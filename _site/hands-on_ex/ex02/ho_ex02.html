@@ -6,8 +6,11 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Jeffery Lau">
+<meta name="dcterms.date" content="2024-08-19">
+<meta name="description" content="In this">
 
-<title>IS415-GAA - IS415-GAA | Jeffery Lau (01394148)</title>
+<title>IS415-GAA - Hands-on Exercise 2</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,24 +26,22 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<script src="site_libs/quarto-listing/list.min.js"></script>
-<script src="site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="site_libs/quarto-html/quarto.js"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -68,67 +69,9 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
 
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
 
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-author','listing-image','listing-description','listing-categories',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description","listing-categories"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
-
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../../styles.css">
 </head>
 
 <body class="nav-fixed">
@@ -138,7 +81,7 @@ window.Quarto = {
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="./index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">IS415-GAA</span>
     </a>
   </div>
@@ -154,11 +97,11 @@ window.Quarto = {
     </a>
     <ul class="dropdown-menu" aria-labelledby="nav-menu-hands-on-exercise">    
         <li>
-    <a class="dropdown-item" href="./hands-on_ex/ex01/ho_ex01.html">
+    <a class="dropdown-item" href="../../hands-on_ex/ex01/ho_ex01.html">
  <span class="dropdown-text">Exercise 1</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./hands-on_ex/ex02/ho_ex02.html">
+    <a class="dropdown-item" href="../../hands-on_ex/ex02/ho_ex02.html">
  <span class="dropdown-text">Exercise 2</span></a>
   </li>  
     </ul>
@@ -169,7 +112,7 @@ window.Quarto = {
     </a>
     <ul class="dropdown-menu" aria-labelledby="nav-menu-in-class-exercise">    
         <li>
-    <a class="dropdown-item" href="./in-class_ex/ex01/ic_ex01.html">
+    <a class="dropdown-item" href="../../in-class_ex/ex01/ic_ex01.html">
  <span class="dropdown-text">Exercise 1</span></a>
   </li>  
     </ul>
@@ -180,7 +123,7 @@ window.Quarto = {
     </a>
     <ul class="dropdown-menu" aria-labelledby="nav-menu-take-home-exercise">    
         <li>
-    <a class="dropdown-item" href="./take-home_ex/ex01/to_ex01.html">
+    <a class="dropdown-item" href="../../take-home_ex/ex01/to_ex01.html">
  <span class="dropdown-text">Exercise 1</span></a>
   </li>  
     </ul>
@@ -198,20 +141,40 @@ window.Quarto = {
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(3)</span></div><div class="category" data-category="Hands-on">Hands-on <span class="quarto-category-count">(2)</span></div></div></div>
+    </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">IS415-GAA | Jeffery Lau (01394148)</h1>
-</div>
+<h1 class="title">Hands-on Exercise 2</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">Hands-on</div>
+  </div>
+  </div>
 
+<div>
+  <div class="description">
+    <p>In this</p>
+  </div>
+</div>
 
 
 <div class="quarto-title-meta">
 
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Jeffery Lau </p>
+          </div>
+  </div>
     
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">August 19, 2024</p>
+    </div>
+  </div>
   
     
   </div>
@@ -221,107 +184,10 @@ window.Quarto = {
 </header>
 
 
-<p>Welcome to <strong>IS415 Geospatial Analytics and Applications.</strong> This website documents my coursework for this course.</p>
-<p><img src="misc/logo.jpeg" class="img-fluid"></p>
 
 
 
-
-<div class="quarto-listing quarto-listing-container-default" id="listing-listing">
-<div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-listing-file-modified-sort="1711777906000" data-listing-reading-time-sort="1" data-listing-word-count-sort="94">
-<div class="thumbnail">
-<p><a href="./in-class_ex/ex01/data/MPSZ-2019.html" class="no-external"></a></p><a href="./in-class_ex/ex01/data/MPSZ-2019.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./in-class_ex/ex01/data/MPSZ-2019.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./in-class_ex/ex01/data/MPSZ-2019.html" class="no-external"></a>
-</h3>
-<div class="listing-subtitle">
-<a href="./in-class_ex/ex01/data/MPSZ-2019.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="./in-class_ex/ex01/data/MPSZ-2019.html" class="no-external"><abstract></abstract> <links> <fees></fees> <encoding></encoding> <crs> <spatialrefsys nativeformat="Wkt"> <wkt></wkt> <proj4></proj4> <srsid>0</srsid> <srid>0</srid> <authid></authid> <description></description> <projectionacronym></projectionacronym> <ellipsoidacronym></ellipsoidacronym> <geographicflag>false</geographicflag> </spatialrefsys> </crs> <extent> </extent></links></a>
-</div>
-</div>
-<div class="metadata">
-<p><a href="./in-class_ex/ex01/data/MPSZ-2019.html" class="no-external"></a></p><a href="./in-class_ex/ex01/data/MPSZ-2019.html" class="no-external">
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-categories="Hands-on" data-listing-date-sort="1723996800000" data-listing-file-modified-sort="1724045750443" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="1">
-<div class="thumbnail">
-<p><a href="./hands-on_ex/ex02/ho_ex02.html" class="no-external"></a></p><a href="./hands-on_ex/ex02/ho_ex02.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./hands-on_ex/ex02/ho_ex02.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./hands-on_ex/ex02/ho_ex02.html" class="no-external">Hands-on Exercise 2</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./hands-on_ex/ex02/ho_ex02.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('Hands-on'); return false;">
-Hands-on
-</div>
-</div>
-<div class="listing-description">
-<a href="./hands-on_ex/ex02/ho_ex02.html" class="no-external">In this </a>
-</div>
-</div>
-<div class="metadata">
-<a href="./hands-on_ex/ex02/ho_ex02.html" class="no-external">
-<div class="listing-date">
-Aug 19, 2024
-</div>
-<div class="listing-author">
-Jeffery Lau
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="2" data-categories="Hands-on" data-listing-date-sort="1723824000000" data-listing-file-modified-sort="1724045448271" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="5" data-listing-word-count-sort="968">
-<div class="thumbnail">
-<p><a href="./hands-on_ex/ex01/ho_ex01.html" class="no-external"></a></p><a href="./hands-on_ex/ex01/ho_ex01.html" class="no-external">
-<p class="card-img-top"><img src="hands-on_ex/ex01/ho_ex01_files/figure-html/unnamed-chunk-6-1.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./hands-on_ex/ex01/ho_ex01.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./hands-on_ex/ex01/ho_ex01.html" class="no-external">Hands-on Exercise 1</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./hands-on_ex/ex01/ho_ex01.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('Hands-on'); return false;">
-Hands-on
-</div>
-</div>
-<div class="listing-description">
-<a href="./hands-on_ex/ex01/ho_ex01.html" class="no-external">In this </a>
-</div>
-</div>
-<div class="metadata">
-<a href="./hands-on_ex/ex01/ho_ex01.html" class="no-external">
-<div class="listing-date">
-Aug 17, 2024
-</div>
-<div class="listing-author">
-Jeffery Lau
-</div>
-</a>
-</div>
-</div>
-</div>
-<div class="listing-no-matching d-none">
-No matching items
-</div>
-</div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {

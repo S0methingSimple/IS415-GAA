@@ -1,0 +1,16 @@
+---
+title: "Hands-on Exercise 2"
+author: "Jeffery Lau"
+date: 08-19-2024
+description: |
+  In this
+categories:
+  - Hands-on
+format:
+  html:
+    toc: true
+execute: 
+  eval: true
+  echo: true
+  warning: false
+---
