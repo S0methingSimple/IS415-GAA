@@ -15,7 +15,7 @@ execute:
   warning: false
 ---
 
-# 1.1 Getting Started
+# 1. Getting Started
 
 The following code chunk uses p_load() to install and load the sf and tidyverse packages.
 
@@ -23,7 +23,7 @@ The following code chunk uses p_load() to install and load the sf and tidyverse 
 pacman::p_load(sf, tidyverse)
 ```
 
-# 1.2 Importing data
+# 2. Importing data
 
 The following code chunk will import the Master Plan and Cycling Path data in ESRI shapefile format and Preschool data in kml file format into R.
 
@@ -37,7 +37,7 @@ cyclingpath = st_read(dsn = "data/geospatial",
 preschool = st_read("data/geospatial/PreSchoolsLocation.kml")
 ```
 
-# 1.3 Working with Simple Feature Data Frame
+# 3. Working with Simple Feature Data Frame
 
 This section document ways to retrieve information from and work with data frames
 
@@ -59,7 +59,7 @@ glimpse(mpsz)
 head(mpsz, n=5)
 ```
 
-# 1.4 Plotting the Geospatial Data
+# 4. Plotting the Geospatial Data
 
 To perform a simple plot use `plot()`, in this case the default plot is a multi-plot of all attributes.
 
@@ -79,11 +79,11 @@ To view a specific attribute use the following
 plot(mpsz["PLN_AREA_N"])
 ```
 
-# 1.5 Map Projection
+# 5. Map Projection
 
 In the event when the coordinate system of the source data is either missing or wrongly assigned we will have to update it.
 
-## Assign EPSG Code
+## 5.1 Assign EPSG Code
 
 In the case of `mpsz` it is projected in `SVY 21` with EPSG code 3414, using `st_crs()` we can see that the data is projected with EPSG code 9001 instead.
 
@@ -103,7 +103,7 @@ The crs for the mpsz data should now be assigned appropriately
 st_crs(mpsz3414)
 ```
 
-## Re-Project CRS
+## 5.2 Re-Project CRS
 
 In the case of the Preschool data, it is initially projected in `WGS 84`
 
@@ -124,9 +124,9 @@ The crs for the preschool data should now be assigned appropriately as well
 st_geometry(preschool3414)
 ```
 
-# 1.6 Working with Aspatial Data
+# 6. Working with Aspatial Data
 
-## Importing data
+## 6.1 Importing data
 
 AirBnb data is a listing and should be loaded with `read_csv()`
 
@@ -142,7 +142,7 @@ list(listings)
 
 We assume the data uses the `wgs84` Geographic Coordinate System
 
-## Aspatial data to `sf` Data Frame
+## 6.2 Aspatial data to `sf` Data Frame
 
 The aspatial data will first be converted into an sf data frame and re-projected into the `SVY 21` crs.
 
@@ -159,9 +159,9 @@ The created data frame shows that geometry has been added while longitude and la
 glimpse(listings_sf)
 ```
 
-# 1.7 Geoprocessing `sf` Data Frame
+# 7. Geoprocessing `sf` Data Frame
 
-## Buffering
+## 7.1 Buffering
 
 Scenario: The authority is planning to upgrade the exiting cycling path. To do so, they need to acquire 5 metres of reserved land on the both sides of the current cycling path. You are tasked to determine the extend of the land need to be acquired and their total area.
 
@@ -184,7 +184,7 @@ Finally the `sum()` is used to derive the total land involved
 sum(buffer_cycling$AREA)
 ```
 
-## Point-in-polygon count
+## 7.2 Point-in-polygon count
 
 Scenario: A pre-school service group want to find out the numbers of pre-schools in each Planning Subzone.
 
@@ -220,7 +220,7 @@ mpsz3414 <- mpsz3414 %>%
   mutate(`PreSch Density` = `PreSch Count`/Area * 1000000)
 ```
 
-# 1.8 Exploratory Data Analysis (EDA)
+# 8. Exploratory Data Analysis (EDA)
 
 Using `hist()` we can view the distribution of `PreSch Density`
 
