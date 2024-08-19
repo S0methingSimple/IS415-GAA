@@ -14,3 +14,80 @@ execute:
   echo: true
   warning: false
 ---
+
+# 1. Getting Started
+
+The following code chunk uses p_load() to install and load the sf, tidyverse and tmap packages.
+
+```{r}
+pacman::p_load(sf, tmap, tidyverse)
+```
+
+# 2. Importing data
+
+The following code chunk will import the Master Plan and Cycling Path data in ESRI shapefile format and Preschool data in kml file format into R.
+
+```{R}
+mpsz <- st_read(dsn = "data/geospatial",
+                layer = "MP14_SUBZONE_WEB_PL")
+
+popdata <- read_csv("data/aspatial/respopagesextod2011to2020.csv")
+```
+
+The following is the glimpse of the imported data
+
+```{R}
+cat("MPSZ:\n")
+glimpse(mpsz)
+cat("\nPopData:\n")
+glimpse(popdata)
+```
+
+# 3. Data Preparation
+
+Before working on the map the data is required to be wrangled to ensure only the relevant fields are included: - YOUNG: age group 0 to 4 until age groyup 20 to 24, - ECONOMY ACTIVE: age group 25-29 until age group 60-64, - AGED: age group 65 and above, - TOTAL: all age group, and - DEPENDENCY: the ratio between young and aged against economy active group
+
+## 3.1 Data Wrangling
+
+```{R}
+# Filter data to 2020, groupby and sum the population
+popdata2020grouped <- popdata %>%
+  filter(Time == 2020) %>%
+  group_by(PA, SZ, AG) %>%
+  summarise(`POP` = sum(`Pop`))
+
+# Pivot wider by age 
+popdata2020pivot <- popdata2020grouped %>%
+  ungroup()%>%
+  pivot_wider(names_from=AG, 
+              values_from=POP)
+
+# Sum into age groups
+popdata2020 <- popdata2020pivot %>%
+  mutate(YOUNG = rowSums(.[3:6])
+         +rowSums(.[12])) %>%
+mutate(`ECONOMY ACTIVE` = rowSums(.[7:11])+
+rowSums(.[13:15]))%>%
+mutate(`AGED`=rowSums(.[16:21])) %>%
+mutate(`TOTAL`=rowSums(.[3:21])) %>%  
+mutate(`DEPENDENCY` = (`YOUNG` + `AGED`)
+/`ECONOMY ACTIVE`) %>%
+  select(`PA`, `SZ`, `YOUNG`, 
+       `ECONOMY ACTIVE`, `AGED`, 
+       `TOTAL`, `DEPENDENCY`)
+
+# View popdata
+head(popdata2020, , n=5)
+```
+Convert PA and SZ fields to uppercase
+
+```{R}
+popdata2020 <- popdata2020 %>%
+  mutate_at(.vars = vars(PA, SZ), 
+          .funs = list(toupper)) %>%
+  filter(`ECONOMY ACTIVE` > 0)
+
+head(popdata2020)
+```
+
+## 3.2 Joining the attribute data
