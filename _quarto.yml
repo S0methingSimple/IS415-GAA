@@ -8,7 +8,7 @@ website:
       - text: "Hands-on Exercise"
         menu: 
           - text: "Exercise 1"
-            href: "hands-on_ex/ex01/ex01.html"
+            href: "hands-on_ex/ex01/ho_ex01.html"
 
 format:
   html:
