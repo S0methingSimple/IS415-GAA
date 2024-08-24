@@ -212,6 +212,7 @@ tm_shape(mpsz_popdata2020) +
   tm_fill("DEPENDENCY", n = 6, style = "quantile", palette = "BuPu") +
   tm_borders(alpha = 0.5)
 ```
+
 ### 4.4.2 Reverse color ramp
 
 To reverse the color ramp add a `-` to the palette
@@ -221,6 +222,7 @@ tm_shape(mpsz_popdata2020) +
   tm_fill("DEPENDENCY", n = 6, style = "quantile", palette = "-BuPu") +
   tm_borders(alpha = 0.5)
 ```
+
 ## 4.5 Map Layouts
 
 For a comprehensive plot several map elements are required, such as the scale bar, compass, title etc.
@@ -236,6 +238,7 @@ tm_shape(mpsz_popdata2020) +
             main.title.position = "center", main.title.size = 1, legend.height = 0.45, legend.width = 0.35, legend.outside = FALSE, legend.position = c("right", "bottom"), frame = FALSE) +
   tm_borders(alpha = 0.5)
 ```
+
 ### 4.5.2 Map Style
 
 To simplify styling we can also use existing tmap styles
@@ -245,12 +248,8 @@ tm_shape(mpsz_popdata2020)+
   tm_fill("DEPENDENCY", style = "quantile", palette = "Greens") +
   tm_borders(alpha = 0.5) +
   tmap_style("cobalt")
-
-tm_shape(mpsz_popdata2020)+
-  tm_fill("DEPENDENCY", style = "quantile", palette = "Greens") +
-  tm_borders(alpha = 0.5) +
-  tmap_style("classic")
 ```
+
 ### 4.5.2 Cartographic Elements
 
 Cartographic furnitures can also be added such compass, scale bar and grid lines using the `tm_compass()`, `tm_scale_bar()` and `tm_grid()` respectively
@@ -272,15 +271,15 @@ tm_shape(mpsz_popdata2020)+
   tm_scale_bar(width = 0.15) +
   tm_grid(lwd = 0.1, alpha = 0.2) +
   tm_credits("Source: Planning Sub-zone boundary from Urban Redevelopment Authorithy (URA)\n and Population data from Department of Statistics DOS", 
-             position = c("left", "bottom"))
+             position = c("left", "bottom")) +
+  tmap_style("classic")
 ```
+
 To reset tmap style to default simply run `tmap_style("white")`
 
 ## 4.6 Portraying Multiple Maps
-Small maps aka facet maps can be arrange vertically or horizontally to help visualise relations between changes in variables. Such maps can be plotted in 3 ways:
-1. By assigning multiple values to at least one of the aesthetic arguments,
-2. by defining a group-by variable in tm_facets(), and
-3. By creating multiple stand-alone maps with tmap_arrange().
+
+Small maps aka facet maps can be arrange vertically or horizontally to help visualise relations between changes in variables. Such maps can be plotted in 3 ways: 1. By assigning multiple values to at least one of the aesthetic arguments, 2. by defining a group-by variable in tm_facets(), and 3. By creating multiple stand-alone maps with tmap_arrange().
 
 ### 4.6.1 Defining with Aesthetic Arguments
 
@@ -293,6 +292,7 @@ tm_shape(mpsz_popdata2020)+
   tm_borders(alpha = 0.5) +
   tmap_style("white")
 ```
+
 ### 4.6.2 Defining with `tm_facets()`
 
 Choropleth created using `tm_facets()` based on the `REGION_N`
@@ -304,6 +304,7 @@ tm_shape(mpsz_popdata2020) +
   tm_layout(legend.show = FALSE, title.position = c("center", "center"),title.size = 20) +
   tm_borders(alpha = 0.5)
 ```
+
 ### 4.6.3 Defining with `tmap_arrange()`
 
 As seen previously `tmap_arrange()` can be used to render individual maps
@@ -317,6 +318,7 @@ agedmap <- tm_shape(mpsz_popdata2020) +
 
 tmap_arrange(youngmap, agedmap, asp=1, ncol=2)
 ```
+
 ## 4.7 Mapping with Selection Criterion
 
 Instead of mapping the entire data frame we can also map just parts of it by filtering the data frame
@@ -324,7 +326,6 @@ Instead of mapping the entire data frame we can also map just parts of it by fil
 ```{r}
 tm_shape(mpsz_popdata2020[mpsz_popdata2020$REGION_N=="NORTH-EAST REGION", ]) +
   tm_fill("DEPENDENCY", style = "quantile", palette = "YlGnBu", legend.hist = TRUE, legend.is.portrait = TRUE,legend.hist.z = 0.1) +
-  tm_layout(legend.outside = TRUE, legend.height = 0.45, legend.width = 5.0, legend.position = c("right", "bottom"), frame = FALSE) +
+  tm_layout(legend.outside = TRUE, legend.outside.size = 0.2, legend.position = c("right", "bottom"), frame = FALSE) +
   tm_borders(alpha = 0.5)
 ```
-
