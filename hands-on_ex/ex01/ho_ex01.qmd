@@ -2,8 +2,9 @@
 title: "Hands-on Exercise 1"
 author: "Jeffery Lau"
 date: 08-17-2024
+date-modified: "last-modified"
 description: |
-  In this
+  In this exercise we get our first hands-on with geoprocessing and basic plotting with R
 categories:
   - Hands-on
 format:

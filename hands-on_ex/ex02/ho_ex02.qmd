@@ -4,7 +4,7 @@ author: "Jeffery Lau"
 date: 08-19-2024
 date-modified: "last-modified"
 description: |
-  In this
+  In this exercise we work with themeatic mapping using tmap package to visualize our data
 categories:
   - Hands-on
 format:
