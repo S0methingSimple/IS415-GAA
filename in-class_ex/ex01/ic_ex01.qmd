@@ -1,5 +1,5 @@
 ---
-title: "In-class Exercise 02"
+title: "In-class Exercise 01"
 author: "Jeffery Lau"
 date: 08-26-2024
 date-modified: "last-modified"
@@ -36,35 +36,40 @@ class(mpsz_shp)
 ```
 
 To use the kml file simply re-export mpsz_shp to the kml file and re-load it
+
 ```{r}
 st_write(mpsz_shp, "data/MP14_SUBZONE_WEB_PL.kml", delete_dsn = TRUE)
 
 mpsz_kml = st_read("data/MP14_SUBZONE_WEB_PL.kml")
 ```
 
-::: {.panel-tabset}
-
+::: panel-tabset
 ## Glimpse
+
 ```{r}
 glimpse(mpsz_shp)
 ```
 
 ## Data
+
 ```{r}
 # use DT instead of head
 datatable(mpsz_shp)
 ```
-
 :::
 
 ## 2.1 Fixing data files
+
 Notice how much less tidy the kml file data is as compared to the shp file
+
 ```{r}
 mpsz19_shp = st_read(dsn="data/MPSZ-2019", layer="MPSZ-2019") 
 
 mpsz19_kml = st_read("data/MasterPlan2019SubzoneBoundaryNoSeaKML.kml")
 ```
+
 Notice that the CRS is also wrong, it is in GCS instead of PCS
+
 ```{r}
 # Check CRS
 st_crs(mpsz19_shp)
@@ -76,13 +81,14 @@ mpsz19_shp <- st_transform(mpsz19_shp, crs = 3414)
 st_crs(mpsz19_shp)
 
 ```
+
 ## 2.2 Load Aspatial Data
+
 ```{r}
 popdata <- read_csv("data/respopagesextod2023/respopagesextod2023.csv")
 
 head(popdata)
 ```
-
 
 # 3. Geoprocessing
 
@@ -97,6 +103,7 @@ popdata2023 <- popdata %>%
 
 head(popdata2023)
 ```
+
 ```{r}
 colnames(popdata2023)
 
@@ -111,6 +118,7 @@ popdata2023 <- popdata2023 %>%
 
 head(popdata2023)
 ```
+
 ```{r}
 # To upper 
 popdata2023 <- popdata2023 %>%
@@ -122,4 +130,3 @@ popdata2023 <- popdata2023 %>%
 mpsz_pop2023 <- left_join(mpsz19_shp, popdata2023, by = c("SUBZONE_N" = "SZ"))
 head(mpsz_pop2023)
 ```
-
