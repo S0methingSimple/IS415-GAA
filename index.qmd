@@ -1,5 +1,5 @@
 ---
-title: "IS415-GAA | Jeffery Lau (01394148)"
+title: "IS415-GAA | Jeffery Lau"
 ---
 
 Welcome to **IS415 Geospatial Analytics and Applications.** This website documents my coursework for this course.

@@ -14,6 +14,7 @@ execute:
   eval: true
   echo: true
   warning: false
+  freeze: true
 ---
 
 # 1. Getting Started
