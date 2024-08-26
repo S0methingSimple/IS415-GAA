@@ -2,7 +2,7 @@ project:
   type: website
 
 website:
-  title: "Jeff's 🗺 Works️"
+  title: "Jeff's 🗺 Adventures"
   navbar:
     left: 
       - text: "Hands-on Exercise"
@@ -19,6 +19,10 @@ website:
         menu: 
           - text: "Exercise 1"
             href: "take-home_ex/ex01/to_ex01.html"
+            
+    right:
+      - href: "listings.qmd"
+        text: "Listings"
 
 format:
   html:

@@ -30,8 +30,7 @@ pacman::p_load(sf, tmap, tidyverse)
 The following code chunk will import the Master Plan and Cycling Path data in ESRI shapefile format and Preschool data in kml file format into R.
 
 ```{R}
-mpsz <- st_read(dsn = "data/geospatial",
-                layer = "MP14_SUBZONE_WEB_PL")
+mpsz <- st_read(dsn = "data/geospatial", layer = "MP14_SUBZONE_WEB_PL")
 
 popdata <- read_csv("data/aspatial/respopagesextod2011to2020.csv")
 ```
