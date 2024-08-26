@@ -2,5 +2,5 @@
 title: "Listings"
 listing:
   contents:
-    - "hands-on_ex/*/*.qmd"
+    - "*/*/*.qmd"
 ---

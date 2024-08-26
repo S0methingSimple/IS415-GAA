@@ -1,12 +1,12 @@
 ---
 title: "In-class Exercise 02"
 author: "Jeffery Lau"
-date: 08-19-2024
+date: 08-26-2024
 date-modified: "last-modified"
 description: |
-  In this exercise we work with themeatic mapping using tmap package to visualize our data
+  In this exercise we learn to handle corrupted data, transforming CRS as well as some geoprocessing and joining of geospatial and aspatial data
 categories:
-  - Hands-on
+  - In-class
 format:
   html:
     toc: true
@@ -14,7 +14,7 @@ execute:
   eval: true
   echo: true
   warning: false
-  freeze: false
+  freeze: true
 ---
 
 # 1. Getting Started
@@ -51,7 +51,7 @@ glimpse(mpsz_shp)
 
 ## Data
 ```{r}
-# use DT instead
+# use DT instead of head
 datatable(mpsz_shp)
 ```
 
@@ -118,6 +118,7 @@ popdata2023 <- popdata2023 %>%
 ```
 
 ```{r}
+# Join the geospatial and aspatial data
 mpsz_pop2023 <- left_join(mpsz19_shp, popdata2023, by = c("SUBZONE_N" = "SZ"))
 head(mpsz_pop2023)
 ```
