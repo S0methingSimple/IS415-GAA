@@ -4,8 +4,19 @@
     "items": [
       "/hands-on_ex/ex01/ho_ex01.html",
       "/hands-on_ex/ex02/ho_ex02.html",
+      "/hands-on_ex/ex03/ho_ex03.html",
       "/in-class_ex/ex01/ic_ex01.html",
       "/in-class_ex/ex01/data/MPSZ-2019/MPSZ-2019.html"
+    ]
+  },
+  {
+    "listing": "/index.html",
+    "items": [
+      "/in-class_ex/ex01/data/MPSZ-2019/MPSZ-2019.html",
+      "/hands-on_ex/ex03/ho_ex03.html",
+      "/in-class_ex/ex01/ic_ex01.html",
+      "/hands-on_ex/ex02/ho_ex02.html",
+      "/hands-on_ex/ex01/ho_ex01.html"
     ]
   }
 ]
