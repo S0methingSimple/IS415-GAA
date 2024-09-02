@@ -30,8 +30,6 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<script src="site_libs/quarto-listing/list.min.js"></script>
-<script src="site_libs/quarto-listing/quarto-listing.js"></script>
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -68,65 +66,7 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
 
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
-
-    const options = {
-      valueNames: ['listing-title','listing-author','listing-date','listing-image','listing-description','listing-categories',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
-      
-      searchColumns: ["listing-title","listing-author","listing-date","listing-image","listing-description","listing-categories"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -176,6 +116,10 @@ window.Quarto = {
     <a class="dropdown-item" href="./in-class_ex/ex01/ic_ex01.html">
  <span class="dropdown-text">Exercise 1</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="./in-class_ex/ex02/ic_ex02.html">
+ <span class="dropdown-text">Exercise 2</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
@@ -208,7 +152,7 @@ window.Quarto = {
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(4)</span></div><div class="category" data-category="Hands-on">Hands-on <span class="quarto-category-count">(3)</span></div><div class="category" data-category="In-class">In-class <span class="quarto-category-count">(1)</span></div></div></div>
+    </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
@@ -236,126 +180,7 @@ window.Quarto = {
 
 
 
-
-<div class="quarto-listing quarto-listing-container-grid" id="listing-listing">
-<div class="list grid quarto-listing-cols-3">
-<div class="g-col-1" data-index="0" data-categories="Hands-on" data-listing-date-sort="1724947200000" data-listing-file-modified-sort="1725115488735" data-listing-date-modified-sort="1725115488000" data-listing-reading-time-sort="15" data-listing-word-count-sort="2875">
-<a href="./hands-on_ex/ex03/ho_ex03.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<p class="card-img-top"><img src="hands-on_ex/ex03/ho_ex03_files/figure-html/unnamed-chunk-3-1.png" style="height: 150px;"  class="thumbnail-image card-img"/></p>
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-Hands-on Exercise 3
-</h5>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('Hands-on'); return false;">
-Hands-on
-</div>
-</div>
-<div class="card-text listing-description">
-<p>In this exercise we discorver the 1st and 2nd Order Spatial Point Patterns Analysis Methods</p>
-</div>
-<div class="card-attribution card-text-small justify">
-<div class="listing-author">
-Jeffery Lau
-</div>
-<div class="listing-date">
-Aug 30, 2024
-</div>
-</div>
-</div>
-</div>
-</a>
-</div>
-<div class="g-col-1" data-index="1" data-categories="In-class" data-listing-date-sort="1724601600000" data-listing-file-modified-sort="1725115834597" data-listing-date-modified-sort="1725115834000" data-listing-reading-time-sort="2" data-listing-word-count-sort="251">
-<a href="./in-class_ex/ex01/ic_ex01.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<div class="listing-item-img-placeholder card-img-top" style="height: 150px;">&nbsp;</div>
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-In-class Exercise 1
-</h5>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('In-class'); return false;">
-In-class
-</div>
-</div>
-<div class="card-text listing-description">
-<p>In this exercise we learn to handle corrupted data, transforming CRS as well as some geoprocessing and joining of geospatial and aspatial data</p>
-</div>
-<div class="card-attribution card-text-small justify">
-<div class="listing-author">
-Jeffery Lau
-</div>
-<div class="listing-date">
-Aug 26, 2024
-</div>
-</div>
-</div>
-</div>
-</a>
-</div>
-<div class="g-col-1" data-index="2" data-categories="Hands-on" data-listing-date-sort="1723996800000" data-listing-file-modified-sort="1724635060413" data-listing-date-modified-sort="1724635060000" data-listing-reading-time-sort="9" data-listing-word-count-sort="1632">
-<a href="./hands-on_ex/ex02/ho_ex02.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<p class="card-img-top"><img src="hands-on_ex/ex02/ho_ex02_files/figure-html/unnamed-chunk-8-1.png" style="height: 150px;"  class="thumbnail-image card-img"/></p>
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-Hands-on Exercise 2
-</h5>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('Hands-on'); return false;">
-Hands-on
-</div>
-</div>
-<div class="card-text listing-description">
-<p>In this exercise we work with themeatic mapping using tmap package to visualize our data</p>
-</div>
-<div class="card-attribution card-text-small justify">
-<div class="listing-author">
-Jeffery Lau
-</div>
-<div class="listing-date">
-Aug 19, 2024
-</div>
-</div>
-</div>
-</div>
-</a>
-</div>
-<div class="g-col-1" data-index="3" data-categories="Hands-on" data-listing-date-sort="1723824000000" data-listing-file-modified-sort="1724632417785" data-listing-date-modified-sort="1724632417000" data-listing-reading-time-sort="5" data-listing-word-count-sort="974">
-<a href="./hands-on_ex/ex01/ho_ex01.html" class="quarto-grid-link">
-<div class="quarto-grid-item card h-100 card-left">
-<p class="card-img-top"><img src="hands-on_ex/ex01/ho_ex01_files/figure-html/unnamed-chunk-6-1.png" style="height: 150px;"  class="thumbnail-image card-img"/></p>
-<div class="card-body post-contents">
-<h5 class="no-anchor card-title listing-title">
-Hands-on Exercise 1
-</h5>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('Hands-on'); return false;">
-Hands-on
-</div>
-</div>
-<div class="card-text listing-description">
-<p>In this exercise we get our first hands-on with geoprocessing and basic plotting with R</p>
-</div>
-<div class="card-attribution card-text-small justify">
-<div class="listing-author">
-Jeffery Lau
-</div>
-<div class="listing-date">
-Aug 17, 2024
-</div>
-</div>
-</div>
-</div>
-</a>
-</div>
-</div>
-<div class="listing-no-matching d-none">
-No matching items
-</div>
-</div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {

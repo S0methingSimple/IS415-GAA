@@ -1,11 +1,5 @@
 ---
 title: "IS415-GAA | Jeffery Lau"
-listing: 
-  type: grid
-  categories: true
-  sort: "date desc"
-  contents:
-    - "*/*/*.qmd"
 execute: 
   freeze: true
 ---

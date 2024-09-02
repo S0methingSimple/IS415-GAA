@@ -1,6 +1,9 @@
 ---
 title: "Listings"
-listing:
+listing: 
+  type: grid
+  categories: true
+  sort: "date desc"
   contents:
     - "*/*/*.qmd"
 ---

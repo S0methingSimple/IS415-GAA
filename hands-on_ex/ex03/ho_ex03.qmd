@@ -30,6 +30,7 @@ In this hands-on we will be working with 3 new packages, spatstat used for point
 
 ``` {r}
 # We have to ensure maptools is installed because it is not available in our version of R
+#| eval: false
 install.packages("maptools", repos = "https://packagemanager.posit.co/cran/2023-10-13")
 
 pacman::p_load(tmap, sf, raster, spatstat, maptools, sp, tidyverse)
@@ -45,8 +46,7 @@ sg_sf <- st_set_crs(sg_sf, 3414)
 childcare_sf <- st_read("data/child-care-services-geojson.geojson") %>%
   st_transform( crs = 3414)
 childcare_sf <- st_set_crs(childcare_sf, 3414)
-```
-```{r}
+
 # Plot map 
 tm_shape(sg_sf) + tm_fill() + 
   tm_shape(mpsz_sf) + tm_polygons() + 
@@ -55,8 +55,8 @@ tm_shape(sg_sf) + tm_fill() +
 Use the `view` mode to get an interactive map
 
 ```{r}
-tmap_mode('view')
-tm_shape(childcare_sf) + tm_dots()
+#tmap_mode('view')
+#tm_shape(childcare_sf) + tm_dots()
 # Rem to chagne the mode
 tmap_mode('plot')
 ```
@@ -138,8 +138,8 @@ sum(multiplicity(childcare_ppp) > 1)
 Lets use the interactive map to view the location of these duplicated points, by giving the points some transparency we can view the overlap of some points which appears to be darker 
 
 ```{r}
-tmap_mode('view')
-tm_shape(childcare) + tm_dots(alpha = 0.4, size = 0.05)
+#tmap_mode('view')
+#tm_shape(childcare) + tm_dots(alpha = 0.4, size = 0.05)
 tmap_mode('plot')
 ```
 

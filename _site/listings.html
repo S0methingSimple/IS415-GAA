@@ -78,9 +78,9 @@ ul.task-list li input[type="checkbox"] {
     }
 
     const options = {
-      valueNames: ['listing-date','listing-title','listing-author','listing-image','listing-description',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
+      valueNames: ['listing-title','listing-author','listing-date','listing-image','listing-description','listing-categories',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
       
-      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description"],
+      searchColumns: ["listing-title","listing-author","listing-date","listing-image","listing-description","listing-categories"],
     };
 
     window['quarto-listings'] = window['quarto-listings'] || {};
@@ -176,6 +176,10 @@ window.Quarto = {
     <a class="dropdown-item" href="./in-class_ex/ex01/ic_ex01.html">
  <span class="dropdown-text">Exercise 1</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="./in-class_ex/ex02/ic_ex02.html">
+ <span class="dropdown-text">Exercise 2</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
@@ -208,7 +212,7 @@ window.Quarto = {
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         
-    </div>
+    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(5)</span></div><div class="category" data-category="Hands-on">Hands-on <span class="quarto-category-count">(3)</span></div><div class="category" data-category="In-class">In-class <span class="quarto-category-count">(2)</span></div></div></div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
@@ -235,119 +239,147 @@ window.Quarto = {
 
 
 
-<div class="quarto-listing quarto-listing-container-default" id="listing-listing">
-<div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-categories="Hands-on" data-listing-date-sort="1723824000000" data-listing-file-modified-sort="1724632417785" data-listing-date-modified-sort="1724632417000" data-listing-reading-time-sort="5" data-listing-word-count-sort="974">
-<div class="thumbnail">
-<p><a href="./hands-on_ex/ex01/ho_ex01.html" class="no-external"></a></p><a href="./hands-on_ex/ex01/ho_ex01.html" class="no-external">
-<p class="card-img-top"><img src="hands-on_ex/ex01/ho_ex01_files/figure-html/unnamed-chunk-6-1.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./hands-on_ex/ex01/ho_ex01.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./hands-on_ex/ex01/ho_ex01.html" class="no-external">Hands-on Exercise 1</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./hands-on_ex/ex01/ho_ex01.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="./hands-on_ex/ex01/ho_ex01.html" class="no-external">In this exercise we get our first hands-on with geoprocessing and basic plotting with R </a>
+<div class="quarto-listing quarto-listing-container-grid" id="listing-listing">
+<div class="list grid quarto-listing-cols-3">
+<div class="g-col-1" data-index="0" data-categories="In-class" data-listing-date-sort="1725206400000" data-listing-file-modified-sort="1725247147974" data-listing-date-modified-sort="1725247147000" data-listing-reading-time-sort="1" data-listing-word-count-sort="130">
+<a href="./in-class_ex/ex02/ic_ex02.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<div class="listing-item-img-placeholder card-img-top" style="height: 150px;">&nbsp;</div>
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+In-class Exercise 2
+</h5>
+<div class="listing-categories">
+<div class="listing-category" onclick="window.quartoListingCategory('In-class'); return false;">
+In-class
 </div>
 </div>
-<div class="metadata">
-<a href="./hands-on_ex/ex01/ho_ex01.html" class="no-external">
-<div class="listing-date">
-Aug 17, 2024
+<div class="card-text listing-description">
+<p>In this exercise we learn to handle corrupted data, transforming CRS as well as some geoprocessing and joining of geospatial and aspatial data</p>
 </div>
+<div class="card-attribution card-text-small justify">
 <div class="listing-author">
 Jeffery Lau
 </div>
+<div class="listing-date">
+Sep 2, 2024
+</div>
+</div>
+</div>
+</div>
 </a>
 </div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-categories="Hands-on" data-listing-date-sort="1723996800000" data-listing-file-modified-sort="1724635060413" data-listing-date-modified-sort="1724635060000" data-listing-reading-time-sort="9" data-listing-word-count-sort="1632">
-<div class="thumbnail">
-<p><a href="./hands-on_ex/ex02/ho_ex02.html" class="no-external"></a></p><a href="./hands-on_ex/ex02/ho_ex02.html" class="no-external">
-<p class="card-img-top"><img src="hands-on_ex/ex02/ho_ex02_files/figure-html/unnamed-chunk-8-1.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./hands-on_ex/ex02/ho_ex02.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./hands-on_ex/ex02/ho_ex02.html" class="no-external">Hands-on Exercise 2</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./hands-on_ex/ex02/ho_ex02.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="./hands-on_ex/ex02/ho_ex02.html" class="no-external">In this exercise we work with themeatic mapping using tmap package to visualize our data </a>
+<div class="g-col-1" data-index="1" data-categories="Hands-on" data-listing-date-sort="1724947200000" data-listing-file-modified-sort="1725247587147" data-listing-date-modified-sort="1725247587000" data-listing-reading-time-sort="15" data-listing-word-count-sort="2877">
+<a href="./hands-on_ex/ex03/ho_ex03.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<p class="card-img-top"><img src="hands-on_ex/ex03/ho_ex03_files/figure-html/unnamed-chunk-2-1.png" style="height: 150px;"  class="thumbnail-image card-img"/></p>
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+Hands-on Exercise 3
+</h5>
+<div class="listing-categories">
+<div class="listing-category" onclick="window.quartoListingCategory('Hands-on'); return false;">
+Hands-on
 </div>
 </div>
-<div class="metadata">
-<a href="./hands-on_ex/ex02/ho_ex02.html" class="no-external">
-<div class="listing-date">
-Aug 19, 2024
+<div class="card-text listing-description">
+<p>In this exercise we discorver the 1st and 2nd Order Spatial Point Patterns Analysis Methods</p>
 </div>
+<div class="card-attribution card-text-small justify">
 <div class="listing-author">
 Jeffery Lau
 </div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="2" data-categories="Hands-on" data-listing-date-sort="1724947200000" data-listing-file-modified-sort="1725115488735" data-listing-date-modified-sort="1725115488000" data-listing-reading-time-sort="15" data-listing-word-count-sort="2875">
-<div class="thumbnail">
-<p><a href="./hands-on_ex/ex03/ho_ex03.html" class="no-external"></a></p><a href="./hands-on_ex/ex03/ho_ex03.html" class="no-external">
-<p class="card-img-top"><img src="hands-on_ex/ex03/ho_ex03_files/figure-html/unnamed-chunk-3-1.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./hands-on_ex/ex03/ho_ex03.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./hands-on_ex/ex03/ho_ex03.html" class="no-external">Hands-on Exercise 3</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./hands-on_ex/ex03/ho_ex03.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="./hands-on_ex/ex03/ho_ex03.html" class="no-external">In this exercise we discorver the 1st and 2nd Order Spatial Point Patterns Analysis Methods </a>
-</div>
-</div>
-<div class="metadata">
-<a href="./hands-on_ex/ex03/ho_ex03.html" class="no-external">
 <div class="listing-date">
 Aug 30, 2024
 </div>
-<div class="listing-author">
-Jeffery Lau
+</div>
+</div>
 </div>
 </a>
 </div>
-</div>
-<div class="quarto-post image-right" data-index="3" data-categories="In-class" data-listing-date-sort="1724601600000" data-listing-file-modified-sort="1725115834597" data-listing-date-modified-sort="1725115834000" data-listing-reading-time-sort="2" data-listing-word-count-sort="251">
-<div class="thumbnail">
-<p><a href="./in-class_ex/ex01/ic_ex01.html" class="no-external"></a></p><a href="./in-class_ex/ex01/ic_ex01.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./in-class_ex/ex01/ic_ex01.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./in-class_ex/ex01/ic_ex01.html" class="no-external">In-class Exercise 1</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./in-class_ex/ex01/ic_ex01.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="./in-class_ex/ex01/ic_ex01.html" class="no-external">In this exercise we learn to handle corrupted data, transforming CRS as well as some geoprocessing and joining of geospatial and aspatial data </a>
+<div class="g-col-1" data-index="2" data-categories="In-class" data-listing-date-sort="1724601600000" data-listing-file-modified-sort="1725115834597" data-listing-date-modified-sort="1725115834000" data-listing-reading-time-sort="2" data-listing-word-count-sort="251">
+<a href="./in-class_ex/ex01/ic_ex01.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<div class="listing-item-img-placeholder card-img-top" style="height: 150px;">&nbsp;</div>
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+In-class Exercise 1
+</h5>
+<div class="listing-categories">
+<div class="listing-category" onclick="window.quartoListingCategory('In-class'); return false;">
+In-class
 </div>
 </div>
-<div class="metadata">
-<a href="./in-class_ex/ex01/ic_ex01.html" class="no-external">
+<div class="card-text listing-description">
+<p>In this exercise we learn to handle corrupted data, transforming CRS as well as some geoprocessing and joining of geospatial and aspatial data</p>
+</div>
+<div class="card-attribution card-text-small justify">
+<div class="listing-author">
+Jeffery Lau
+</div>
 <div class="listing-date">
 Aug 26, 2024
 </div>
-<div class="listing-author">
-Jeffery Lau
+</div>
+</div>
 </div>
 </a>
 </div>
+<div class="g-col-1" data-index="3" data-categories="Hands-on" data-listing-date-sort="1723996800000" data-listing-file-modified-sort="1724635060413" data-listing-date-modified-sort="1724635060000" data-listing-reading-time-sort="9" data-listing-word-count-sort="1632">
+<a href="./hands-on_ex/ex02/ho_ex02.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<p class="card-img-top"><img src="hands-on_ex/ex02/ho_ex02_files/figure-html/unnamed-chunk-8-1.png" style="height: 150px;"  class="thumbnail-image card-img"/></p>
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+Hands-on Exercise 2
+</h5>
+<div class="listing-categories">
+<div class="listing-category" onclick="window.quartoListingCategory('Hands-on'); return false;">
+Hands-on
+</div>
+</div>
+<div class="card-text listing-description">
+<p>In this exercise we work with themeatic mapping using tmap package to visualize our data</p>
+</div>
+<div class="card-attribution card-text-small justify">
+<div class="listing-author">
+Jeffery Lau
+</div>
+<div class="listing-date">
+Aug 19, 2024
+</div>
+</div>
+</div>
+</div>
+</a>
+</div>
+<div class="g-col-1" data-index="4" data-categories="Hands-on" data-listing-date-sort="1723824000000" data-listing-file-modified-sort="1724632417785" data-listing-date-modified-sort="1724632417000" data-listing-reading-time-sort="5" data-listing-word-count-sort="974">
+<a href="./hands-on_ex/ex01/ho_ex01.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<p class="card-img-top"><img src="hands-on_ex/ex01/ho_ex01_files/figure-html/unnamed-chunk-6-1.png" style="height: 150px;"  class="thumbnail-image card-img"/></p>
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+Hands-on Exercise 1
+</h5>
+<div class="listing-categories">
+<div class="listing-category" onclick="window.quartoListingCategory('Hands-on'); return false;">
+Hands-on
+</div>
+</div>
+<div class="card-text listing-description">
+<p>In this exercise we get our first hands-on with geoprocessing and basic plotting with R</p>
+</div>
+<div class="card-attribution card-text-small justify">
+<div class="listing-author">
+Jeffery Lau
+</div>
+<div class="listing-date">
+Aug 17, 2024
+</div>
+</div>
+</div>
+</div>
+</a>
 </div>
 </div>
 <div class="listing-no-matching d-none">
