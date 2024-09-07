@@ -1,0 +1,92 @@
+---
+title: "Take-home Exercise 2"
+author: "Jeffery Lau"
+date: 09-07-2024
+date-modified: "last-modified"
+description: |
+  In this exercise, We will be analyzing armed conflict data in Myanmar, using spatial point pattern analysis to understand the distribution and relationships between conflict events. We'll also create maps to visualize the results and interpret the spatial patterns.
+categories:
+  - Take-home
+format:
+  html:
+    toc: true
+execute: 
+  eval: true
+  echo: true
+  warning: false
+  freeze: false
+---
+
+# 1. Introduction
+
+## 1.1 Context
+
+In 2024 armed conflict continues to be a devastating global issue, with millions of people affected each year. Recent years have seen a surge in conflicts, driven by factors such as political instability, regional tensions, and resource scarcity. Myanmar, in particular, has experienced significant armed conflict in recent years, including the 2021 military coup and subsequent violence.
+
+## 1.2 Objectives
+
+1.  Analyze the spatial distribution of armed conflict events in Myanmar.
+2.  Identify patterns and trends in the temporal distribution of conflict events.
+3.  Explore the relationship between conflict events and geographic features (e.g., administrative boundaries, natural resources).
+4.  Identify potential hotspots of conflict activity.
+5.  Provide insights for policymakers and humanitarian organizations working to address the conflict in Myanmar.
+
+# 2. Setup
+
+## 2.1 Loading Packages
+
+In this project we will be using the following packages:
+
+-   **`tmap`:** A package for creating thematic maps in R. It provides a simple and flexible interface for customizing maps and exporting them in various formats.
+
+```{=html}
+<!-- -->
+```
+-   **`sf`:** A package for simple feature data, which is a modern standard for representing geographic features. It provides efficient data structures and functions for spatial operations.
+
+-   **`raster`:** A package for working with raster data, such as images and digital elevation models. It offers tools for reading, writing, manipulating, and analyzing raster data.
+
+-   **`spatstat`:** A package for spatial point pattern analysis. It provides functions for analyzing the distribution and relationships between points in a study area.
+
+-   **`maptools`:** A package for reading and writing various spatial data formats, including shapefiles and KML. It also provides tools for converting between different spatial data structures.
+
+-   **`sp`:** A package for spatial data in R. It provides classes and functions for representing and manipulating spatial data, such as points, lines, and polygons.
+
+-   **`tidyverse`:** A collection of R packages designed for data manipulation, visualization, and analysis. It includes packages like dplyr, ggplot2, and tidyr, which are commonly used in data science workflows.
+
+```{r}
+pacman::p_load(tmap, sf, raster, spatstat, maptools, sp, tidyverse)
+```
+
+## 2.2 Loading Data
+
+The dataset used in this analysis is sourced from the Armed Conflict Location & Event Data (ACLED) database. It contains information on various types of armed conflict events, including Battles, Explosion/Remote violence, Strategic developments, Protest, Riots, and Violence against civilians. The data covers the period from January 2021 to June 2024 and provides specific details such as event date, location coordinates, actor information, and more.
+
+```{r}
+# Read CSV files
+acled_2021_23 <- read_csv("./data/2021-2023-Myanmar.csv")
+acled_2024 <- read_csv("./data/2024-Myanmar.csv")
+
+```
+
+# 3. Data Wrangling
+
+## 3.1 CRS Projection & Formatting
+
+The initial step involved reading the ACLED data into R and converting it into a sf data frame, specifying the longitude and latitude columns as coordinates and the WGS84 coordinate reference system (CRS). To ensure consistency with the administrative boundary data, the CRS was projected to EPSG:32647.
+
+Additional data cleaning and preparation steps were performed, including handling missing values and formatting dates.
+
+```{r}
+# Combine data frames
+acled_combined <- bind_rows(acled_2021_23, acled_2024)
+
+# Convert to SF object
+acled_sf <- acled_combined %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326) %>%
+  st_transform(crs = 32647) %>%
+  mutate(event_date = dmy(event_date))
+
+# Create a map
+qtm(acled_sf)
+```

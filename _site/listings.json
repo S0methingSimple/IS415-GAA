@@ -2,6 +2,18 @@
   {
     "listing": "/listings.html",
     "items": [
+      "/take-home_ex/ex01/th_ex01.html",
+      "/in-class_ex/ex02/ic_ex02.html",
+      "/hands-on_ex/ex03/ho_ex03.html",
+      "/in-class_ex/ex01/ic_ex01.html",
+      "/hands-on_ex/ex02/ho_ex02.html",
+      "/hands-on_ex/ex01/ho_ex01.html"
+    ]
+  },
+  {
+    "listing": "/index.html",
+    "items": [
+      "/take-home_ex/ex01/th_ex01.html",
       "/in-class_ex/ex02/ic_ex02.html",
       "/hands-on_ex/ex03/ho_ex03.html",
       "/in-class_ex/ex01/ic_ex01.html",

@@ -1,9 +1,15 @@
 ---
-title: "IS415-GAA | Jeffery Lau"
+title: "Geospatial Analytics and Applications - IS415"
+listing: 
+  type: grid
+  categories: true
+  sort: "date desc"
+  contents:
+    - "*/*/*.qmd"
 execute: 
   freeze: true
 ---
 
-Welcome to **IS415 Geospatial Analytics and Applications.** This website documents my coursework for this course.
+![](assets/logo.jpeg)
 
-![](misc/logo.jpeg)
+##### The following documents my GIS explorations:
