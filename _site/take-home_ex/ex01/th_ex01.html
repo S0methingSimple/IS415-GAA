@@ -142,6 +142,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="dropdown-item" href="../../hands-on_ex/ex03/ho_ex03.html">
  <span class="dropdown-text">Exercise 3</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../../hands-on_ex/ex04/ho_ex04.html">
+ <span class="dropdown-text">Exercise 4</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../hands-on_ex/ex05/ho_ex05.html">
+ <span class="dropdown-text">Exercise 5</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
@@ -157,6 +165,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="dropdown-item" href="../../in-class_ex/ex02/ic_ex02.html">
  <span class="dropdown-text">Exercise 2</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../../in-class_ex/ex03/ic_ex03.html">
+ <span class="dropdown-text">Exercise 3</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../in-class_ex/ex04/ic_ex04.html">
+ <span class="dropdown-text">Exercise 4</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
@@ -165,17 +181,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </a>
     <ul class="dropdown-menu" aria-labelledby="nav-menu-take-home-exercise">    
         <li>
-    <a class="dropdown-item" href="../../take-home_ex/ex01/to_ex01.html">
+    <a class="dropdown-item" href="../../take-home_ex/ex01/th_ex01.html">
  <span class="dropdown-text">Exercise 1</span></a>
   </li>  
     </ul>
   </li>
-</ul>
-            <ul class="navbar-nav navbar-nav-scroll ms-auto">
-  <li class="nav-item">
-    <a class="nav-link" href="../../listings.html"> 
-<span class="menu-text">Listings</span></a>
-  </li>  
 </ul>
           </div> <!-- /navcollapse -->
           <div class="quarto-navbar-tools">
@@ -202,10 +212,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#loading-packages" id="toc-loading-packages" class="nav-link" data-scroll-target="#loading-packages">2.1 Loading Packages</a></li>
   <li><a href="#loading-data" id="toc-loading-data" class="nav-link" data-scroll-target="#loading-data">2.2 Loading Data</a></li>
   </ul></li>
-  <li><a href="#data-wrangling" id="toc-data-wrangling" class="nav-link" data-scroll-target="#data-wrangling">3. Data Wrangling</a>
+  <li><a href="#data-wrangling-and-exploration" id="toc-data-wrangling-and-exploration" class="nav-link" data-scroll-target="#data-wrangling-and-exploration">3. Data Wrangling and Exploration</a>
   <ul class="collapse">
   <li><a href="#crs-projection-formatting" id="toc-crs-projection-formatting" class="nav-link" data-scroll-target="#crs-projection-formatting">3.1 CRS Projection &amp; Formatting</a></li>
+  <li><a href="#data-cleaning" id="toc-data-cleaning" class="nav-link" data-scroll-target="#data-cleaning">3.2 Data Cleaning</a></li>
+  <li><a href="#joining-dataframes" id="toc-joining-dataframes" class="nav-link" data-scroll-target="#joining-dataframes">3.3 Joining Dataframes</a></li>
+  <li><a href="#exploratory-data-analysis" id="toc-exploratory-data-analysis" class="nav-link" data-scroll-target="#exploratory-data-analysis">3.3 Exploratory Data Analysis</a></li>
   </ul></li>
+  <li><a href="#spatial-point-pattern-analysis" id="toc-spatial-point-pattern-analysis" class="nav-link" data-scroll-target="#spatial-point-pattern-analysis">4. Spatial Point Pattern Analysis</a>
+  <ul class="collapse">
+  <li><a href="#preparation" id="toc-preparation" class="nav-link" data-scroll-target="#preparation">4.1 Preparation</a></li>
+  <li><a href="#first-order-analysis" id="toc-first-order-analysis" class="nav-link" data-scroll-target="#first-order-analysis">4.2 First Order Analysis</a>
+  <ul class="collapse">
+  <li><a href="#compute-kernel-density" id="toc-compute-kernel-density" class="nav-link" data-scroll-target="#compute-kernel-density">4.2.1 Compute Kernel Density</a></li>
+  <li><a href="#questions" id="toc-questions" class="nav-link" data-scroll-target="#questions">Questions</a></li>
+  </ul></li>
+  <li><a href="#second-order-analysis" id="toc-second-order-analysis" class="nav-link" data-scroll-target="#second-order-analysis">4.3 Second Order Analysis</a></li>
+  </ul></li>
+  <li><a href="#spatial-temporal-analysis" id="toc-spatial-temporal-analysis" class="nav-link" data-scroll-target="#spatial-temporal-analysis">5. Spatial-Temporal Analysis</a></li>
+  <li><a href="#interpretation" id="toc-interpretation" class="nav-link" data-scroll-target="#interpretation">6. Interpretation</a></li>
   </ul>
 </nav>
     </div>
@@ -246,7 +271,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">September 7, 2024</p>
+      <p class="date-modified">September 14, 2024</p>
     </div>
   </div>
     
@@ -262,6 +287,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="context" class="level2">
 <h2 class="anchored" data-anchor-id="context">1.1 Context</h2>
 <p>In 2024 armed conflict continues to be a devastating global issue, with millions of people affected each year. Recent years have seen a surge in conflicts, driven by factors such as political instability, regional tensions, and resource scarcity. Myanmar, in particular, has experienced significant armed conflict in recent years, including the 2021 military coup and subsequent violence.</p>
+<p>TODO: Lit review</p>
 </section>
 <section id="objectives" class="level2">
 <h2 class="anchored" data-anchor-id="objectives">1.2 Objectives</h2>
@@ -280,10 +306,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="loading-packages">2.1 Loading Packages</h2>
 <p>In this project we will be using the following packages:</p>
 <ul>
-<li><strong><code>tmap</code>:</strong> A package for creating thematic maps in R. It provides a simple and flexible interface for customizing maps and exporting them in various formats.</li>
-</ul>
-<!-- -->
-<ul>
+<li><p><strong><code>tmap</code>:</strong> A package for creating thematic maps in R. It provides a simple and flexible interface for customizing maps and exporting them in various formats.</p></li>
 <li><p><strong><code>sf</code>:</strong> A package for simple feature data, which is a modern standard for representing geographic features. It provides efficient data structures and functions for spatial operations.</p></li>
 <li><p><strong><code>raster</code>:</strong> A package for working with raster data, such as images and digital elevation models. It offers tools for reading, writing, manipulating, and analyzing raster data.</p></li>
 <li><p><strong><code>spatstat</code>:</strong> A package for spatial point pattern analysis. It provides functions for analyzing the distribution and relationships between points in a study area.</p></li>
@@ -300,40 +323,312 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The dataset used in this analysis is sourced from the Armed Conflict Location &amp; Event Data (ACLED) database. It contains information on various types of armed conflict events, including Battles, Explosion/Remote violence, Strategic developments, Protest, Riots, and Violence against civilians. The data covers the period from January 2021 to June 2024 and provides specific details such as event date, location coordinates, actor information, and more.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Read CSV files</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>acled_2021_23 <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"./data/2021-2023-Myanmar.csv"</span>)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>acled_2024 <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"./data/2024-Myanmar.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>acled_2021_23 <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/2021-2023-Myanmar.csv"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>acled_2024 <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/2024-Myanmar.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Next we load <a href="https://data.humdata.org/dataset/mimu-geonode-myanmar-state-and-region-boundaries-mimu?">Myanmar Boundary</a> from Humanitarian Data Exchange - Get demographics - Get town center</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Read Myanmar Boundary</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>mym_sf <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"data/geospatial"</span>, </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>                      <span class="at">layer =</span> <span class="st">"mmr_polbnda_adm1_250k_mimu_1"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>              <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="dv">32647</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `mmr_polbnda_adm1_250k_mimu_1' from data source 
+  `/Users/jeffery/Projects/Y4S1/IS415/S0methingSimple/IS415-GAA/take-home_ex/ex01/data/geospatial' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 15 features and 6 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: 92.1721 ymin: 9.696844 xmax: 101.17 ymax: 28.54554
+Geodetic CRS:  WGS 84</code></pre>
+</div>
 </div>
 </section>
 </section>
-<section id="data-wrangling" class="level1">
-<h1>3. Data Wrangling</h1>
+<section id="data-wrangling-and-exploration" class="level1">
+<h1>3. Data Wrangling and Exploration</h1>
 <section id="crs-projection-formatting" class="level2">
 <h2 class="anchored" data-anchor-id="crs-projection-formatting">3.1 CRS Projection &amp; Formatting</h2>
 <p>The initial step involved reading the ACLED data into R and converting it into a sf data frame, specifying the longitude and latitude columns as coordinates and the WGS84 coordinate reference system (CRS). To ensure consistency with the administrative boundary data, the CRS was projected to EPSG:32647.</p>
 <p>Additional data cleaning and preparation steps were performed, including handling missing values and formatting dates.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine data frames</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>acled_combined <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(acled_2021_23, acled_2024)</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert to SF object</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>acled_sf <span class="ot">&lt;-</span> acled_combined <span class="sc">%&gt;%</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"longitude"</span>, <span class="st">"latitude"</span>), <span class="at">crs =</span> <span class="dv">4326</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="dv">32647</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">event_date =</span> <span class="fu">dmy</span>(event_date))</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a map</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="fu">qtm</span>(acled_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine data frames</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>acled_combined <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(acled_2021_23, acled_2024)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert to SF object</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>acled_full_sf <span class="ot">&lt;-</span> acled_combined <span class="sc">%&gt;%</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"longitude"</span>, <span class="st">"latitude"</span>), <span class="at">crs =</span> <span class="dv">4326</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="dv">32647</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">event_date =</span> <span class="fu">dmy</span>(event_date))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="data-cleaning" class="level2">
+<h2 class="anchored" data-anchor-id="data-cleaning">3.2 Data Cleaning</h2>
+<p>Next data cleaning</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check for null values in key columns</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>na_count <span class="ot">&lt;-</span> acled_full_sf <span class="sc">%&gt;%</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">na_geometry =</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(geometry)),</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">na_event_date =</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(event_date)))</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Check for null values in key columns</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>duplicate_count <span class="ot">&lt;-</span> acled_full_sf <span class="sc">%&gt;%</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">duplicate_event_id =</span> <span class="fu">sum</span>(<span class="fu">duplicated</span>(event_id_cnty)),</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>            <span class="at">duplicate_geometry =</span> <span class="fu">sum</span>(<span class="fu">duplicated</span>(geometry)))</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(na_count)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Simple feature collection with 1 feature and 2 fields
+Geometry type: MULTIPOINT
+Dimension:     XY
+Bounding box:  xmin: -208804.4 ymin: 1103500 xmax: 640934.5 ymax: 3042960
+Projected CRS: WGS 84 / UTM zone 47N
+# A tibble: 1 × 3
+  na_geometry na_event_date                                             geometry
+        &lt;int&gt;         &lt;int&gt;                                     &lt;MULTIPOINT [m]&gt;
+1           0             0 ((-208804.4 2357274), (-207135 2358896), (-206931.7…</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(duplicate_count)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Simple feature collection with 1 feature and 2 fields
+Geometry type: MULTIPOINT
+Dimension:     XY
+Bounding box:  xmin: -208804.4 ymin: 1103500 xmax: 640934.5 ymax: 3042960
+Projected CRS: WGS 84 / UTM zone 47N
+# A tibble: 1 × 3
+  duplicate_event_id duplicate_geometry                                 geometry
+               &lt;int&gt;              &lt;int&gt;                         &lt;MULTIPOINT [m]&gt;
+1                  0              44101 ((-208804.4 2357274), (-207135 2358896)…</code></pre>
+</div>
+</div>
+</section>
+<section id="joining-dataframes" class="level2">
+<h2 class="anchored" data-anchor-id="joining-dataframes">3.3 Joining Dataframes</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>acled_sf <span class="ot">&lt;-</span> <span class="fu">st_join</span>(acled_full_sf, mym_sf) <span class="sc">%&gt;%</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(event_date, event_type, fatalities, ST, admin1, geometry) <span class="sc">%&gt;%</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">state =</span> ST)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(acled_sf <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="fu">is.na</span>(state)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Simple feature collection with 7 features and 5 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: -169820.9 ymin: 1306490 xmax: 479880.3 ymax: 2310507
+Projected CRS: WGS 84 / UTM zone 47N
+# A tibble: 7 × 6
+  event_date event_type        fatalities state admin1            geometry
+* &lt;date&gt;     &lt;chr&gt;                  &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;          &lt;POINT [m]&gt;
+1 2023-09-21 Violence against…          0 &lt;NA&gt;  Rakhi… (-169820.9 2310507)
+2 2023-08-31 Violence against…          0 &lt;NA&gt;  Tanin…  (479880.3 1306490)
+3 2023-05-13 Battles                    3 &lt;NA&gt;  Kayin   (464878.7 1805058)
+4 2023-05-12 Battles                    2 &lt;NA&gt;  Kayin   (464878.7 1805058)
+5 2023-05-11 Battles                    0 &lt;NA&gt;  Kayin   (464878.7 1805058)
+6 2022-07-23 Strategic develo…          0 &lt;NA&gt;  Ayeya…  (15981.32 1894241)
+7 2021-03-22 Violence against…          0 &lt;NA&gt;  Rakhi… (-169820.9 2310507)</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>acled_sf <span class="ot">&lt;-</span> acled_sf <span class="sc">%&gt;%</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">state =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(state), admin1, state)) <span class="sc">%&gt;%</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>admin1)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(acled_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   event_date          event_type          fatalities         state          
+ Min.   :2021-01-01   Length:51553       Min.   :  0.000   Length:51553      
+ 1st Qu.:2021-10-23   Class :character   1st Qu.:  0.000   Class :character  
+ Median :2022-07-28   Mode  :character   Median :  0.000   Mode  :character  
+ Mean   :2022-08-25                      Mean   :  1.062                     
+ 3rd Qu.:2023-07-05                      3rd Qu.:  1.000                     
+ Max.   :2024-06-30                      Max.   :201.000                     
+          geometry    
+ POINT        :51553  
+ epsg:32647   :    0  
+ +proj=utm ...:    0  
+                      
+                      
+                      </code></pre>
+</div>
+</div>
+</section>
+<section id="exploratory-data-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="exploratory-data-analysis">3.3 Exploratory Data Analysis</h2>
+<p>The following is an initial plot of the point events on boundary and region map of Myanmar.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(mym_sf) <span class="sc">+</span> <span class="fu">tm_polygons</span>() <span class="sc">+</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_shape</span>(acled_sf) <span class="sc">+</span> <span class="fu">tm_dots</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="th_ex01_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="th_ex01_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
-
-
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(acled_sf, <span class="fu">aes</span>(<span class="at">x =</span> event_date, <span class="at">fill =</span> event_type)) <span class="sc">+</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="dv">15</span>, <span class="at">position =</span> <span class="st">"stack"</span>) <span class="sc">+</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_brewer</span>(<span class="at">palette =</span> <span class="st">"Spectral"</span>) <span class="sc">+</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Stacked Histogram of Event Dates by Event Type"</span>,</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Event Date"</span>,</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Count"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="th_ex01_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>acled_by_region <span class="ot">&lt;-</span> acled_sf <span class="sc">%&gt;%</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(state) <span class="sc">%&gt;%</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">event_count =</span> <span class="fu">n</span>())</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Join the event count data with the region polygon data</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>joined_data <span class="ot">&lt;-</span> <span class="fu">st_join</span>(mym_sf, acled_by_region)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(joined_data) <span class="sc">+</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"event_count"</span>, <span class="at">style =</span> <span class="st">"jenks"</span>, <span class="at">palette =</span> <span class="st">"YlOrRd"</span>) <span class="sc">+</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_layout</span>(<span class="at">title =</span> <span class="st">"Event Count by Region"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="th_ex01_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(acled_sf, <span class="fu">aes</span>(<span class="at">x =</span> event_type, <span class="at">y =</span> fatalities)) <span class="sc">+</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">color =</span> <span class="st">"darkorange"</span>) <span class="sc">+</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Relationship Between Fatalities and Event Type"</span>,</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Event Type"</span>,</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Fatalities"</span>) <span class="sc">+</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.y =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="th_ex01_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>event_type_counts <span class="ot">&lt;-</span> acled_sf <span class="sc">%&gt;%</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(event_type)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(event_type_counts, <span class="fu">aes</span>(<span class="at">x =</span> <span class="st">""</span>, <span class="at">y =</span> n, <span class="at">fill =</span> event_type)) <span class="sc">+</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>, <span class="at">color =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> n), <span class="at">position =</span> <span class="fu">position_stack</span>(<span class="at">vjust =</span> <span class="fl">0.5</span>)) <span class="sc">+</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_polar</span>(<span class="at">theta =</span> <span class="st">"y"</span>) <span class="sc">+</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_brewer</span>(<span class="at">palette =</span> <span class="st">"Spectral"</span>) <span class="sc">+</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribution of Event Types"</span>)  <span class="sc">+</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="th_ex01_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
 </section>
+</section>
+<section id="spatial-point-pattern-analysis" class="level1">
+<h1>4. Spatial Point Pattern Analysis</h1>
+<section id="preparation" class="level2">
+<h2 class="anchored" data-anchor-id="preparation">4.1 Preparation</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>acled_ppp <span class="ot">&lt;-</span> <span class="fu">as.ppp</span>(acled_sf)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>acled_ppp</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Marked planar point pattern: 51553 points
+marks are dates, of class 'Date'
+window: rectangle = [-208804.4, 640934.5] x [1103500.1, 3042960.3] units</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>mym_outer_sf <span class="ot">&lt;-</span> mym_sf <span class="sc">%&gt;%</span> <span class="co"># select the central parts</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_buffer</span>(<span class="fl">0.5</span>) <span class="sc">%&gt;%</span> <span class="co"># make a buffer of half a meter around all parts (to avoid slivers)</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_union</span>()</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>mym_owin <span class="ot">&lt;-</span> <span class="fu">as.owin</span>(mym_outer_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>acled_ppp <span class="ot">&lt;-</span> acled_ppp[mym_owin]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>acled_ppp_km <span class="ot">&lt;-</span> <span class="fu">rescale</span>(acled_ppp, <span class="dv">1000</span>, <span class="st">"km"</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(acled_ppp_km)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="first-order-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="first-order-analysis">4.2 First Order Analysis</h2>
+<section id="compute-kernel-density" class="level3">
+<h3 class="anchored" data-anchor-id="compute-kernel-density">4.2.1 Compute Kernel Density</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># acled_ppp_km_bw_ppl &lt;- bw.ppl(acled_ppp_km) # 2.325089</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>acled_ppp_kde <span class="ot">=</span> <span class="fu">density</span>(acled_ppp_km, </span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>                        <span class="at">sigma =</span> <span class="fl">2.3</span>, </span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>                        <span class="at">edge =</span> <span class="cn">FALSE</span>, </span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">kernel =</span> <span class="st">"gaussian"</span>)</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(acled_ppp_kde)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="questions" class="level3">
+<h3 class="anchored" data-anchor-id="questions">Questions</h3>
+<p>Analytics - How to use analysis results such as clustering to interpret? should we include other dimension of data - How to work on the 10 quarters meaningfully (For spatial point pattern analysis) - Pick region to do 2nd order analysis</p>
+<p>Technical - How to speed up KDE analysis with 51k record? sampling - How to deal with the 7 points outside of the region</p>
+<ul>
+<li><p>Group the ACLED data by quarter and calculate KDE surfaces using <code>st_density</code>.</p></li>
+<li><p>Experiment with different bandwidths and kernel functions to find the most appropriate settings.</p></li>
+<li><p>Create separate KDE layers for each quarter.<br>
+</p></li>
+</ul>
+</section>
+</section>
+<section id="second-order-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="second-order-analysis">4.3 Second Order Analysis</h2>
+<ul>
+<li><p><strong>Calculate Spatial Autocorrelation Measures:</strong></p>
+<ul>
+<li><p>Use functions from <code>spatstat</code> or other spatial analysis packages to calculate measures like Moran’s I or Geary’s C.</p></li>
+<li><p>Assess whether conflict events are clustered, dispersed, or randomly distributed.</p></li>
+<li><p>Consider using edge correction methods to account for boundary effects</p></li>
+</ul>
+<p><strong>Analyze Ripley’s K-function:</strong></p>
+<ul>
+<li><p>Calculate Ripley’s K-function to measure the intensity of points within a given distance of an existing point.</p></li>
+<li><p>Interpret the results to identify clustering or dispersion patterns.</p></li>
+</ul></li>
+</ul>
+</section>
+</section>
+<section id="spatial-temporal-analysis" class="level1">
+<h1>5. Spatial-Temporal Analysis</h1>
+<ul>
+<li><p><strong>Create Quarterly Spatio-Temporal KDE Layers:</strong></p>
+<ul>
+<li><p>Combine the temporal dimension (quarter) with the spatial coordinates to create spatio-temporal KDE surfaces</p></li>
+<li><p>Explore different methods for incorporating time into the KDE calculation</p></li>
+</ul>
+<p><strong>Analyze Spatio-Temporal Autocorrelation:</strong></p>
+<ul>
+<li><p>Use spatio-temporal autocorrelation measures to assess the spatial and temporal relationships between conflict events.</p></li>
+<li><p>Consider using methods like spatio-temporal G-functions or spatio-temporal Moran’s I.</p></li>
+</ul></li>
+</ul>
+</section>
+<section id="interpretation" class="level1">
+<h1>6. Interpretation</h1>
+
+
 </section>
 
 </main> <!-- /main -->

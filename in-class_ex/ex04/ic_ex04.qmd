@@ -1,0 +1,154 @@
+---
+title: "In-class Exercise 4"
+author: "Jeffery Lau"
+date: 09-09-2024
+date-modified: "last-modified"
+description: |
+  In this exercise we learn how to work with sparr to perform spatial temporal analysis on our data
+categories:
+  - In-class
+format:
+  html:
+    toc: true
+execute: 
+  eval: true
+  echo: true
+  warning: false
+  freeze: false
+---
+
+# 1. Introduction
+
+# 2. Setup
+
+## 2.1 Loading Packages
+
+We will be loading the following packages, on top of the standard package with the additional `sparr` to work with spatio-temporal densities
+
+```{r}
+pacman::p_load(sf, raster, spatstat, sparr, tmap, tidyverse)
+```
+
+## 2.2 Import data
+
+Next we import our data required, the boundary and forest fire data.
+
+```{r}
+# Load data
+kbb_sf <- st_read(dsn = "data/rawdata", layer = "Kepulauan_Bangka_Belitung") %>%
+  st_union() %>%
+  st_zm(drop = TRUE, what = "ZM") %>% 
+  st_transform(crs = 32748)
+  
+ff_sf <- read_csv("data/rawdata/forestfires.csv") %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326) %>% # Sequence always long then lat (x -> y)
+  st_transform(crs = 32748)
+```
+
+We also create an owin for the boundary map
+
+```{r}
+kbb_owin <- as.owin(kbb_sf)
+class(kbb_owin)
+plot(kbb_owin)
+```
+
+## 2.3 Data Wrangling
+
+Start by creating the year of day, month num and abbr for our forest fire
+
+```{r}
+# read_csv can detect the datetype
+ff_sf <- ff_sf %>%
+  mutate(DayofYear = yday(acq_date)) %>%
+  mutate(Month_num = month(acq_date)) %>%
+  mutate(Month_fac = month(acq_date, label = T, abbr = F))
+
+ff_sf
+```
+
+## 2.4 Data Exploration
+
+```{r}
+tm_shape(kbb_sf) + tm_polygons() + 
+  tm_shape(ff_sf) + tm_bubbles(size = 0.1, col = "brightness") # (markets, symbol -> own emblem), bubbles, squares
+```
+
+```{r}
+tm_shape(kbb_sf) + tm_polygons() +
+  tm_shape(ff_sf) + tm_squares(size = 0.1) +
+  tm_facets(by="Month_fac",
+            free.coords = F,
+            drop.units = T)
+
+```
+# 3. ST KDE
+## 3.1 Data Preparation
+
+Get fire month with geometry
+
+```{r}
+ff_month <- ff_sf %>%
+  select(Month_num)
+```
+
+Convert to ppp
+
+```{r}
+ff_month_ppp <- as.ppp(ff_month)
+plot(ff_month_ppp)
+```
+
+No duplicates detected
+
+```{r}
+any(duplicated(ff_month_ppp))
+```
+
+```{r}
+ff_ppp_owin <- ff_month_ppp[kbb_owin]
+plot(ff_ppp_owin)
+```
+
+## 3.2 Compute ST KDE
+```{r}
+st_kde <- spattemp.density(ff_ppp_owin)
+summary(st_kde)
+```
+Visualize the kde
+
+```{r}
+#| fig-width: 12
+#| fig-height: 10
+tims <- c(7,8,9,10,11,12)
+par(mfcol = c(2,3))
+for(i in tims) {
+  plot(st_kde, i,
+       override.par = F,
+       fix.range = T,
+       main=paste("KDE at month",i))
+  }
+  
+```
+
+
+## 3.3 Altenative method
+
+```{r}
+ff_doy <- ff_sf %>%
+  select(DayofYear) %>% 
+  as.ppp()
+
+ff_doy_owin <- ff_doy[kbb_owin]
+plot(ff_doy_owin)
+```
+
+
+```{r}
+# Take yday owin
+st_doy_kde <- spattemp.density(ff_doy_owin)
+summary(st_doy_kde)
+```
+
+
+Checkout animation (https://tilmandavies.github.io/sparr/articles/fmd_animation/fmd_animation.html) to see the diffusion

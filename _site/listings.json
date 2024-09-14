@@ -2,22 +2,30 @@
   {
     "listing": "/listings.html",
     "items": [
+      "/hands-on_ex/ex05/ho_ex05.html",
+      "/in-class_ex/ex04/ic_ex04.html",
+      "/hands-on_ex/ex04/ho_ex04.html",
       "/take-home_ex/ex01/th_ex01.html",
-      "/in-class_ex/ex02/ic_ex02.html",
+      "/in-class_ex/ex03/ic_ex03.html",
       "/hands-on_ex/ex03/ho_ex03.html",
-      "/in-class_ex/ex01/ic_ex01.html",
+      "/in-class_ex/ex02/ic_ex02.html",
       "/hands-on_ex/ex02/ho_ex02.html",
+      "/in-class_ex/ex01/ic_ex01.html",
       "/hands-on_ex/ex01/ho_ex01.html"
     ]
   },
   {
     "listing": "/index.html",
     "items": [
+      "/hands-on_ex/ex05/ho_ex05.html",
+      "/in-class_ex/ex04/ic_ex04.html",
+      "/hands-on_ex/ex04/ho_ex04.html",
       "/take-home_ex/ex01/th_ex01.html",
-      "/in-class_ex/ex02/ic_ex02.html",
+      "/in-class_ex/ex03/ic_ex03.html",
       "/hands-on_ex/ex03/ho_ex03.html",
-      "/in-class_ex/ex01/ic_ex01.html",
+      "/in-class_ex/ex02/ic_ex02.html",
       "/hands-on_ex/ex02/ho_ex02.html",
+      "/in-class_ex/ex01/ic_ex01.html",
       "/hands-on_ex/ex01/ho_ex01.html"
     ]
   }

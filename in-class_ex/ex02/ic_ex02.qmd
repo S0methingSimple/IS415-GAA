@@ -1,10 +1,10 @@
 ---
 title: "In-class Exercise 2"
 author: "Jeffery Lau"
-date: 09-02-2024
+date: 08-26-2024
 date-modified: "last-modified"
 description: |
-  In this exercise we learn to handle corrupted data, transforming CRS as well as some geoprocessing and joining of geospatial and aspatial data
+  In this exercise we learn to handle corrupted data, transforming CRS as well as some geoprocessing and joining of geospatial and aspatial data. Note: Last modified to update title only.
 categories:
   - In-class
 format:
@@ -22,7 +22,7 @@ execute:
 The following code chunk uses p_load() to install and load the sf and tidyverse packages.
 
 ```{r}
-pacman::p_load(tmap, sf, raster, spatstat, maptools, sp, tidyverse)
+pacman::p_load(sf, tidyverse, DT)
 ```
 
 # 2. Importing data
@@ -30,31 +30,103 @@ pacman::p_load(tmap, sf, raster, spatstat, maptools, sp, tidyverse)
 The following code chunk will import the Master Plan data in ESRI shapefile and kml file format into R.
 
 ```{r}
-mpsz_sf <- st_read(dsn = "data", layer = "MP14_SUBZONE_WEB_PL")
-mpsz_sf <- st_set_crs(mpsz_sf, 3414)
-
-sg_sf <- st_read(dsn = "data", layer = "CostalOutline")
-sg_sf <- st_set_crs(sg_sf, 3414)
-
-childcare_sf <- st_read("data/child-care-services-geojson.geojson") %>%
-  st_transform( crs = 3414)
-childcare_sf <- st_set_crs(childcare_sf, 3414)
-
-# st_union used to derive coastal outline sf data frame
-sg_sf <- mpsz_sf %>% st_union()
-tm_shape(sg_sf) + tm_borders()
+mpsz_shp = st_read(dsn="data/", layer="MP14_SUBZONE_WEB_PL")
+# Check the data type of the object
+class(mpsz_shp)
 ```
 
-Updated way of conversion is to use `as_owin()` and `as_ppp()` to convert sp dataframe
-Convert to Raster: spatstat use as(kd_childcareSG_adaptive, "SpatialGridDataFrame") if maptools:: is not installed
-
+To use the kml file simply re-export mpsz_shp to the kml file and re-load it
 
 ```{r}
-acled_sf <- read_csv("./data/ACLED_Myanmar.csv") %>%
-  st_as_sf(coords= c("longitude", "latitude"), crs=4326) %>%
-  st_transform(crs = 32647) %>%
-  mutate(event_date = dmy(event_date))
+st_write(mpsz_shp, "data/MP14_SUBZONE_WEB_PL.kml", delete_dsn = TRUE)
 
-qtm(acled_sf)
+mpsz_kml = st_read("data/MP14_SUBZONE_WEB_PL.kml")
 ```
 
+::: panel-tabset
+## Glimpse
+
+```{r}
+glimpse(mpsz_shp)
+```
+
+## Data
+
+```{r}
+# use DT instead of head
+datatable(mpsz_shp)
+```
+:::
+
+## 2.1 Fixing data files
+
+Notice how much less tidy the kml file data is as compared to the shp file
+
+```{r}
+mpsz19_shp = st_read(dsn="data/MPSZ-2019", layer="MPSZ-2019") 
+
+mpsz19_kml = st_read("data/MasterPlan2019SubzoneBoundaryNoSeaKML.kml")
+```
+
+Notice that the CRS is also wrong, it is in GCS instead of PCS
+
+```{r}
+# Check CRS
+st_crs(mpsz19_shp)
+
+# Look up epsg code https://epsg.io/?q=3414
+mpsz19_shp <- st_transform(mpsz19_shp, crs = 3414)
+
+# Check CRS again
+st_crs(mpsz19_shp)
+
+```
+
+## 2.2 Load Aspatial Data
+
+```{r}
+popdata <- read_csv("data/respopagesextod2023/respopagesextod2023.csv")
+
+head(popdata)
+```
+
+# 3. Geoprocessing
+
+```{r}
+# To use specific library package use <package>::<function> -> dplyr::filter()
+
+popdata2023 <- popdata %>% 
+  group_by(PA, SZ, AG) %>%
+  summarise(`POP` = sum(`Pop`)) %>% # Sum up the population by PA, SZ and AG
+  ungroup() %>%
+  pivot_wider(names_from=AG, values_from=POP)
+
+head(popdata2023)
+```
+
+```{r}
+colnames(popdata2023)
+
+# Further sum into age groups
+popdata2023 <- popdata2023 %>%
+  mutate(`YOUNG` = rowSums(.[3:6]) + rowSums(.[14])) %>%
+  mutate(`ECONOMY ACTIVE` = rowSums(.[7:13]) + rowSums(.[15])) %>%
+  mutate(`AGED` = rowSums(.[16:21])) %>%
+  mutate(`TOTAL` = rowSums(.[3:21])) %>%
+  mutate(`DEPENDENCY` = (`YOUNG` + `AGED`)/`ECONOMY ACTIVE`) %>%
+  select(`PA`, `SZ`, `YOUNG`, `ECONOMY ACTIVE`, `AGED`, `TOTAL`, `DEPENDENCY`)
+
+head(popdata2023)
+```
+
+```{r}
+# To upper 
+popdata2023 <- popdata2023 %>%
+  mutate_at(.vars=vars(PA,SZ), .funs = list(toupper))
+```
+
+```{r}
+# Join the geospatial and aspatial data
+mpsz_pop2023 <- left_join(mpsz19_shp, popdata2023, by = c("SUBZONE_N" = "SZ"))
+head(mpsz_pop2023)
+```

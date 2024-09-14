@@ -1,12 +1,12 @@
 ---
-title: "In-class Exercise 1"
+title: "Hands-on Exercise 4"
 author: "Jeffery Lau"
-date: 08-19-2024
+date: 09-07-2024
 date-modified: "last-modified"
 description: |
-  First lesson, learnt how to setup quatro doc. Note: Last modified to update title only.
+  Hands-on on Spatial-Temporal Analysis covered in In-class exercise 4
 categories:
-  - In-class
+  - Hands-on
 format:
   html:
     toc: true

@@ -1,12 +1,12 @@
 ---
-title: "In-class Exercise 1"
+title: "Hands-on Exercise 5"
 author: "Jeffery Lau"
-date: 08-19-2024
+date: 09-13-2024
 date-modified: "last-modified"
 description: |
-  First lesson, learnt how to setup quatro doc. Note: Last modified to update title only.
+  In this exercise we discorver the 1st and 2nd Order Spatial Point Patterns Analysis Methods
 categories:
-  - In-class
+  - Hands-on
 format:
   html:
     toc: true
@@ -14,5 +14,5 @@ execute:
   eval: true
   echo: true
   warning: false
-  freeze: true
+  freeze: false
 ---

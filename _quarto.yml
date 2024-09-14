@@ -13,20 +13,24 @@ website:
             href: "hands-on_ex/ex02/ho_ex02.html"
           - text: "Exercise 3"
             href: "hands-on_ex/ex03/ho_ex03.html"
+          - text: "Exercise 4"
+            href: "hands-on_ex/ex04/ho_ex04.html"
+          - text: "Exercise 5"
+            href: "hands-on_ex/ex05/ho_ex05.html"
       - text: "In-class Exercise"
         menu: 
           - text: "Exercise 1"
             href: "in-class_ex/ex01/ic_ex01.html"
           - text: "Exercise 2"
             href: "in-class_ex/ex02/ic_ex02.html"
+          - text: "Exercise 3"
+            href: "in-class_ex/ex03/ic_ex03.html"
+          - text: "Exercise 4"
+            href: "in-class_ex/ex04/ic_ex04.html"
       - text: "Take-home Exercise"
         menu: 
           - text: "Exercise 1"
-            href: "take-home_ex/ex01/to_ex01.html"
-            
-    right:
-      - href: "listings.qmd"
-        text: "Listings"
+            href: "take-home_ex/ex01/th_ex01.html"
 
 format:
   html:

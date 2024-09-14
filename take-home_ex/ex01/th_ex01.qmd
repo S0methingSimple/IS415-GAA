@@ -14,7 +14,7 @@ execute:
   eval: true
   echo: true
   warning: false
-  freeze: false
+  freeze: true
 ---
 
 # 1. Introduction
@@ -22,6 +22,8 @@ execute:
 ## 1.1 Context
 
 In 2024 armed conflict continues to be a devastating global issue, with millions of people affected each year. Recent years have seen a surge in conflicts, driven by factors such as political instability, regional tensions, and resource scarcity. Myanmar, in particular, has experienced significant armed conflict in recent years, including the 2021 military coup and subsequent violence.
+
+TODO: Lit review
 
 ## 1.2 Objectives
 
@@ -39,9 +41,6 @@ In this project we will be using the following packages:
 
 -   **`tmap`:** A package for creating thematic maps in R. It provides a simple and flexible interface for customizing maps and exporting them in various formats.
 
-```{=html}
-<!-- -->
-```
 -   **`sf`:** A package for simple feature data, which is a modern standard for representing geographic features. It provides efficient data structures and functions for spatial operations.
 
 -   **`raster`:** A package for working with raster data, such as images and digital elevation models. It offers tools for reading, writing, manipulating, and analyzing raster data.
@@ -64,12 +63,21 @@ The dataset used in this analysis is sourced from the Armed Conflict Location & 
 
 ```{r}
 # Read CSV files
-acled_2021_23 <- read_csv("./data/2021-2023-Myanmar.csv")
-acled_2024 <- read_csv("./data/2024-Myanmar.csv")
+acled_2021_23 <- read_csv("data/2021-2023-Myanmar.csv")
+acled_2024 <- read_csv("data/2024-Myanmar.csv")
 
 ```
 
-# 3. Data Wrangling
+Next we load [Myanmar Boundary](https://data.humdata.org/dataset/mimu-geonode-myanmar-state-and-region-boundaries-mimu?) from Humanitarian Data Exchange - Get demographics - Get town center
+
+```{r}
+# Read Myanmar Boundary
+mym_sf <- st_read(dsn = "data/geospatial", 
+                      layer = "mmr_polbnda_adm1_250k_mimu_1") %>%
+              st_transform(crs = 32647)
+```
+
+# 3. Data Wrangling and Exploration
 
 ## 3.1 CRS Projection & Formatting
 
@@ -82,11 +90,191 @@ Additional data cleaning and preparation steps were performed, including handlin
 acled_combined <- bind_rows(acled_2021_23, acled_2024)
 
 # Convert to SF object
-acled_sf <- acled_combined %>%
+acled_full_sf <- acled_combined %>%
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326) %>%
   st_transform(crs = 32647) %>%
   mutate(event_date = dmy(event_date))
-
-# Create a map
-qtm(acled_sf)
 ```
+
+## 3.2 Data Cleaning
+
+Next data cleaning
+
+```{r}
+# Check for null values in key columns
+na_count <- acled_full_sf %>%
+  summarise(na_geometry = sum(is.na(geometry)),
+            na_event_date = sum(is.na(event_date)))
+
+# Check for null values in key columns
+duplicate_count <- acled_full_sf %>%
+  summarise(duplicate_event_id = sum(duplicated(event_id_cnty)),
+            duplicate_geometry = sum(duplicated(geometry)))
+
+print(na_count)
+print(duplicate_count)
+```
+
+## 3.3 Joining Dataframes
+
+```{r}
+
+acled_sf <- st_join(acled_full_sf, mym_sf) %>%
+  select(event_date, event_type, fatalities, ST, admin1, geometry) %>%
+  rename(state = ST)
+
+print(acled_sf %>% filter(is.na(state)))
+```
+
+```{r}
+acled_sf <- acled_sf %>%
+  mutate(state = ifelse(is.na(state), admin1, state)) %>%
+  select(-admin1)
+
+summary(acled_sf)
+```
+
+## 3.3 Exploratory Data Analysis
+
+The following is an initial plot of the point events on boundary and region map of Myanmar.
+
+```{r}
+tm_shape(mym_sf) + tm_polygons() +
+  tm_shape(acled_sf) + tm_dots()
+```
+
+```{r}
+ggplot(acled_sf, aes(x = event_date, fill = event_type)) +
+  geom_histogram(binwidth = 15, position = "stack") +
+  scale_fill_brewer(palette = "Spectral") +
+  labs(title = "Stacked Histogram of Event Dates by Event Type",
+       x = "Event Date",
+       y = "Count")
+```
+
+```{r}
+acled_by_region <- acled_sf %>%
+  group_by(state) %>%
+  summarize(event_count = n())
+
+# Join the event count data with the region polygon data
+joined_data <- st_join(mym_sf, acled_by_region)
+
+tm_shape(joined_data) +
+  tm_polygons(col = "event_count", style = "jenks", palette = "YlOrRd") +
+  tm_layout(title = "Event Count by Region")
+```
+
+```{r}
+ggplot(acled_sf, aes(x = event_type, y = fatalities)) +
+  geom_point(color = "darkorange") +
+  labs(title = "Relationship Between Fatalities and Event Type",
+       x = "Event Type",
+       y = "Fatalities") +
+  coord_flip() +
+  theme(axis.text.y = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+event_type_counts <- acled_sf %>%
+  count(event_type)
+
+ggplot(event_type_counts, aes(x = "", y = n, fill = event_type)) +
+  geom_bar(stat = "identity", color = "white") +
+  geom_text(aes(label = n), position = position_stack(vjust = 0.5)) +
+  coord_polar(theta = "y") +
+  scale_fill_brewer(palette = "Spectral") +
+  labs(title = "Distribution of Event Types")  +
+  theme_void()
+```
+
+# 4. Spatial Point Pattern Analysis
+
+## 4.1 Preparation
+
+```{r}
+acled_ppp <- as.ppp(acled_sf)
+acled_ppp
+```
+
+```{r eval=FALSE}
+mym_outer_sf <- mym_sf %>% # select the central parts
+  st_buffer(0.5) %>% # make a buffer of half a meter around all parts (to avoid slivers)
+  st_union()
+
+mym_owin <- as.owin(mym_outer_sf)
+```
+
+```{r eval=FALSE}
+acled_ppp <- acled_ppp[mym_owin]
+```
+
+```{r eval=FALSE}
+acled_ppp_km <- rescale(acled_ppp, 1000, "km")
+
+plot(acled_ppp_km)
+```
+
+## 4.2 First Order Analysis
+
+### 4.2.1 Compute Kernel Density
+
+```{r eval=FALSE}
+# acled_ppp_km_bw_ppl <- bw.ppl(acled_ppp_km) # 2.325089
+```
+
+```{r eval=FALSE}
+acled_ppp_kde = density(acled_ppp_km, 
+                        sigma = 2.3, 
+                        edge = FALSE, 
+                        kernel = "gaussian")
+plot(acled_ppp_kde)
+```
+
+### Questions
+
+Analytics - How to use analysis results such as clustering to interpret? should we include other dimension of data - How to work on the 10 quarters meaningfully (For spatial point pattern analysis) - Pick region to do 2nd order analysis
+
+Technical - How to speed up KDE analysis with 51k record? sampling - How to deal with the 7 points outside of the region
+
+-   Group the ACLED data by quarter and calculate KDE surfaces using `st_density`.
+
+-   Experiment with different bandwidths and kernel functions to find the most appropriate settings.
+
+-   Create separate KDE layers for each quarter.\
+
+## 4.3 Second Order Analysis
+
+```{r}
+
+```
+
+-   **Calculate Spatial Autocorrelation Measures:**
+
+    -   Use functions from `spatstat` or other spatial analysis packages to calculate measures like Moran's I or Geary's C.
+
+    -   Assess whether conflict events are clustered, dispersed, or randomly distributed.
+
+    -   Consider using edge correction methods to account for boundary effects
+
+    **Analyze Ripley's K-function:**
+
+    -   Calculate Ripley's K-function to measure the intensity of points within a given distance of an existing point.
+
+    -   Interpret the results to identify clustering or dispersion patterns.
+
+# 5. Spatial-Temporal Analysis
+
+-   **Create Quarterly Spatio-Temporal KDE Layers:**
+
+    -   Combine the temporal dimension (quarter) with the spatial coordinates to create spatio-temporal KDE surfaces
+
+    -   Explore different methods for incorporating time into the KDE calculation
+
+    **Analyze Spatio-Temporal Autocorrelation:**
+
+    -   Use spatio-temporal autocorrelation measures to assess the spatial and temporal relationships between conflict events.
+
+    -   Consider using methods like spatio-temporal G-functions or spatio-temporal Moran's I.
+
+# 6. Interpretation
