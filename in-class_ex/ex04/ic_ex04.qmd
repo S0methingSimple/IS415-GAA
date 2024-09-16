@@ -14,7 +14,7 @@ execute:
   eval: true
   echo: true
   warning: false
-  freeze: false
+  freeze: true
 ---
 
 # 1. Introduction
@@ -82,7 +82,9 @@ tm_shape(kbb_sf) + tm_polygons() +
             drop.units = T)
 
 ```
+
 # 3. ST KDE
+
 ## 3.1 Data Preparation
 
 Get fire month with geometry
@@ -111,10 +113,12 @@ plot(ff_ppp_owin)
 ```
 
 ## 3.2 Compute ST KDE
+
 ```{r}
 st_kde <- spattemp.density(ff_ppp_owin)
 summary(st_kde)
 ```
+
 Visualize the kde
 
 ```{r}
@@ -131,7 +135,6 @@ for(i in tims) {
   
 ```
 
-
 ## 3.3 Altenative method
 
 ```{r}
@@ -143,12 +146,10 @@ ff_doy_owin <- ff_doy[kbb_owin]
 plot(ff_doy_owin)
 ```
 
-
 ```{r}
 # Take yday owin
 st_doy_kde <- spattemp.density(ff_doy_owin)
 summary(st_doy_kde)
 ```
-
 
 Checkout animation (https://tilmandavies.github.io/sparr/articles/fmd_animation/fmd_animation.html) to see the diffusion
