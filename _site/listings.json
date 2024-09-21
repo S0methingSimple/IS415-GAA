@@ -2,6 +2,7 @@
   {
     "listing": "/listings.html",
     "items": [
+      "/hands-on_ex/ex06/ho_ex06.html",
       "/in-class_ex/ex05/ic_ex05.html",
       "/hands-on_ex/ex05/ho_ex05.html",
       "/in-class_ex/ex04/ic_ex04.html",
@@ -18,6 +19,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/hands-on_ex/ex06/ho_ex06.html",
       "/in-class_ex/ex05/ic_ex05.html",
       "/hands-on_ex/ex05/ho_ex05.html",
       "/in-class_ex/ex04/ic_ex04.html",

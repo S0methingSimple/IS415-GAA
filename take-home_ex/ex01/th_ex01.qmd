@@ -1,5 +1,5 @@
 ---
-title: "Take-home Exercise 2"
+title: "Take-home Exercise 1"
 author: "Jeffery Lau"
 date: 09-07-2024
 date-modified: "last-modified"
@@ -14,7 +14,7 @@ execute:
   eval: true
   echo: true
   warning: false
-  freeze: true
+  freeze: false
 ---
 
 # 1. Introduction
@@ -54,7 +54,7 @@ In this project we will be using the following packages:
 -   **`tidyverse`:** A collection of R packages designed for data manipulation, visualization, and analysis. It includes packages like dplyr, ggplot2, and tidyr, which are commonly used in data science workflows.
 
 ```{r}
-pacman::p_load(tmap, sf, raster, spatstat, maptools, sp, tidyverse)
+pacman::p_load(tmap, sf, raster, spatstat, maptools, sp, tidyverse, DT, gridExtra)
 ```
 
 ## 2.2 Loading Data
@@ -63,8 +63,8 @@ The dataset used in this analysis is sourced from the Armed Conflict Location & 
 
 ```{r}
 # Read CSV files
-acled_2021_23 <- read_csv("data/2021-2023-Myanmar.csv")
-acled_2024 <- read_csv("data/2024-Myanmar.csv")
+acled_2021_23 <- read_csv("data/aspatial/2021-2023-Myanmar.csv")
+acled_2024 <- read_csv("data/aspatial/2024-Myanmar.csv")
 
 ```
 
@@ -73,6 +73,9 @@ Next we load [Myanmar Boundary](https://data.humdata.org/dataset/mimu-geonode-my
 ```{r}
 # Read Myanmar Boundary
 mym_sf <- st_read(dsn = "data/geospatial", 
+                      layer = "mmr_polbnda_adm2_250k_mimu") %>%
+              st_transform(crs = 32647)
+mym_st_sf <- st_read(dsn = "data/geospatial", 
                       layer = "mmr_polbnda_adm1_250k_mimu_1") %>%
               st_transform(crs = 32647)
 ```
@@ -117,31 +120,131 @@ print(duplicate_count)
 
 ## 3.3 Joining Dataframes
 
+### 3.3.1 Joining with District Data
+
 ```{r}
-
 acled_sf <- st_join(acled_full_sf, mym_sf) %>%
-  select(event_date, event_type, fatalities, ST, admin1, geometry) %>%
-  rename(state = ST)
-
-print(acled_sf %>% filter(is.na(state)))
+  dplyr::select(event_date, event_type, fatalities, ST, DT, admin1, geometry) %>%
+  rename(state = ST, district = DT)
 ```
+
+### 3.3.2 Missing Fields (State)
+
+Note that we've 7 records which are missing
+
+```{r}
+datatable(acled_sf %>% 
+        filter(is.na(state)) %>%
+        dplyr::select(event_date, event_type, admin1)
+      )
+```
+
+### 3.3.3 Adding Quarter and Saving RDS
 
 ```{r}
 acled_sf <- acled_sf %>%
-  mutate(state = ifelse(is.na(state), admin1, state)) %>%
-  select(-admin1)
+  mutate(quarter = quarter(event_date, with_year = TRUE)) %>%
+  mutate(year = year(event_date)) %>%
+  dplyr::select(-admin1)
 
-summary(acled_sf)
+acled_sf
 ```
 
-## 3.3 Exploratory Data Analysis
-
-The following is an initial plot of the point events on boundary and region map of Myanmar.
+### 3.3.4 Saving sf Dataframe
 
 ```{r}
-tm_shape(mym_sf) + tm_polygons() +
-  tm_shape(acled_sf) + tm_dots()
+write_rds(acled_sf, "data/rds/acled_sf.rds")
+write_rds(mym_sf, "data/rds/mym_sf.rds")
+write_rds(mym_st_sf, "data/rds/mym_st_sf.rds")
 ```
+
+# 4. Exploratory Data Analysis
+
+```{r}
+acled_sf <- read_rds("data/rds/acled_sf.rds")
+mym_sf <- read_rds("data/rds/mym_sf.rds")
+mym_st_sf <- read_rds("data/rds/mym_st_sf.rds")
+```
+
+## 4.1 Selecting Area of Study
+
+### 4.1.1 Viewing Overall Distribution
+
+The following is an initial plot of the point events on boundary and region ma <!--#  -->p of Myanmar. We shall identify the are of interest
+
+```{r}
+# Create the state map with title and text
+state_m <- tm_shape(mym_st_sf) +
+  tm_polygons() +
+  tm_text("ST", size = 0.5) +
+  tm_layout(title = "State")
+
+# Create the distribution map with title and dots
+distribution_m <- tm_shape(mym_st_sf) +
+  tm_polygons() +
+  tm_shape(acled_sf) +
+  tm_dots(col = "red", alpha = 0.05, size = 0.01) +
+  tm_layout(title = "Distribution")
+
+# Arrange the maps with equal aspect ratio and two columns
+tmap_arrange(state_m, distribution_m, asp = 1, ncol = 2)
+```
+
+### 4.1.2 Viewing Overall Distribution
+
+Now lets take a look at the Choropleth plot of where the events occur
+
+```{r}
+acled_by_district <- acled_sf %>%
+  group_by(district) %>%
+  summarize(event_count = n())
+
+# Join the event count data with the region polygon data
+joined_data <- st_join(mym_sf, acled_by_district)
+
+choropleth_m <- tm_shape(joined_data) +
+  tm_polygons(col = "event_count", style = "jenks", palette = "YlOrRd") +
+  tm_layout(title = "Event Count by District")
+
+# Arrange the maps with equal aspect ratio and two columns
+tmap_arrange(state_m, choropleth_m, asp = 1, ncol = 2)
+```
+
+### 4.1.1 Viewing Overall Distribution
+
+```{r}
+summary_table <- acled_sf %>%
+  st_drop_geometry() %>% # Remove geometry for faster processing
+  group_by(state) %>%
+  tally(name = "event_count") %>%
+  arrange(desc(event_count))
+
+datatable(summary_table)
+```
+
+Sagaing and Mandalay are much more studied due to the higher level of conflict and population density, hence for this analysis I will pick Magway to study spill over conflicts from it's turbulent neighbours. It is also highly diverse with other ethnic groups like Chin, Rakhine, Shan, and Karen in the state besides Bamar descent.
+
+```{r}
+full_acled_sf <- acled_sf
+
+# Filter for Magway Surrounding Neigbours
+acled_msm_sf <- full_acled_sf %>%
+  filter(state %in% c("Magway", "Sagaing", "Mandalay"))
+
+msm_sf <- mym_st_sf %>%
+  filter(ST %in% c("Magway", "Sagaing", "Mandalay"))
+
+# Filter for "Magway" in both data frames
+acled_sf <- full_acled_sf %>%
+  filter(state == "Magway")
+
+magway_sf <- mym_sf %>%
+  filter(ST == "Magway")
+```
+
+## 4.2 Viewing the timeline
+
+### 4.2.1 Histogram of Events in Magway
 
 ```{r}
 ggplot(acled_sf, aes(x = event_date, fill = event_type)) +
@@ -152,22 +255,59 @@ ggplot(acled_sf, aes(x = event_date, fill = event_type)) +
        y = "Count")
 ```
 
+Notice how it begun with just protest and how it battles become more frequent, there is hope seeing a general downward trend in events since the peak of 2022
+
+### 4.2.2 Distribution of events
+
 ```{r}
-acled_by_region <- acled_sf %>%
-  group_by(state) %>%
-  summarize(event_count = n())
+# Filter data by year
+year_acled_sf <- list()
+for (yr in 2021:2024) {
+  year_acled_sf[[yr - 2020]] <- acled_sf %>% filter(year == yr)
+}
 
-# Join the event count data with the region polygon data
-joined_data <- st_join(mym_sf, acled_by_region)
+# Create pie charts for each year
+etc_plot <- list()
+yr<-0
+for (year_acled in year_acled_sf) {
+  yr<-yr+1
+  etc_plot[[yr]] <- ggplot(year_acled  %>% count(event_type), aes(x = "", y = n, fill = event_type)) +
+  geom_bar(stat = "identity", color = "white") +
+  geom_text(aes(label = n), position = position_stack(vjust = 0.5)) +
+  coord_polar(theta = "y") +
+  scale_fill_brewer(palette = "Spectral") +
+  labs(title = as.character(yr+2020)) +
+  theme_void()
+}
 
-tm_shape(joined_data) +
-  tm_polygons(col = "event_count", style = "jenks", palette = "YlOrRd") +
-  tm_layout(title = "Event Count by Region")
+# Arrange the charts in a 2x2 grid
+grid.arrange(etc_plot[[1]], etc_plot[[2]], etc_plot[[3]], etc_plot[[4]], ncol = 2)
 ```
 
 ```{r}
+
+# Create the distribution map with title and dots
+magway_plot <- list()
+
+yr<-0
+for (year_acled in year_acled_sf) {
+  yr <- yr + 1
+  magway_plot[[yr]] <- tm_shape(magway_sf) +
+  tm_polygons() +
+  tm_shape(year_acled) +
+  tm_dots(col = "event_type", alpha = 0.5, size = 0.1, palette = "Spectral") +
+  tm_layout(title = paste("Dist. ", as.character(yr + 2020)))
+}
+
+# Arrange the maps with equal aspect ratio and two columns
+tmap_arrange(magway_plot, asp = 2, nrow = 2, ncol = 2)
+```
+
+## 4.3 Other Insights
+
+```{r}
 ggplot(acled_sf, aes(x = event_type, y = fatalities)) +
-  geom_point(color = "darkorange") +
+  geom_boxplot(color = "darkorange") +
   labs(title = "Relationship Between Fatalities and Event Type",
        x = "Event Type",
        y = "Fatalities") +
@@ -175,106 +315,345 @@ ggplot(acled_sf, aes(x = event_type, y = fatalities)) +
   theme(axis.text.y = element_text(angle = 45, hjust = 1))
 ```
 
-```{r}
-event_type_counts <- acled_sf %>%
-  count(event_type)
+Due to the interesting development of the event types we will be focusing on Battles, Explosions, Violence against civilians and Protest
 
-ggplot(event_type_counts, aes(x = "", y = n, fill = event_type)) +
-  geom_bar(stat = "identity", color = "white") +
-  geom_text(aes(label = n), position = position_stack(vjust = 0.5)) +
-  coord_polar(theta = "y") +
-  scale_fill_brewer(palette = "Spectral") +
-  labs(title = "Distribution of Event Types")  +
-  theme_void()
-```
+# 5. Spatial Point Pattern Analysis
 
-# 4. Spatial Point Pattern Analysis
+## 5.1 Preparation
 
-## 4.1 Preparation
+We will be prepare several funciton to prevent repeating
+
+### 5.1.1 Convert and Rescale
 
 ```{r}
-acled_ppp <- as.ppp(acled_sf)
-acled_ppp
+rescale_ppp_km <- function(ppp_sf, owin_sf) {
+  # Converting sf to ppp
+  ppp <- as.ppp(ppp_sf)
+  
+  # Converting sf to owin
+  owin <- as.owin(owin_sf %>% st_union())
+  
+  # Apply jitter duplicate exist
+  if (any(duplicated(ppp))) {
+    ppp <- rjitter(ppp,
+                   retry = TRUE,
+                   nsimm = 1,
+                   drop = TRUE)
+  }
+
+  # Confine and rescale ppp
+  return(rescale(ppp[owin], 1000, "km"))
+}
 ```
 
-```{r eval=FALSE}
-mym_outer_sf <- mym_sf %>% # select the central parts
-  st_buffer(0.5) %>% # make a buffer of half a meter around all parts (to avoid slivers)
-  st_union()
+### 5.1.2 Convert KDE to Raster
 
-mym_owin <- as.owin(mym_outer_sf)
+```{r}
+kde_to_raster <- function(kde) {
+  return(raster(as.SpatialGridDataFrame.im(kde)))
+}
 ```
 
-```{r eval=FALSE}
-acled_ppp <- acled_ppp[mym_owin]
-```
+### 5.1.3 Prepping PPP
 
-```{r eval=FALSE}
-acled_ppp_km <- rescale(acled_ppp, 1000, "km")
+#### 5.1.3.1 Converting for Magway
+::: panel-tabset
+##### Covert to PPP
+
+```{r}
+acled_ppp_km <- rescale_ppp_km(acled_sf, magway_sf)
 
 plot(acled_ppp_km)
 ```
 
-## 4.2 First Order Analysis
-
-### 4.2.1 Compute Kernel Density
-
-```{r eval=FALSE}
-# acled_ppp_km_bw_ppl <- bw.ppl(acled_ppp_km) # 2.325089
-```
-
-```{r eval=FALSE}
-acled_ppp_kde = density(acled_ppp_km, 
-                        sigma = 2.3, 
-                        edge = FALSE, 
-                        kernel = "gaussian")
-plot(acled_ppp_kde)
-```
-
-### Questions
-
-Analytics - How to use analysis results such as clustering to interpret? should we include other dimension of data - How to work on the 10 quarters meaningfully (For spatial point pattern analysis) - Pick region to do 2nd order analysis
-
-Technical - How to speed up KDE analysis with 51k record? sampling - How to deal with the 7 points outside of the region
-
--   Group the ACLED data by quarter and calculate KDE surfaces using `st_density`.
-
--   Experiment with different bandwidths and kernel functions to find the most appropriate settings.
-
--   Create separate KDE layers for each quarter.\
-
-## 4.3 Second Order Analysis
+##### Map
 
 ```{r}
+ggplot(data = magway_sf) +
+  geom_sf(fill = "lightblue") +
+  geom_sf_label(aes(label = DT), size = 3, repel = TRUE) +
+  labs(title = "District Boundaries") +
+  theme_bw()
+```
+:::
+
+::: callout-note
+##### callout
+Here is something
+:::
+
+#### 5.1.3.2 Converting for Magway
+::: panel-tabset
+##### Covert to PPP
+
+```{r}
+acled_msm_ppp_km <- rescale_ppp_km(acled_msm_sf, msm_sf)
+
+plot(acled_msm_ppp_km)
+```
+
+##### Map
+
+```{r}
+ggplot(data = msm_sf) +
+  geom_sf(fill = "lightblue") +
+  geom_sf_label(aes(label = ST), size = 3, repel = TRUE) +
+  labs(title = "State Boundaries") +
+  theme_bw()
+```
+:::
+
+## 5.2 First Order Analysis
+
+### 5.2.1 Picking a Density BW
+
+::: panel-tabset
+
+#### PPL
+```{r}
+acled_ppp_kde_ppl = density(acled_ppp_km, 
+                        sigma = bw.ppl, 
+                        edge = TRUE, 
+                        kernel = "gaussian")
+
+plot(acled_ppp_kde_ppl, main = "PPL bandwidth")
+```
+
+#### Scott
+```{r}
+acled_ppp_kde_scott = density(acled_ppp_km, 
+                        sigma = bw.scott,
+                        edge = TRUE, 
+                        kernel = "gaussian")
+
+plot(acled_ppp_kde_scott, main = "Scott bandwidth")
+```
+
+#### Adaptive
+```{r}
+acled_ppp_kde_adaptive <- adaptive.density(acled_ppp_km, method="kernel")
+
+plot(acled_ppp_kde_adaptive, main = "Adaptive bandwidth")
+# Convert the SF object to a polygon
+boundary_polygon <- st_geometry(magway_sf)
+```
+
+#### Manual
+```{r}
+acled_ppp_kde_man = density(acled_ppp_km, 
+                        sigma = 10,
+                        edge = TRUE, 
+                        kernel = "gaussian")
+
+plot(acled_ppp_kde_man, main = "Manual bandwidth (10km)")
+```
+
+:::
+
+
+```{r}
+scott_raster <- kde_to_raster(acled_ppp_kde_scott)
+tm_shape(scott_raster) + 
+  tm_raster("v", palette="viridis") +
+  tm_layout(legend.position = c("right", "top"), frame = FALSE)
+  
+```
+
+### 5.2.2 Observing Spatial Relations (MSM)
+
+```{r}
+kde_results <- list()
+for (yr in 2021:2024) {
+  acled_msm_ppp_km <- rescale_ppp_km(acled_msm_sf %>% filter(year == yr), msm_sf)
+  acled_msm_ppp_kde_scott <- density(acled_msm_ppp_km, sigma = 15, edge = TRUE, kernel = "gaussian")
+  kde_results[[yr - 2020]] <- acled_msm_ppp_kde_scott
+}
+
+par(mfrow=c(1,5), mar=c(1,1,1,2))
+# Create a data frame for plotting
+yr <- 2020
+for (res in kde_results) {
+  yr <- yr + 1
+  plot(res, main = as.character(yr))
+}
+
+# Todo plot on standard scale
+plot(st_geometry(msm_sf), col = "lightblue")
+
 
 ```
 
--   **Calculate Spatial Autocorrelation Measures:**
+Notice the how there were cluster of it on the mandalay then along the border of Sagaing and Magway mostly on Sagaing the cluster started to grow and spilled over to Magway.
 
-    -   Use functions from `spatstat` or other spatial analysis packages to calculate measures like Moran's I or Geary's C.
+### 5.2.3 Quarterly KDE (Magway)
 
-    -   Assess whether conflict events are clustered, dispersed, or randomly distributed.
+```{r}
+unique_quarters <- unique(acled_sf$quarter) %>% sort()
 
-    -   Consider using edge correction methods to account for boundary effects
+# Create an empty list to store KDE results
+quart_kde_results <- list()
 
-    **Analyze Ripley's K-function:**
+# Iterate through unique quarters
+q <- 0
+for (quart in unique_quarters) {
+  q <- q + 1
+  acled_ppp_km <- rescale_ppp_km(acled_sf %>% filter(quarter == quart), magway_sf)
+  acled_ppp_kde_scott <- density(acled_ppp_km, sigma = 15, edge = TRUE, kernel = "gaussian")
+  quart_kde_results[[q]] <- acled_ppp_kde_scott
+}
 
-    -   Calculate Ripley's K-function to measure the intensity of points within a given distance of an existing point.
 
-    -   Interpret the results to identify clustering or dispersion patterns.
+# TODO plot on standard scale
+par(mfrow=c(4,4), mar=c(1,1,1,2))
+# Create a data frame for plotting
+i <- 0
+for (res in quart_kde_results) {
+  i <- i + 1
+  r <- ifelse(i %% 4 == 0, 4, i %% 4)
+  plot(res, main = paste(as.character(2021+as.integer((i-1)/4)), ".", r))
+}
+```
+### 5.2.4 Summary by district
+::: panel-tabset
 
-# 5. Spatial-Temporal Analysis
+#### Yearly
 
--   **Create Quarterly Spatio-Temporal KDE Layers:**
+```{r}
+# Group by district, year, and event_type, then count events
+acled_grouped <- acled_sf %>%
+  st_drop_geometry() %>% 
+  group_by(district, year) %>%
+  summarize(count = n()) %>%
+  pivot_wider(names_from = year, values_from = count, values_fill = 0)
 
-    -   Combine the temporal dimension (quarter) with the spatial coordinates to create spatio-temporal KDE surfaces
+# Create a data table
+datatable(acled_grouped)
+```
 
-    -   Explore different methods for incorporating time into the KDE calculation
+#### Event Type
 
-    **Analyze Spatio-Temporal Autocorrelation:**
+```{r}
+# Group by district, year, and event_type, then count events
+acled_grouped <- acled_sf %>%
+  st_drop_geometry() %>% 
+  group_by(district, event_type) %>%
+  summarize(count = n()) %>%
+  pivot_wider(names_from = event_type, values_from = count, values_fill = 0)
 
-    -   Use spatio-temporal autocorrelation measures to assess the spatial and temporal relationships between conflict events.
+# Create a data table
+datatable(acled_grouped)
+```
 
-    -   Consider using methods like spatio-temporal G-functions or spatio-temporal Moran's I.
+#### Yearly by Event
 
-# 6. Interpretation
+```{r}
+# Group by district, year, and event_type, then count events
+acled_grouped <- acled_sf %>%
+  st_drop_geometry() %>% 
+  group_by(district, year, event_type) %>%
+  summarize(count = n()) %>%
+  pivot_wider(names_from = c(year, event_type), values_from = count, values_fill = 0)
+
+# Create a data table
+datatable(acled_grouped)
+```
+
+:::
+
+### 5.2.5 Prepare Pakokku sfs
+
+```{r}
+# Filter for "Pakokku" in both data frames
+acled_pak_sf <- acled_sf %>%
+  filter(district == "Pakokku")
+magway_pak_sf <- mym_sf %>%
+  filter(DT == "Pakokku")
+
+```
+
+
+### 5.2.6 Yearly Event Type KDE (Pakokku)
+
+```{r}
+et_kde_results <- list()
+event_types <- list("Protests", "Explosions/Remote violence", "Battles", "Violence against civilians")
+q <- 0
+
+# Iterate through the list
+for (et in event_types) {
+  for (yr in 2021:2024) {
+    q <- q + 1
+    acled_ppp_km <- rescale_ppp_km(acled_pak_sf %>% filter(year == yr & event_type == et), magway_pak_sf)
+    acled_ppp_kde <- density(acled_ppp_km, sigma = 5, edge = TRUE, kernel = "gaussian")
+    et_kde_results[[q]] <- acled_ppp_kde
+  }
+}
+
+# TODO: same as above replot
+par(mfrow=c(4,4), mar=c(1,1,1,2))
+# Create a data frame for plotting
+i <- 0
+for (res in et_kde_results) {
+  i <- i + 1
+  r <- ifelse(i %% 4 == 0, 4, i %% 4)
+  plot(res, main = as.character(2020 + r))
+}
+```
+
+### 5.2.7 Clark Evan Test
+
+```{r}
+clarkevans.test(rescale_ppp_km(acled_pak_sf %>% filter(year == 2021), magway_pak_sf),
+                correction = "none",
+                alternative = c("clustered"),
+                nsim = 999)
+```
+
+
+## 5.3 Second Order Analysis
+
+::: panel-tabset
+ 
+### G-Function
+
+Let start with computing the G function
+
+```{r}
+g_func <- function() {
+  G <- Gest(acled_ppp_km, correction = "border")
+  G.csr <- envelope(acled_ppp_km, Gest, nsim = 999)
+  
+  # Return a tuple with named elements
+  return(list(G = G, G.csr = G.csr))
+}
+```
+
+
+```{r}
+#acled_ppp_km <- rescale_ppp_km(acled_pak_sf %>% filter(year == 2021), magway_pak_sf)
+#G.csr <- envelope(acled_ppp_km, Gest, nsim = 999)
+#plot(G.csr)
+```
+
+### K-Function
+
+```{r}
+#acled_ppp_km <- rescale_ppp_km(acled_pak_sf %>% filter(year == 2021), magway_pak_sf)
+#K.csr <- envelope(acled_ppp_km, Kest, nsim = 10)
+#plot(K.csr)
+```
+
+### K-Function
+
+```{r}
+#acled_ppp_km <- rescale_ppp_km(acled_pak_sf %>% filter(year == 2021), magway_pak_sf)
+#L.csr <- envelope(acled_ppp_km, Lest, nsim = 10)
+#plot(L.csr)
+```
+:::
+
+# 6. Spatial-Temporal Analysis
+
+
+
+# 7. Interpretation
