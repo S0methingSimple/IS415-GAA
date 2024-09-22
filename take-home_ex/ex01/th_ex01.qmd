@@ -14,7 +14,7 @@ execute:
   eval: true
   echo: true
   warning: false
-  freeze: false
+  freeze: true
 ---
 
 # 1. Introduction
@@ -29,9 +29,8 @@ TODO: Lit review
 
 1.  Analyze the spatial distribution of armed conflict events in Myanmar.
 2.  Identify patterns and trends in the temporal distribution of conflict events.
-3.  Explore the relationship between conflict events and geographic features (e.g., administrative boundaries, natural resources).
-4.  Identify potential hotspots of conflict activity.
-5.  Provide insights for policymakers and humanitarian organizations working to address the conflict in Myanmar.
+3.  Identify potential hotspots of conflict activity.
+4.  Provide insights for policymakers and humanitarian organizations working to address the conflict in Myanmar.
 
 # 2. Setup
 
@@ -54,7 +53,7 @@ In this project we will be using the following packages:
 -   **`tidyverse`:** A collection of R packages designed for data manipulation, visualization, and analysis. It includes packages like dplyr, ggplot2, and tidyr, which are commonly used in data science workflows.
 
 ```{r}
-pacman::p_load(tmap, sf, raster, spatstat, maptools, sp, tidyverse, DT, gridExtra)
+pacman::p_load(tmap, sf, raster, spatstat, sparr, maptools, sp, tidyverse, DT, gridExtra, animation)
 ```
 
 ## 2.2 Loading Data
@@ -65,10 +64,9 @@ The dataset used in this analysis is sourced from the Armed Conflict Location & 
 # Read CSV files
 acled_2021_23 <- read_csv("data/aspatial/2021-2023-Myanmar.csv")
 acled_2024 <- read_csv("data/aspatial/2024-Myanmar.csv")
-
 ```
 
-Next we load [Myanmar Boundary](https://data.humdata.org/dataset/mimu-geonode-myanmar-state-and-region-boundaries-mimu?) from Humanitarian Data Exchange - Get demographics - Get town center
+Next we load [Myanmar District and State Boundary](https://www.themimu.info/) from Myanmar Information Management Unit (MIMU) and projected onto the correct CRS.
 
 ```{r}
 # Read Myanmar Boundary
@@ -92,7 +90,6 @@ Additional data cleaning and preparation steps were performed, including handlin
 # Combine data frames
 acled_combined <- bind_rows(acled_2021_23, acled_2024)
 
-# Convert to SF object
 acled_full_sf <- acled_combined %>%
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326) %>%
   st_transform(crs = 32647) %>%
@@ -101,7 +98,7 @@ acled_full_sf <- acled_combined %>%
 
 ## 3.2 Data Cleaning
 
-Next data cleaning
+We conducted a preliminary data quality check on our key spatial features to ensure data integrity. While no missing values were found in the columns, we did identify duplicate geometries. This is not unexpected, as the data represents a time series, and multiple events may occur in the same location over time.
 
 ```{r}
 # Check for null values in key columns
@@ -118,9 +115,13 @@ print(na_count)
 print(duplicate_count)
 ```
 
-## 3.3 Joining Dataframes
+## 3.3 Data Wrangling
+
+To prepare our dataframe for subsequent geoprocessing, we performed necessary data joining and processing steps. We then saved the processed state of the dataframe for future reference and analysis.
 
 ### 3.3.1 Joining with District Data
+
+We will start by adding the district and state into our `acled_sf` dataframe using a spatial join
 
 ```{r}
 acled_sf <- st_join(acled_full_sf, mym_sf) %>%
@@ -130,7 +131,7 @@ acled_sf <- st_join(acled_full_sf, mym_sf) %>%
 
 ### 3.3.2 Missing Fields (State)
 
-Note that we've 7 records which are missing
+Upon joining the dataframes, we observed that a small number of points were located outside the boundary dataframe. However, this is not a significant concern for our subsequent analysis, as we will be focusing on other states.
 
 ```{r}
 datatable(acled_sf %>% 
@@ -141,6 +142,8 @@ datatable(acled_sf %>%
 
 ### 3.3.3 Adding Quarter and Saving RDS
 
+We will also be extracting out the quarters and years for our subsequent analysis.
+
 ```{r}
 acled_sf <- acled_sf %>%
   mutate(quarter = quarter(event_date, with_year = TRUE)) %>%
@@ -150,15 +153,22 @@ acled_sf <- acled_sf %>%
 acled_sf
 ```
 
-### 3.3.4 Saving sf Dataframe
+### 3.3.4 Saving `sf` Dataframe
+
+Next we store the processed `sf` dataframe as rds for subsequent usage.
 
 ```{r}
+#| eval: false
 write_rds(acled_sf, "data/rds/acled_sf.rds")
 write_rds(mym_sf, "data/rds/mym_sf.rds")
 write_rds(mym_st_sf, "data/rds/mym_st_sf.rds")
 ```
 
 # 4. Exploratory Data Analysis
+
+To gain a deeper understanding of our data and inform subsequent analysis decisions, we conducted an in-depth exploration of the relationships between various variables and their spatial distribution.
+
+Before we begin our EDA, let's load the rds back into our R environment
 
 ```{r}
 acled_sf <- read_rds("data/rds/acled_sf.rds")
@@ -168,31 +178,30 @@ mym_st_sf <- read_rds("data/rds/mym_st_sf.rds")
 
 ## 4.1 Selecting Area of Study
 
-### 4.1.1 Viewing Overall Distribution
+To identify suitable areas for in-depth analysis, we examined the overall distribution of conflict events across Myanmar. This initial exploration helped us select regions of particular interest for further investigation.
 
-The following is an initial plot of the point events on boundary and region ma <!--#  -->p of Myanmar. We shall identify the are of interest
+### 4.1.1 Overall Distribution (Points)
+
+Our initial visualization of conflict events on the map of Myanmar revealed distinct clusters around the central regions of Sagaing, Mandalay, and Magway. This observation suggests that these areas may have experienced higher concentrations of conflict activity.
 
 ```{r}
-# Create the state map with title and text
 state_m <- tm_shape(mym_st_sf) +
   tm_polygons() +
   tm_text("ST", size = 0.5) +
   tm_layout(title = "State")
 
-# Create the distribution map with title and dots
 distribution_m <- tm_shape(mym_st_sf) +
   tm_polygons() +
   tm_shape(acled_sf) +
-  tm_dots(col = "red", alpha = 0.05, size = 0.01) +
+  tm_dots(col = "red", alpha = 0.03, size = 0.01) +
   tm_layout(title = "Distribution")
 
-# Arrange the maps with equal aspect ratio and two columns
 tmap_arrange(state_m, distribution_m, asp = 1, ncol = 2)
 ```
 
-### 4.1.2 Viewing Overall Distribution
+### 4.1.2 Overall Distribution (Districts)
 
-Now lets take a look at the Choropleth plot of where the events occur
+To further validate our previous observations, we created a choropleth map to visualize the spatial distribution of conflict events. This map confirmed the concentration of conflict activity in the central states.
 
 ```{r}
 acled_by_district <- acled_sf %>%
@@ -204,13 +213,14 @@ joined_data <- st_join(mym_sf, acled_by_district)
 
 choropleth_m <- tm_shape(joined_data) +
   tm_polygons(col = "event_count", style = "jenks", palette = "YlOrRd") +
-  tm_layout(title = "Event Count by District")
+  tm_layout(title = "Event Count")
 
-# Arrange the maps with equal aspect ratio and two columns
 tmap_arrange(state_m, choropleth_m, asp = 1, ncol = 2)
 ```
 
-### 4.1.1 Viewing Overall Distribution
+### 4.1.3 Event Count by State
+
+The following datatables shows that over the four-year period, Sagaing, Mandalay, and Magway experienced the highest number of conflict events.
 
 ```{r}
 summary_table <- acled_sf %>%
@@ -222,29 +232,35 @@ summary_table <- acled_sf %>%
 datatable(summary_table)
 ```
 
-Sagaing and Mandalay are much more studied due to the higher level of conflict and population density, hence for this analysis I will pick Magway to study spill over conflicts from it's turbulent neighbours. It is also highly diverse with other ethnic groups like Chin, Rakhine, Shan, and Karen in the state besides Bamar descent.
+::: callout-note
+##### Selected State
+
+While Sagaing and Mandalay have received significant attention due to their higher levels of conflict and population density, we have chosen to focus our analysis on Magway. This state offers a unique perspective due to its diverse ethnic composition, including Chin, Rakhine, Shan, and Karen populations. By examining Magway, we can gain valuable insights into the potential spillover effects from neighboring conflict zones and conduct a more in-depth analysis of the state's internal dynamics.
+:::
+
+## 4.2 Viewing the timeline
+
+To understand the temporal dynamics of conflict and its spatial distribution, we will analyze the data for the selected states. Before proceeding, we will partition the conflict and boundary dataframes into three groups: the three states of interest and Magway alone. This separation will allow us to focus on specific regions and analyze their unique characteristics.
 
 ```{r}
-full_acled_sf <- acled_sf
-
 # Filter for Magway Surrounding Neigbours
-acled_msm_sf <- full_acled_sf %>%
+acled_msm_sf <- acled_sf %>%
   filter(state %in% c("Magway", "Sagaing", "Mandalay"))
 
 msm_sf <- mym_st_sf %>%
   filter(ST %in% c("Magway", "Sagaing", "Mandalay"))
 
 # Filter for "Magway" in both data frames
-acled_sf <- full_acled_sf %>%
+acled_sf <- acled_sf %>%
   filter(state == "Magway")
 
 magway_sf <- mym_sf %>%
   filter(ST == "Magway")
 ```
 
-## 4.2 Viewing the timeline
+### 4.2.1 Histogram of Events (Magway)
 
-### 4.2.1 Histogram of Events in Magway
+From the histogram of event types reveals that the events were initially dominated by protests, the frequency of battles has steadily increased, while protests have declined. Although the overall number of conflict events has shown a general downward trend since its peak in 2022, battles currently constitute the majority of incidents.
 
 ```{r}
 ggplot(acled_sf, aes(x = event_date, fill = event_type)) +
@@ -255,9 +271,9 @@ ggplot(acled_sf, aes(x = event_date, fill = event_type)) +
        y = "Count")
 ```
 
-Notice how it begun with just protest and how it battles become more frequent, there is hope seeing a general downward trend in events since the peak of 2022
+### 4.2.2 Distribution of Events (Magway)
 
-### 4.2.2 Distribution of events
+Our pie charts further validates the observation that protests were more prevalent at the beginning of the time period, while battles have become more frequent in recent months. This shift in the composition of conflict events highlights the evolving dynamics of the conflict.
 
 ```{r}
 # Filter data by year
@@ -284,9 +300,9 @@ for (year_acled in year_acled_sf) {
 grid.arrange(etc_plot[[1]], etc_plot[[2]], etc_plot[[3]], etc_plot[[4]], ncol = 2)
 ```
 
-```{r}
+We can also see in following majoritiy of the events occur on the northern border with Sagaing.
 
-# Create the distribution map with title and dots
+```{r}
 magway_plot <- list()
 
 yr<-0
@@ -296,14 +312,15 @@ for (year_acled in year_acled_sf) {
   tm_polygons() +
   tm_shape(year_acled) +
   tm_dots(col = "event_type", alpha = 0.5, size = 0.1, palette = "Spectral") +
-  tm_layout(title = paste("Dist. ", as.character(yr + 2020)))
+  tm_layout(title = paste("Events ", as.character(yr + 2020)))
 }
 
-# Arrange the maps with equal aspect ratio and two columns
 tmap_arrange(magway_plot, asp = 2, nrow = 2, ncol = 2)
 ```
 
-## 4.3 Other Insights
+## 4.3 Event/Fatalities Insights
+
+Our boxplot also suggests that battles are associated with the highest number of fatalities, while protests generally have lower fatality counts. 
 
 ```{r}
 ggplot(acled_sf, aes(x = event_type, y = fatalities)) +
@@ -315,15 +332,28 @@ ggplot(acled_sf, aes(x = event_type, y = fatalities)) +
   theme(axis.text.y = element_text(angle = 45, hjust = 1))
 ```
 
-Due to the interesting development of the event types we will be focusing on Battles, Explosions, Violence against civilians and Protest
+::: callout-note
+##### Selection of Event Type
+
+Given the distinct patterns observed in fatalities and the development of event types, we will focus our subsequent analysis on Battles, Explosions, Violence against Civilians, and Protests. 
+
+:::
 
 # 5. Spatial Point Pattern Analysis
 
+To gain a deeper understanding of the conflict dynamics within Magway State, we will examine the spatial distribution and patterns of conflict events. This analysis will provide valuable insights into the concentration of incidents, potential hotspots, and the relationships between conflict and underlying factors.
+
 ## 5.1 Preparation
 
-We will be prepare several funciton to prevent repeating
+To streamline our analysis, we have created reusable functions for common tasks. These functions facilitate the conversion of data to ppp format, confinement to specific regions, jittering for spatial randomness, rescaling, and the transformation of KDE results into raster format.
 
 ### 5.1.1 Convert and Rescale
+
+In this function we perform the following:
+1. Convert event `sf` to `ppp`
+2. Convert boundary `sf` to `ppp`
+3. Jitter any duplicates (If any)
+4. Rescale from m to km 
 
 ```{r}
 rescale_ppp_km <- function(ppp_sf, owin_sf) {
@@ -350,15 +380,20 @@ rescale_ppp_km <- function(ppp_sf, owin_sf) {
 
 ```{r}
 kde_to_raster <- function(kde) {
-  return(raster(as.SpatialGridDataFrame.im(kde)))
+  kde_raster <- raster(as.SpatialGridDataFrame.im(kde))
+  projection(kde_raster) <- CRS("+init=EPSG:32647")
+  return(kde_raster)
 }
 ```
 
 ### 5.1.3 Prepping PPP
 
-#### 5.1.3.1 Converting for Magway
+Next lets prep the ppp objects for later use
+
+#### 5.1.3.1 Magway
+
 ::: panel-tabset
-##### Covert to PPP
+##### PPP
 
 ```{r}
 acled_ppp_km <- rescale_ppp_km(acled_sf, magway_sf)
@@ -366,7 +401,7 @@ acled_ppp_km <- rescale_ppp_km(acled_sf, magway_sf)
 plot(acled_ppp_km)
 ```
 
-##### Map
+##### Map Boundary
 
 ```{r}
 ggplot(data = magway_sf) +
@@ -377,14 +412,10 @@ ggplot(data = magway_sf) +
 ```
 :::
 
-::: callout-note
-##### callout
-Here is something
-:::
+#### 5.1.3.2 Magway, Sagaing & Mandalay
 
-#### 5.1.3.2 Converting for Magway
 ::: panel-tabset
-##### Covert to PPP
+##### PPP
 
 ```{r}
 acled_msm_ppp_km <- rescale_ppp_km(acled_msm_sf, msm_sf)
@@ -392,7 +423,7 @@ acled_msm_ppp_km <- rescale_ppp_km(acled_msm_sf, msm_sf)
 plot(acled_msm_ppp_km)
 ```
 
-##### Map
+##### Map Boundary
 
 ```{r}
 ggplot(data = msm_sf) +
@@ -405,11 +436,15 @@ ggplot(data = msm_sf) +
 
 ## 5.2 First Order Analysis
 
+Our initial analysis focuses on visualizing the spatial distribution of conflict events on inter-state, state and district level, across the time and event types using the `density` from the Spatstat package to derive the kernel density of area of study
+
 ### 5.2.1 Picking a Density BW
 
-::: panel-tabset
+We will be starting with finding a suitable Bandwidth for our data. As the area of study is large, making point events sparse, the bandwidth needs to be carefully considered for the best representation.
 
+::: panel-tabset
 #### PPL
+
 ```{r}
 acled_ppp_kde_ppl = density(acled_ppp_km, 
                         sigma = bw.ppl, 
@@ -420,6 +455,7 @@ plot(acled_ppp_kde_ppl, main = "PPL bandwidth")
 ```
 
 #### Scott
+
 ```{r}
 acled_ppp_kde_scott = density(acled_ppp_km, 
                         sigma = bw.scott,
@@ -430,15 +466,15 @@ plot(acled_ppp_kde_scott, main = "Scott bandwidth")
 ```
 
 #### Adaptive
+
 ```{r}
 acled_ppp_kde_adaptive <- adaptive.density(acled_ppp_km, method="kernel")
 
 plot(acled_ppp_kde_adaptive, main = "Adaptive bandwidth")
-# Convert the SF object to a polygon
-boundary_polygon <- st_geometry(magway_sf)
 ```
 
-#### Manual
+#### Manual (10km)
+
 ```{r}
 acled_ppp_kde_man = density(acled_ppp_km, 
                         sigma = 10,
@@ -447,45 +483,48 @@ acled_ppp_kde_man = density(acled_ppp_km,
 
 plot(acled_ppp_kde_man, main = "Manual bandwidth (10km)")
 ```
-
 :::
 
+Given the relatively sparse distribution of points within our study area, a manual bandwidth of 10km is deemed appropriate for the kernel density estimation. This bandwidth setting provides a suitable balance between capturing spatial patterns and avoiding excessive smoothing
 
-```{r}
-scott_raster <- kde_to_raster(acled_ppp_kde_scott)
-tm_shape(scott_raster) + 
-  tm_raster("v", palette="viridis") +
-  tm_layout(legend.position = c("right", "top"), frame = FALSE)
-  
-```
+### 5.2.2 Inter-state Spatial Relations
 
-### 5.2.2 Observing Spatial Relations (MSM)
+To understand the potential influence of neighboring states on conflict dynamics within Magway, we will conduct a spatial analysis using a bandwidth of 15km, reflecting the larger geographical extent involved. This analysis will help us identify any spillover effects or sequential patterns of conflict across borders.
 
 ```{r}
 kde_results <- list()
 for (yr in 2021:2024) {
   acled_msm_ppp_km <- rescale_ppp_km(acled_msm_sf %>% filter(year == yr), msm_sf)
-  acled_msm_ppp_kde_scott <- density(acled_msm_ppp_km, sigma = 15, edge = TRUE, kernel = "gaussian")
-  kde_results[[yr - 2020]] <- acled_msm_ppp_kde_scott
+  acled_msm_ppp_kde <- density(acled_msm_ppp_km, sigma = 15, edge = TRUE, kernel = "gaussian")
+  kde_results[[yr - 2020]] <- acled_msm_ppp_kde
 }
 
-par(mfrow=c(1,5), mar=c(1,1,1,2))
-# Create a data frame for plotting
+par(mfrow=c(1,5), mar=c(1,1,1,1))
 yr <- 2020
 for (res in kde_results) {
   yr <- yr + 1
   plot(res, main = as.character(yr))
 }
 
-# Todo plot on standard scale
-plot(st_geometry(msm_sf), col = "lightblue")
-
+plot(st_geometry(msm_sf), col = "lightblue", main = "State")
 
 ```
 
-Notice the how there were cluster of it on the mandalay then along the border of Sagaing and Magway mostly on Sagaing the cluster started to grow and spilled over to Magway.
+::: callout-note
 
-### 5.2.3 Quarterly KDE (Magway)
+#### Observation
+
+Notice the initial clusters forming in Mandalay. Subsequently, the clusters within Sagaing expanded towards the border between with Magway, eventually spilling over into Magway. Suggesting a strong influence of neighboring regions on conflict dynamics within Magway.
+
+::: 
+
+### 5.2.3 State Analysis (Magway)
+
+Next we will delve into the state level, by exploring spatial patterns within Magway's districts, we can identify areas of high concentration, potential hotspots, and the evolution of conflict over quarter
+
+#### 5.2.3.1 Quarterly KDE (Magway)
+
+At a closer look we can observe the events tend to form hotspots closer to the border with Sagaing.
 
 ```{r}
 unique_quarters <- unique(acled_sf$quarter) %>% sort()
@@ -498,25 +537,30 @@ q <- 0
 for (quart in unique_quarters) {
   q <- q + 1
   acled_ppp_km <- rescale_ppp_km(acled_sf %>% filter(quarter == quart), magway_sf)
-  acled_ppp_kde_scott <- density(acled_ppp_km, sigma = 15, edge = TRUE, kernel = "gaussian")
-  quart_kde_results[[q]] <- acled_ppp_kde_scott
+  acled_ppp_kde <- density(acled_ppp_km, sigma = 15, edge = TRUE, kernel = "gaussian")
+  quart_kde_results[[q]] <- acled_ppp_kde
 }
 
 
-# TODO plot on standard scale
-par(mfrow=c(4,4), mar=c(1,1,1,2))
+par(mfrow=c(4,4), mar=c(1,1,1,1))
 # Create a data frame for plotting
 i <- 0
 for (res in quart_kde_results) {
   i <- i + 1
   r <- ifelse(i %% 4 == 0, 4, i %% 4)
-  plot(res, main = paste(as.character(2021+as.integer((i-1)/4)), ".", r))
+  plot(res, 
+       override.par = F,
+       fix.range = T,
+       main = paste(as.character(2021+as.integer((i-1)/4)), "Q", r))
 }
 ```
-### 5.2.4 Summary by district
-::: panel-tabset
 
-#### Yearly
+#### 5.2.3.2 Summary by district
+
+The following are the summary statistics of the districts in Magway by Year, Event type and Year-Event type. Of all districts the one worst affected is Pakokku
+
+::: panel-tabset
+##### Yearly
 
 ```{r}
 # Group by district, year, and event_type, then count events
@@ -530,7 +574,7 @@ acled_grouped <- acled_sf %>%
 datatable(acled_grouped)
 ```
 
-#### Event Type
+##### Event Type
 
 ```{r}
 # Group by district, year, and event_type, then count events
@@ -544,7 +588,7 @@ acled_grouped <- acled_sf %>%
 datatable(acled_grouped)
 ```
 
-#### Yearly by Event
+##### Yearly by Event
 
 ```{r}
 # Group by district, year, and event_type, then count events
@@ -557,10 +601,13 @@ acled_grouped <- acled_sf %>%
 # Create a data table
 datatable(acled_grouped)
 ```
-
 :::
 
-### 5.2.5 Prepare Pakokku sfs
+### 5.2.4 District Analysis (Pakokku)
+
+Given the severe nature of conflict in Pakokku, we will focus our subsequent analysis on this district. By examining Pakokku in detail, we can gain valuable insights into the factors driving intense conflict.
+
+#### 5.2.4.1 Prepare Pakokku `sf`
 
 ```{r}
 # Filter for "Pakokku" in both data frames
@@ -571,8 +618,25 @@ magway_pak_sf <- mym_sf %>%
 
 ```
 
+#### 5.2.4.1 Quadrant Count
 
-### 5.2.6 Yearly Event Type KDE (Pakokku)
+Splitting Pakokku into 10x10, we can start by looking a the Quadrat count of where the events mostly occur, in this case we can obseve higher counts in the center as well as long the eastern boundary.
+
+```{r}
+
+acled_ppp_km <- rescale_ppp_km(acled_pak_sf %>% dplyr::select(year, geometry), magway_pak_sf)
+quadrat_counts <- quadratcount(acled_ppp_km, nx=10, ny=10)
+
+plot(quadrat_counts, main = "Quadrat Counts")
+```
+
+#### 5.2.4.2 Yearly Event Type KDE (Pakokku)
+
+Here we compare the event types over the years in Pakokku, each row representing an event type:
+1. Protests
+2. Explosions/Remote violence
+3. Battles
+4. Violence against civilians
 
 ```{r}
 et_kde_results <- list()
@@ -600,60 +664,533 @@ for (res in et_kde_results) {
 }
 ```
 
-### 5.2.7 Clark Evan Test
+::: callout-note
 
-```{r}
-clarkevans.test(rescale_ppp_km(acled_pak_sf %>% filter(year == 2021), magway_pak_sf),
-                correction = "none",
-                alternative = c("clustered"),
-                nsim = 999)
-```
+##### Event Type Findings
 
+1. Protests tend to be concentrated in urban areas
+2. Explosions and battles frequently occur near the outskirts of the city and towns
+3. Violence against civilians, on the other hand, is primarily concentrated in rural areas outside the city boundaries.
+
+:::
 
 ## 5.3 Second Order Analysis
 
+To gain a deeper understanding of the spatial distribution of conflict events within Pakokku, we will conduct a second-order spatial analysis using the Clark-Evans test and Ripley's K function. Before delving into these analyses, let's examine the types of events that occurred in Pakokku across different quarters. 
+
+```{r}
+# Group by district, year, and event_type, then count events
+acled_pak_grouped <- acled_pak_sf %>%
+  st_drop_geometry() %>% 
+  group_by(event_type, quarter) %>%
+  summarize(count = n()) %>%
+  pivot_wider(names_from = quarter, values_from = count, values_fill = 0, names_sort = TRUE)
+
+# Create a data table
+datatable(acled_pak_grouped)
+```
+
+### 5.3.1 Clark Evan Test
+
+By employing the Clark-Evans test, we can assess whether the spatial distribution of conflict events within Pakokku deviates from complete spatial randomness. This analysis will help us identify any clustering or dispersion patterns that may exist.
+- H0: The distribution of events in Pakokku are randomly distributed.
+- H1: The distribution of events in Pakokku are not randomly distributed.
+- The 95% confident interval will be used.
+
 ::: panel-tabset
- 
-### G-Function
-
-Let start with computing the G function
+#### Protests
 
 ```{r}
-g_func <- function() {
-  G <- Gest(acled_ppp_km, correction = "border")
-  G.csr <- envelope(acled_ppp_km, Gest, nsim = 999)
-  
-  # Return a tuple with named elements
-  return(list(G = G, G.csr = G.csr))
-}
+# Iterate through the list
+clarkevans.test(rescale_ppp_km(acled_pak_sf %>% filter(event_type == "Protests"), magway_pak_sf),
+            correction = "none",
+            alternative = c("clustered"),
+            nsim = 999)
 ```
 
+Protests: R < 1 which suggest clustering. p-value < 0.05, H0 can be rejected.
+
+#### Explosions
 
 ```{r}
-#acled_ppp_km <- rescale_ppp_km(acled_pak_sf %>% filter(year == 2021), magway_pak_sf)
-#G.csr <- envelope(acled_ppp_km, Gest, nsim = 999)
-#plot(G.csr)
+# Iterate through the list
+clarkevans.test(rescale_ppp_km(acled_pak_sf %>% filter(event_type == "Explosions/Remote violence"), magway_pak_sf),
+            correction = "none",
+            alternative = c("clustered"),
+            nsim = 999)
 ```
 
-### K-Function
+Explosions/Remote violence: R < 1 which suggest clustering. p-value < 0.05, H0 can be rejected.
+
+#### Battles
 
 ```{r}
-#acled_ppp_km <- rescale_ppp_km(acled_pak_sf %>% filter(year == 2021), magway_pak_sf)
-#K.csr <- envelope(acled_ppp_km, Kest, nsim = 10)
-#plot(K.csr)
+# Iterate through the list
+clarkevans.test(rescale_ppp_km(acled_pak_sf %>% filter(event_type == "Battles"), magway_pak_sf),
+            correction = "none",
+            alternative = c("clustered"),
+            nsim = 999)
 ```
 
-### K-Function
+Battles: R < 1 which suggest clustering. p-value < 0.05, H0 can be rejected.
+
+#### Violence
 
 ```{r}
-#acled_ppp_km <- rescale_ppp_km(acled_pak_sf %>% filter(year == 2021), magway_pak_sf)
-#L.csr <- envelope(acled_ppp_km, Lest, nsim = 10)
-#plot(L.csr)
+# Iterate through the list
+clarkevans.test(rescale_ppp_km(acled_pak_sf %>% filter(event_type == "Violence against civilians"), magway_pak_sf),
+            correction = "none",
+            alternative = c("clustered"),
+            nsim = 999)
 ```
+
+Violence against civilians: R < 1 which suggest clustering. p-value < 0.05, H0 can be rejected.
+
+:::
+
+::: callout-note
+
+#### Understanding High Clustering
+
+1.  Increased Intensity: Clusters of conflict events often indicate areas of heightened intensity. Concentrated violence can lead to greater casualties, displacement, and destruction of infrastructure.
+2.  Strategic Considerations: Armed groups may strategically target specific areas for tactical advantages or to exert control over key resources.
+3.  Spillover Effects: High clustering in one area can increase the risk of conflict spreading to neighboring regions. This is especially true if the conflict involves armed groups with territorial ambitions.
+
+Given the observed shift from protests to battles over time, I am particularly interested in exploring the relationship between these two types of events. We will be using this 2 events for our subsequent analysis.
+
+:::
+
+### 5.3.2 G Function Analysis
+
+To better appreciate the clustering we can start by visualizing on G function help us identify any clustering or dispersion patterns that may exist, providing valuable insights into the underlying dynamics of conflict in the region. Subsequently we will also be using the other variants of the Ripley's K Function to determine spatial auto correlations, here are their uses:
+- G function: Measures the probability of finding a point within a given distance of another point.
+- K function: Measures the average number of points within a given distance of a randomly chosen point.
+- L function: A transformation of the K function that makes it easier to interpret.
+- F function: Measures the distribution of distances between pairs of points.
+
+::: panel-tabset
+#### Battles
+
+```{r}
+acled_ppp_km <- rescale_ppp_km(acled_pak_sf %>% filter(year == 2021 & event_type == "Battles"), magway_pak_sf)
+G.csr <- envelope(acled_ppp_km, Gest, nsim = 999)
+plot(G.csr, xlab = "Dist (km)", ylab = "G(r)", main = "G-Function (Battles)", lwd = 2, cex.axis = 1.2)
+```
+
+These observations suggest that there is a strong tendency for points to cluster within a distance of 6km. The rapid increase in the G function at shorter distances indicates a high degree of clustering within the first 6km. However, the slower increase beyond 8km suggests that the clustering effect might be weakening at larger distances.
+
+#### Battles
+
+```{r}
+acled_ppp_km <- rescale_ppp_km(acled_pak_sf %>% filter(year == 2021 & event_type == "Protests"), magway_pak_sf)
+G.csr <- envelope(acled_ppp_km, Gest, nsim = 999)
+plot(G.csr, xlab = "Dist (km)", ylab = "G(r)", main = "G-Function (Protests)", lwd = 2, cex.axis = 1.2)
+```
+
+The observed G function steadily increasing suggests a clustering pattern for protests. This means that the probability of finding another protest within a given distance of a protest increases as the distance increases. Unlike battles which often involve larger-scale operations that can extend over wider areas, Protests tend to be more localized events, often concentrated in specific areas or near particular targets. This is why the G function for battles might have a larger range, indicating that points (events) can be found at greater distances from each other.
+
+:::
+
+### 5.3.3 K-Function Analysis
+
+To ensure our observation is consistent we will use K Function to provide further insights into the spatial distribution of conflict events and help confirm our findings from the G function.
+
+::: panel-tabset
+#### Battles
+
+```{r}
+acled_ppp_km <- rescale_ppp_km(acled_pak_sf %>% filter(year == 2021 & event_type == "Battles"), magway_pak_sf)
+K.csr <- envelope(acled_ppp_km, Kest, nsim = 50)
+plot(K.csr, xlab = "Dist (km)", ylab = "K(r)", main = "K-Function (Battles)", lwd = 2, cex.axis = 1.2)
+```
+Similarly here we can observe the strong tendency for points to cluster on the on start up until 20+ km as it slowly converges with the envelope toward 25 km
+
+#### Protests
+
+```{r}
+acled_ppp_km <- rescale_ppp_km(acled_pak_sf %>% filter(year == 2021 & event_type == "Protests"), magway_pak_sf)
+K.csr <- envelope(acled_ppp_km, Kest, nsim = 50)
+plot(K.csr, xlab = "Dist (km)", ylab = "K(r)", main = "K-Function (Protests)", lwd = 2, cex.axis = 1.2)
+```
+
+The K function for protest potrays even more pronounced clustering pattern for protests. The K function indicates a highly localized and intense concentration of protest events within a small radius.
+
+:::
+
+From the above observation we can confirm that our findings from
+
+::: callout-note
+
+#### Understanding Ripley's K Function 
+
+- The solid line represents the observed K function. - If K(r) is above the envelope, it indicates clustering (points are closer together than expected by chance). - If K(r) is below the envelope, it indicates dispersion (points are farther apart than expected by chance). - If K(r) is within the envelope, it suggests a random pattern.
+- Envelope: The envelope is generated by simulating random point patterns under the assumption of CSR. If the observed K function falls outside the envelope, it suggests a significant deviation from randomness.
+- Dotted line through the center: This line represents the theoretical K function under complete spatial randomness. It serves as a benchmark for comparison with the observed K function.
+
+![](assets/k_func.png)
+
+:::
+
+### 5.3.3 L-Function Analysis
+
+To view the K-Function more intuitively we will employ the L function. This transformation of the K function will provide a clearer visualization of the clustering patterns observed in the data.
+
+::: panel-tabset
+#### Battles
+
+```{r}
+acled_ppp_km <- rescale_ppp_km(acled_pak_sf %>% filter(year == 2021 & event_type == "Battles"), magway_pak_sf)
+L.csr <- envelope(acled_ppp_km, Lest, nsim = 50)
+plot(L.csr , . - r ~ r, xlab="Dist (km)", ylab="L(r)-r", main = "L-Function (Battles)", lwd = 2, cex.axis = 1.2)
+```
+
+#### Protests
+
+```{r}
+acled_ppp_km <- rescale_ppp_km(acled_pak_sf %>% filter(year == 2021 & event_type == "Protests"), magway_pak_sf)
+L.csr <- envelope(acled_ppp_km, Lest, nsim = 50)
+plot(L.csr , . - r ~ r, xlab="Dist (km)", ylab="L(r)-r", main = "L-Function (Protests)", lwd = 2, cex.axis = 1.2)
+```
+:::
+
+### 5.3.4 F-Function Analysis
+
+To further validate our observation, we will employ the F function as complementary analysis. Which measures the distribution of distances between pairs of points.
+
+::: panel-tabset
+#### Battles
+
+```{r}
+acled_ppp_km <- rescale_ppp_km(acled_pak_sf %>% filter(year == 2021 & event_type == "Battles"), magway_pak_sf)
+K.csr <- envelope(acled_ppp_km, Fest, nsim = 999)
+plot(K.csr, xlab = "Dist (km)", ylab = "F(r)", main = "F-Function (Battles)", lwd = 2, cex.axis = 1.2)
+```
+
+This suggests that the observed distances between points are smaller than expected under complete spatial randomness. In other words, there is evidence of clustering in the data. The degree of clustering can be assessed by how far below the dotted line the F function curve lies.
+
+#### Protests
+
+```{r}
+acled_ppp_km <- rescale_ppp_km(acled_pak_sf %>% filter(year == 2021 & event_type == "Protests"), magway_pak_sf)
+K.csr <- envelope(acled_ppp_km, Fest, nsim = 999)
+plot(K.csr, xlab = "Dist (km)", ylab = "F(r)", main = "F-Function (Protests)", lwd = 2, cex.axis = 1.2)
+```
+
+Similar observation as with Battles but with a more less steep observation line, indicating more intense clustering.
+
 :::
 
 # 6. Spatial-Temporal Analysis
 
+With our previous findings on clustering with Pakokku, we spatial temporal distribution of events across the district and examine how these patterns evolve over time. This analysis will help us identify specific areas of concentration and potential hotspots, as well as understand the temporal changes in conflict activity.
+
+## 6.1 Overview by Quarter
+
+```{r}
+tm_shape(magway_pak_sf) + tm_polygons() +
+  tm_shape(acled_pak_sf) + tm_dots(size = 0.1, alpha = 0.5, col = "red") +
+  tm_facets(by="quarter",
+            free.coords = F,
+            drop.units = T)
+```
+
+## 6.2 Compute ST Density by Event_type
+
+We start by preparing our `sf` with our quarter id to be used with the `spattemp.density` of the `sparr` for our spatial temporal analysis.
+
+```{r}
+acled_pak_sf <- acled_pak_sf %>%
+  mutate(quarter_id = ((year - 2021) * 4) + ((quarter %% 1) * 10))
+```
+
+::: panel-tabset
+### Battles
+
+```{r}
+pak_ppp_owin <- rescale_ppp_km(acled_pak_sf %>% filter(event_type == "Battles") %>% dplyr::select(quarter_id, geometry), magway_pak_sf)
+
+st_kde <- sparr::spattemp.density(pak_ppp_owin)
+summary(st_kde)
+```
+
+```{r}
+tims <- seq(2, 14)
+par(mfcol = c(4,4), mar = c(2, 2, 2, 2))
+for(i in tims) {
+  plot(st_kde, i,
+       override.par = F,
+       fix.range = F,
+       main=paste("KDE: ",i))
+  }
+```
+
+We can observe over the quarters (less 2021 Q1) the Battles are spread out around the northern sector of Pakokku
+
+### Protests
+
+```{r}
+pak_ppp_owin <- rescale_ppp_km(acled_pak_sf %>% filter(event_type == "Protests") %>% dplyr::select(quarter_id, geometry), magway_pak_sf)
+
+st_kde <- sparr::spattemp.density(pak_ppp_owin)
+summary(st_kde)
+```
+
+```{r}
+tims <- seq(2, 14)
+par(mfcol = c(4,4), mar = c(2, 2, 2, 2))
+for(i in tims) {
+  plot(st_kde, i,
+       override.par = F,
+       fix.range = F,
+       main=paste("KDE: ",i))
+  }
+```
+
+Whereas the Protests is observed to remain localized and consistent in towns and cities.
+
+:::
+
+## 6.3 Animating Events (Battles)
+
+The Spatial Temporal Diffusion for Battles is animated with the following code, which generates and MP4, subsequently converted into a Gif
+
+```{r}
+#| eval: false
+#! ouptput: false
+# pak_ppp_owin <- rescale_ppp_km(acled_pak_sf %>% filter(event_type == "Battles") %>% dplyr::select(quarter_id, geometry), magway_pak_sf)
+
+# hlam <- LIK.spattemp(pak_ppp_owin)
+# f.breve <- spattemp.density(pak_ppp_owin, h=hlam[1], lambda=hlam[2], tlim=c(1,14))
+# g.tilde <- bivariate.density(pak_ppp_owin, h0=hlam[1])
+# rho.breve <- spattemp.risk(f=f.breve,g=g.tilde, tolerate=TRUE)
+
+# colpal <- spatstat.options("image.colfun")
+# fmdcolours <- colourmap(colpal(128),breaks=c(-80,seq(-7,4,length=128)))
+# mytimes <- 1:14
+# animation::saveVideo(
+#  for(i in 1:length(mytimes)){
+#    plot(rho.breve,tselect=mytimes[i],type="conditional",col=fmdcolours,
+#         tol.args=list(levels=c(0.05,0.0001),lty=2:1,drawlabels=FALSE),
+#         sleep=0,override.par=FALSE)
+#    title(xlab="Easting",ylab="Northing")
+#  },
+#  video.name="fmd_protests.mp4", other.opts = '-b:v 1M -pix_fmt yuv420p', ani.width=640, ani.height=640, interval=1/4)
+```
+
+![](assets/fmd.gif)
+
+::: callout-note
+
+The above code chunk is commented to prevent execution as it requires ffmpeg tool for running. Ensure you have the tool installed before running.
+
+:::
+
+# 7. Interpretation 
+
+After gathering the insights from our previous analysis, we will integrate OpenStreetMap (OSM) data and explore the temporal relationships within our dataset.
 
 
-# 7. Interpretation
+
+## 7.1 Visualizing conflicts on OSM
+
+For our OSM dimensions we will be working with the places layers which consists of towns and cities as well as the places of worship (POW). The data are retrieved from [geofabrik](https://download.geofabrik.de/asia/myanmar.html) for Myanmmar.
+
+### 7.1.1 Prepping OSM Data
+
+OSM data is loaded and crs transformed.
+
+```{r}
+osm_sf = st_read("data/geospatial/myanmar-latest-free.shp.zip", layer="gis_osm_places_a_free_1") %>%
+  st_transform(crs = 32647)
+
+osm_pow_sf = st_read("data/geospatial/myanmar-latest-free.shp.zip", layer="gis_osm_pofw_free_1") %>%
+  st_transform(crs = 32647)
+```
+
+```{r}
+#| eval: false
+write_rds(osm_sf, "data/rds/osm_sf.rds")
+write_rds(osm_pow_sf, "data/rds/osm_pow_sf.rds")
+```
+
+```{r}
+osm_sf <- read_rds("data/rds/osm_sf.rds")
+osm_pow_sf <- read_rds("data/rds/osm_pow_sf.rds")
+```
+
+### 7.1.2 Visualizing Area of Study
+
+In the following we take a look at the distribution of the places and POW across Magway.
+
+::: panel-tabset
+#### Towns and City
+
+By incorporating places data from OSM, we can identify areas with high population density and analyze their relationship to conflict events. This analysis will help us understand whether population concentration plays a role in shaping the spatial distribution of conflict
+
+```{r}
+# Create the distribution map with title and dots
+osm_mag_sf <- st_intersection(osm_sf, magway_sf)
+tm_shape(magway_sf) +
+  tm_polygons() +
+  tm_shape(osm_mag_sf %>% filter(fclass %in% c("town", "city", "suburb"))) +
+  tm_bubbles(col = "fclass", alpha = 1, size = 0.1) +
+  tm_layout(title = "Distribution", title.position = c("right", "top"))
+```
+
+Within Magway we can identify the Pakokku in blue, the largest city in the Magway Region of Myanmar. It is situated about 30 km northeast of Bagan on the Irrawaddy River with a population of 322,154.
+
+#### Places of Worship
+
+While our OSM data does not include ethnicity information, we can explore potential relationships between conflict events and places of worship. By analyzing the spatial proximity between conflict locations and religious sites, we may gain insights into the role of religious identity or affiliation in shaping conflict dynamics.
+
+```{r}
+# Create the distribution map with title and dots
+osm_pow_mag_sf <- st_intersection(osm_pow_sf, magway_sf)
+tm_shape(magway_sf) +
+  tm_polygons() +
+  tm_shape(osm_pow_mag_sf) +
+  tm_bubbles(col = "fclass", alpha = 0.5, size = 0.1) +
+  tm_layout(title = "Distribution", title.position = c("right", "top"))
+```
+
+Other than a scatter of other religions in Minbu on the broder with Rakhine in the west the region is mostly dominated by Buddhism.
+:::
+
+### 7.1.3 KDE on OSM
+
+Next we will overlay the OSM points on our density plot to identify their spatial relations.
+
+```{r}
+acled_ppp_pro <- as.ppp(acled_pak_sf %>% filter(event_type == "Protests"))
+acled_ppp_bat <- as.ppp(acled_pak_sf %>% filter(event_type == "Battles"))
+magway_owin <- as.owin(magway_pak_sf %>% st_union())
+```
+
+#### 7.1.3.1 Protests KDE
+
+```{r}
+acled_ppp_kde <- density(acled_ppp_pro[magway_owin], sigma = 5000, edge = TRUE, kernel = "gaussian")
+acled_mag_raster <- kde_to_raster(acled_ppp_kde)
+
+pak_kde_raster <- tm_shape(acled_mag_raster) +
+  tm_raster(alpha = 0.8, palette = "YlOrRd")
+```
+
+::: panel-tabset
+##### Towns and City
+
+```{r}
+# Assuming you have a RasterLayer object named 'my_raster'
+osm_pak_sf <- st_intersection(osm_sf, magway_pak_sf)
+tm_shape(magway_pak_sf) +
+  tm_polygons(col = "white") +
+  pak_kde_raster +
+  tm_shape(osm_pak_sf %>% filter(fclass %in% c("town", "city"))) +
+  tm_bubbles(col = "fclass", alpha = 1, size = 0.2, palette = c("aquamarine", "cornflowerblue")) + 
+  tm_layout(title = "Places (Protests)", title.position = c("center", "top")) 
+```
+
+As observed the protests are mostly clustered around the city of Pakokku and the township of Myaing.
+
+##### Places of Worhsip
+
+```{r}
+# Assuming you have a RasterLayer object named 'my_raster'
+osm_pow_pak_sf <- st_intersection(osm_pow_sf, magway_pak_sf)
+tm_shape(magway_pak_sf) +
+  tm_polygons(col = "white") +
+  pak_kde_raster +
+  tm_shape(osm_pow_pak_sf) +
+  tm_bubbles(col = "fclass", alpha = 0.3, size = 0.1, palette = c("aquamarine")) +
+  tm_layout(title = "Places of Worship (Protests)", title.position = c("center", "top"))
+```
+
+There is not much relations to be observed with places of worship since the dominant and registered religion within the district is Buddhist.
+
+:::
+
+#### 7.1.3.2 Battles KDE
+
+```{r}
+acled_ppp_kde <- density(acled_ppp_bat[magway_owin], sigma = 5000, edge = TRUE, kernel = "gaussian")
+acled_mag_raster <- kde_to_raster(acled_ppp_kde)
+
+pak_kde_raster <- tm_shape(acled_mag_raster) +
+  tm_raster(alpha = 0.8, palette = "YlOrRd")
+```
+
+::: panel-tabset
+##### Towns and City
+
+```{r}
+# Assuming you have a RasterLayer object named 'my_raster'
+osm_pak_sf <- st_intersection(osm_sf, magway_pak_sf)
+tm_shape(magway_pak_sf) +
+  tm_polygons(col = "white") +
+  pak_kde_raster +
+  tm_shape(osm_pak_sf %>% filter(fclass %in% c("town", "city"))) +
+  tm_bubbles(col = "fclass", alpha = 1, size = 0.2, palette = c("aquamarine", "cornflowerblue")) + 
+  tm_layout(title = "Places (Battles)", title.position = c("center", "top")) 
+```
+
+Battles tend to occur in wider radius around towns and cities, while protests are more concentrated in urban centers. 
+
+##### Places of Worhsip
+
+```{r}
+# Assuming you have a RasterLayer object named 'my_raster'
+osm_pow_pak_sf <- st_intersection(osm_pow_sf, magway_pak_sf)
+tm_shape(magway_pak_sf) +
+  tm_polygons(col = "white") +
+  pak_kde_raster +
+  tm_shape(osm_pow_pak_sf) +
+  tm_bubbles(col = "fclass", alpha = 0.3, size = 0.1, palette = c("aquamarine")) +
+  tm_layout(title = "Places of Worship (Battles)", title.position = c("center", "top"))
+```
+
+There is not much relations to be observed with places of worship since the dominant and registered religion within the district is Buddhist.
+
+:::
+
+## 7.2 Analysis of Timeline
+
+Finally lets discuss the event type and its changes over the course of the conflict.
+
+```{r}
+# Filter for the desired event types
+grouped_data <- acled_pak_sf %>%
+  filter(event_type %in% c("Protests", "Battles")) %>%
+  mutate(year_quarter = year + (quarter %% 1) * 2.5) %>% 
+  group_by(event_type, year_quarter) %>%
+  summarize(count = n())
+
+# Create the line plot
+ggplot(grouped_data, aes(x = year_quarter, y = count, color = event_type)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Event Type Counts Over Time",
+       x = "Quarter",
+       y = "Count") +
+  scale_color_manual(values = c("Protests" = "red", "Battles" = "blue")) +
+  theme_minimal()
+```
+
+Our analysis reveals a distinct temporal pattern in conflict events. Protests were prevalent in the early stages of the conflict in 2021, but their frequency gradually declined over time. On the other hand, battles have become more frequent, suggesting a shift in the tactics or strategies employed by the conflicting parties.
+
+Several factors may contribute to this trend. The increasing presence of security forces and the implementation of restrictive measures could have suppressed protest activity. Additionally, the evolving dynamics of the conflict, such as changes in leadership or alliances, may have influenced the shift towards more violent confrontations.
+
+## 7.3 Key Policy and Mitigation Strategies
+
+1. Promote Dialogue and Reconciliation: To foster peace and stability, it is essential to facilitate inclusive dialogue among all relevant stakeholders. Neutral mediation and trust-building measures can support this process, creating a conducive environment for negotiation and agreement.
+
+2. Address Root Causes: Addressing the underlying grievances and social injustices that fuel the conflict is crucial for long-term peace. This involves promoting socioeconomic development, ensuring human rights protection, and fostering inter-ethnic reconciliation.
+
+3. Security Sector Reform: Reforming the security sector is essential for creating a more accountable, professional, and human rights-respecting force. This includes measures such as demilitarization, civilian control, and support for disarmament, demobilization, and reintegration programs.
+
+# 8. Personal Reflection
+
+## 8.1 Technically
+I've learned how to use spatial analysis tools effectively, especially for first-order, second-order and spatial temporal analyses. The `spatstat` and `sparr` packages were invaluable for this. The EDA with `ggplot` was also tremendously helpful for my subsequent.
+
+## 8.2 Conflict-Related
+I gained insights into the spatial distribution of conflict events, identified hotspots, and understood temporal patterns. I also explored the relationships between conflict and geographic factors such as places and POW. These findings also made me delve into ways of mitigating such conflicts as well as peacbuilding effots.
