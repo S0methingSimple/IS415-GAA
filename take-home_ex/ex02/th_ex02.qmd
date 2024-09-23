@@ -4,7 +4,7 @@ author: "Jeffery Lau"
 date: 09-23-2024
 date-modified: "last-modified"
 description: |
-  In this exercise, We will be analyzing armed conflict data in Myanmar, using spatial point pattern analysis to understand the distribution and relationships between conflict events. We'll also create maps to visualize the results and interpret the spatial patterns.
+  In this exercise, we will be analyzing drug use offence in Thailand from 2017 - 2022, using spatial autocorrelation techniques to identify clusters, outliers and hotspots of such offence. We'll also create maps to visualize the results and interpret the spatial patterns.
 categories:
   - Take-home
 format:
@@ -21,16 +21,17 @@ execute:
 
 ## 1.1 Context
 
-In 2024 armed conflict continues to be a devastating global issue, with millions of people affected each year. Recent years have seen a surge in conflicts, driven by factors such as political instability, regional tensions, and resource scarcity. Myanmar, in particular, has experienced significant armed conflict in recent years, including the 2021 military coup and subsequent violence.
+Drug abuse is a significant global health issue with far-reaching consequences, including negative health outcomes, financial burdens, and social problems. Despite efforts to combat it, illicit drug consumption remains prevalent and continues to grow. In 2021, an estimated 296 million people aged 15–64 worldwide had used a drug in the past 12 months.
 
-TODO: Lit review
+Thailand, situated near the Golden Triangle - the largest drug production site in Asia - has become a market and transit route for drug trafficking due to its geographic location and infrastructure development. This has made drug abuse a major social issue within the country.
+
+Youth are particularly vulnerable to drug abuse, with approximately 2.7 million Thai youths using drugs. Among 15-19-year-olds, around 300,000 require drug treatment. Vocational-school students are disproportionately affected, with nearly double the number of drug users compared to secondary-school students.
 
 ## 1.2 Objectives
 
-1.  Analyze the spatial distribution of armed conflict events in Myanmar.
-2.  Identify patterns and trends in the temporal distribution of conflict events.
-3.  Identify potential hotspots of conflict activity.
-4.  Provide insights for policymakers and humanitarian organizations working to address the conflict in Myanmar.
+1.  Determine if drug abuse indicator are spatially dependent
+2.  Identify clusters, outliers and hotspots of drug abuse 
+3.  Analyse how the spatial patterns
 
 # 2. Setup
 
@@ -41,6 +42,8 @@ In this project we will be using the following packages:
 -   **`tmap`:** A package for creating thematic maps in R. It provides a simple and flexible interface for customizing maps and exporting them in various formats.
 
 -   **`sf`:** A package for simple feature data, which is a modern standard for representing geographic features. It provides efficient data structures and functions for spatial operations.
+
+-   **`sfdep`:** A collection of R packages designed for data manipulation, visualization, and analysis. It includes packages like dplyr, ggplot2, and tidyr, which are commonly used in data science workflows.
 
 -   **`raster`:** A package for working with raster data, such as images and digital elevation models. It offers tools for reading, writing, manipulating, and analyzing raster data.
 
@@ -53,7 +56,145 @@ In this project we will be using the following packages:
 -   **`tidyverse`:** A collection of R packages designed for data manipulation, visualization, and analysis. It includes packages like dplyr, ggplot2, and tidyr, which are commonly used in data science workflows.
 
 ```{r}
-pacman::p_load(tmap, sf, raster, spatstat, sparr, maptools, sp, tidyverse, DT, gridExtra, animation)
+pacman::p_load(tmap, sf, sfdep, raster, spatstat, maptools, tidyverse, DT)
 ```
 
 ## 2.2 Loading Data
+
+The dataset used in this analysis is sourced from the Armed Conflict Location & Event Data (ACLED) database. It contains information on various types of armed conflict events, including Battles, Explosion/Remote violence, Strategic developments, Protest, Riots, and Violence against civilians. The data covers the period from January 2021 to June 2024 and provides specific details such as event date, location coordinates, actor information, and more.
+
+```{r}
+off_sf <- read_csv("data/aspatial/thai_drug_offenses_2017_2022.csv")
+```
+
+Here we will be using the read_sf as the st_read encountered 
+
+```{r}
+prov_sf <- read_sf('data/geospatial/tha_adm_rtsd_itos_20210121_shp/tha_admbnda_adm1_rtsd_20220121.shp')
+```
+
+
+# 3. Data Wrangling
+
+## 3.1 Examining Data 
+
+Before performing the join we need to identify if the column we are joining share the same province spelling.
+
+```{r}
+prov_diff <- function(off_sf_provinces, prov_sf_provinces) {
+  # Check if all provinces from off_sf are in prov_sf
+  all_off_sf_in_prov_sf <- all(off_sf_provinces %in% prov_sf_provinces)
+  
+  # Check if all provinces from prov_sf are in off_sf
+  all_prov_sf_in_off_sf <- all(prov_sf_provinces %in% off_sf_provinces)
+  
+  # Check if the sets are equal
+  sets_are_equal <- all_off_sf_in_prov_sf && all_prov_sf_in_off_sf
+  
+  if (sets_are_equal) {
+    cat("All province names match.\n")
+  } else {
+    cat("There are mismatches in province names.\n")
+  
+    # Find the differences
+    cat("Missing in prov_sf:", paste(setdiff(off_sf_provinces, prov_sf_provinces), collapse = ", "), "\n")
+    cat("Missing in off_sf:", paste(setdiff(prov_sf_provinces, off_sf_provinces), collapse = ", "), "\n")
+  }
+}
+
+prov_diff(unique(off_sf$province_en), unique(prov_sf$ADM1_EN))
+```
+
+Notice in the above when we compare the unique set from both SF there is 2 misspellings, where we will be renaming the province in off_sf:
+1.    Loburi -> Lop Buri
+2.    Buogkan -> Bueng Kan
+
+```{r}
+off_sf <- off_sf %>%
+  mutate(province_en = case_when(
+    province_en == "Loburi" ~ "Lop Buri",
+    TRUE ~ province_en
+  ))
+off_sf <- off_sf %>%
+  mutate(province_en = case_when(
+    province_en == "buogkan" ~ "Bueng Kan",
+    TRUE ~ province_en
+  ))
+
+prov_diff(unique(off_sf$province_en), unique(prov_sf$ADM1_EN))
+```
+
+## 3.2 Joining `sf` on Province
+
+```{r}
+du_sf <- left_join(off_sf, prov_sf, by = c("province_en" = "ADM1_EN"))
+head(du_sf)
+```
+
+## 3.3 Data Cleaning
+
+### 3.3.1 Detecting NA
+
+```{r}
+# Check for null values in key columns
+na_count <- du_sf %>%
+  summarise(na_geometry = sum(is.na(geometry)),
+            na_province = sum(is.na(province_en)),
+            na_drug_offense = sum(is.na(types_of_drug_offenses)),
+            na_cases = sum(is.na(no_cases)))
+
+print(na_count)
+```
+
+### 3.3.2 Ensuring Consistency
+
+The data should have the years 2017 - 2022 for 16 types of drug offenses:
+
+```{r}
+# Check for null values in key columns
+print(unique(du_sf$fiscal_year))
+print(unique(du_sf$types_of_drug_offenses))
+```
+
+Next we need to ensure all province should have 96 records each. We can also verify that since there 77 unique province which tallies to 7392 obs. in our `sf` given each province have 96 records
+
+```{r}
+# Assuming du_sf is a data frame
+province_counts <- du_sf %>%
+  group_by(province_en) %>%
+  summarize(count = n())
+
+# Check if all counts are 96
+all_96 <- all(province_counts$count == 96)
+
+if (all_96) {
+  cat("All provinces have 96 records.\n")
+} else {
+  cat("Provinces with counts other than 96:\n")
+  print(province_counts %>% filter(count != 96))
+}
+```
+
+### 3.3.3 Detecting Duplicates
+
+Here we try to detect if there happen to be any duplicate given a state, fiscal year and typeo of offence.
+
+```{r}
+duplicates <- du_sf %>%
+  group_by(province_en, fiscal_year, types_of_drug_offenses) %>%
+  filter(n() > 1)
+
+if (nrow(duplicates) > 0) {
+  cat("Duplicates found:\n")
+  print(duplicates)
+} else {
+  cat("No duplicates found.\n")
+}
+```
+
+# 4. Exploratory Data Analysis
+
+```{r}
+
+```
+

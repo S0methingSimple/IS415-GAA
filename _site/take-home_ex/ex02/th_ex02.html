@@ -228,6 +228,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#loading-packages" id="toc-loading-packages" class="nav-link" data-scroll-target="#loading-packages">2.1 Loading Packages</a></li>
   <li><a href="#loading-data" id="toc-loading-data" class="nav-link" data-scroll-target="#loading-data">2.2 Loading Data</a></li>
   </ul></li>
+  <li><a href="#data-wrangling" id="toc-data-wrangling" class="nav-link" data-scroll-target="#data-wrangling">3. Data Wrangling</a>
+  <ul class="collapse">
+  <li><a href="#examining-data" id="toc-examining-data" class="nav-link" data-scroll-target="#examining-data">3.1 Examining Data</a></li>
+  <li><a href="#joining-sf-on-province" id="toc-joining-sf-on-province" class="nav-link" data-scroll-target="#joining-sf-on-province">3.2 Joining <code>sf</code> on Province</a></li>
+  <li><a href="#data-cleaning" id="toc-data-cleaning" class="nav-link" data-scroll-target="#data-cleaning">3.3 Data Cleaning</a>
+  <ul class="collapse">
+  <li><a href="#detecting-na" id="toc-detecting-na" class="nav-link" data-scroll-target="#detecting-na">3.3.1 Detecting NA</a></li>
+  <li><a href="#ensuring-consistency" id="toc-ensuring-consistency" class="nav-link" data-scroll-target="#ensuring-consistency">3.3.2 Ensuring Consistency</a></li>
+  <li><a href="#detecting-duplicates" id="toc-detecting-duplicates" class="nav-link" data-scroll-target="#detecting-duplicates">3.3.3 Detecting Duplicates</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#exploratory-data-analysis" id="toc-exploratory-data-analysis" class="nav-link" data-scroll-target="#exploratory-data-analysis">4. Exploratory Data Analysis</a></li>
   </ul>
 </nav>
     </div>
@@ -283,16 +295,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>1. Introduction</h1>
 <section id="context" class="level2">
 <h2 class="anchored" data-anchor-id="context">1.1 Context</h2>
-<p>In 2024 armed conflict continues to be a devastating global issue, with millions of people affected each year. Recent years have seen a surge in conflicts, driven by factors such as political instability, regional tensions, and resource scarcity. Myanmar, in particular, has experienced significant armed conflict in recent years, including the 2021 military coup and subsequent violence.</p>
-<p>TODO: Lit review</p>
+<p>Drug abuse is a significant global health issue with far-reaching consequences, including negative health outcomes, financial burdens, and social problems. Despite efforts to combat it, illicit drug consumption remains prevalent and continues to grow. In 2021, an estimated 296 million people aged 15–64 worldwide had used a drug in the past 12 months.</p>
+<p>Thailand, situated near the Golden Triangle - the largest drug production site in Asia - has become a market and transit route for drug trafficking due to its geographic location and infrastructure development. This has made drug abuse a major social issue within the country.</p>
+<p>Youth are particularly vulnerable to drug abuse, with approximately 2.7 million Thai youths using drugs. Among 15-19-year-olds, around 300,000 require drug treatment. Vocational-school students are disproportionately affected, with nearly double the number of drug users compared to secondary-school students.</p>
 </section>
 <section id="objectives" class="level2">
 <h2 class="anchored" data-anchor-id="objectives">1.2 Objectives</h2>
 <ol type="1">
-<li>Analyze the spatial distribution of armed conflict events in Myanmar.</li>
-<li>Identify patterns and trends in the temporal distribution of conflict events.</li>
-<li>Identify potential hotspots of conflict activity.</li>
-<li>Provide insights for policymakers and humanitarian organizations working to address the conflict in Myanmar.</li>
+<li>Determine if drug abuse indicator are spatially dependent</li>
+<li>Identify clusters, outliers and hotspots of drug abuse</li>
+<li>Analyse how the spatial patterns</li>
 </ol>
 </section>
 </section>
@@ -304,6 +316,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <ul>
 <li><p><strong><code>tmap</code>:</strong> A package for creating thematic maps in R. It provides a simple and flexible interface for customizing maps and exporting them in various formats.</p></li>
 <li><p><strong><code>sf</code>:</strong> A package for simple feature data, which is a modern standard for representing geographic features. It provides efficient data structures and functions for spatial operations.</p></li>
+<li><p><strong><code>sfdep</code>:</strong> A collection of R packages designed for data manipulation, visualization, and analysis. It includes packages like dplyr, ggplot2, and tidyr, which are commonly used in data science workflows.</p></li>
 <li><p><strong><code>raster</code>:</strong> A package for working with raster data, such as images and digital elevation models. It offers tools for reading, writing, manipulating, and analyzing raster data.</p></li>
 <li><p><strong><code>spatstat</code>:</strong> A package for spatial point pattern analysis. It provides functions for analyzing the distribution and relationships between points in a study area.</p></li>
 <li><p><strong><code>maptools</code>:</strong> A package for reading and writing various spatial data formats, including shapefiles and KML. It also provides tools for converting between different spatial data structures.</p></li>
@@ -311,14 +324,192 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><p><strong><code>tidyverse</code>:</strong> A collection of R packages designed for data manipulation, visualization, and analysis. It includes packages like dplyr, ggplot2, and tidyr, which are commonly used in data science workflows.</p></li>
 </ul>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(tmap, sf, raster, spatstat, sparr, maptools, sp, tidyverse, DT, gridExtra, animation)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(tmap, sf, sfdep, raster, spatstat, maptools, tidyverse, DT)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="loading-data" class="level2">
 <h2 class="anchored" data-anchor-id="loading-data">2.2 Loading Data</h2>
-
-
+<p>The dataset used in this analysis is sourced from the Armed Conflict Location &amp; Event Data (ACLED) database. It contains information on various types of armed conflict events, including Battles, Explosion/Remote violence, Strategic developments, Protest, Riots, and Violence against civilians. The data covers the period from January 2021 to June 2024 and provides specific details such as event date, location coordinates, actor information, and more.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>off_sf <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/aspatial/thai_drug_offenses_2017_2022.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Here we will be using the read_sf as the st_read encountered</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>prov_sf <span class="ot">&lt;-</span> <span class="fu">read_sf</span>(<span class="st">'data/geospatial/tha_adm_rtsd_itos_20210121_shp/tha_admbnda_adm1_rtsd_20220121.shp'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 </section>
+</section>
+<section id="data-wrangling" class="level1">
+<h1>3. Data Wrangling</h1>
+<section id="examining-data" class="level2">
+<h2 class="anchored" data-anchor-id="examining-data">3.1 Examining Data</h2>
+<p>Before performing the join we need to identify if the column we are joining share the same province spelling.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>prov_diff <span class="ot">&lt;-</span> <span class="cf">function</span>(off_sf_provinces, prov_sf_provinces) {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Check if all provinces from off_sf are in prov_sf</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  all_off_sf_in_prov_sf <span class="ot">&lt;-</span> <span class="fu">all</span>(off_sf_provinces <span class="sc">%in%</span> prov_sf_provinces)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Check if all provinces from prov_sf are in off_sf</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  all_prov_sf_in_off_sf <span class="ot">&lt;-</span> <span class="fu">all</span>(prov_sf_provinces <span class="sc">%in%</span> off_sf_provinces)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Check if the sets are equal</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  sets_are_equal <span class="ot">&lt;-</span> all_off_sf_in_prov_sf <span class="sc">&amp;&amp;</span> all_prov_sf_in_off_sf</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (sets_are_equal) {</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="st">"All province names match.</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="st">"There are mismatches in province names.</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Find the differences</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="st">"Missing in prov_sf:"</span>, <span class="fu">paste</span>(<span class="fu">setdiff</span>(off_sf_provinces, prov_sf_provinces), <span class="at">collapse =</span> <span class="st">", "</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="st">"Missing in off_sf:"</span>, <span class="fu">paste</span>(<span class="fu">setdiff</span>(prov_sf_provinces, off_sf_provinces), <span class="at">collapse =</span> <span class="st">", "</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="fu">prov_diff</span>(<span class="fu">unique</span>(off_sf<span class="sc">$</span>province_en), <span class="fu">unique</span>(prov_sf<span class="sc">$</span>ADM1_EN))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>There are mismatches in province names.
+Missing in prov_sf: Loburi, buogkan 
+Missing in off_sf: Lop Buri, Bueng Kan </code></pre>
+</div>
+</div>
+<p>Notice in the above when we compare the unique set from both SF there is 2 misspellings, where we will be renaming the province in off_sf: 1. Loburi -&gt; Lop Buri 2. Buogkan -&gt; Bueng Kan</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>off_sf <span class="ot">&lt;-</span> off_sf <span class="sc">%&gt;%</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">province_en =</span> <span class="fu">case_when</span>(</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    province_en <span class="sc">==</span> <span class="st">"Loburi"</span> <span class="sc">~</span> <span class="st">"Lop Buri"</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="cn">TRUE</span> <span class="sc">~</span> province_en</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  ))</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>off_sf <span class="ot">&lt;-</span> off_sf <span class="sc">%&gt;%</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">province_en =</span> <span class="fu">case_when</span>(</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    province_en <span class="sc">==</span> <span class="st">"buogkan"</span> <span class="sc">~</span> <span class="st">"Bueng Kan"</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="cn">TRUE</span> <span class="sc">~</span> province_en</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  ))</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="fu">prov_diff</span>(<span class="fu">unique</span>(off_sf<span class="sc">$</span>province_en), <span class="fu">unique</span>(prov_sf<span class="sc">$</span>ADM1_EN))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>All province names match.</code></pre>
+</div>
+</div>
+</section>
+<section id="joining-sf-on-province" class="level2">
+<h2 class="anchored" data-anchor-id="joining-sf-on-province">3.2 Joining <code>sf</code> on Province</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>du_sf <span class="ot">&lt;-</span> <span class="fu">left_join</span>(off_sf, prov_sf, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"province_en"</span> <span class="ot">=</span> <span class="st">"ADM1_EN"</span>))</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(du_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 21
+  fiscal_year types_of_drug_offenses no_cases province_th province_en Shape_Leng
+        &lt;dbl&gt; &lt;chr&gt;                     &lt;dbl&gt; &lt;chr&gt;       &lt;chr&gt;            &lt;dbl&gt;
+1        2017 drug_use_cases            11871 กรุงเทพมหาน… Bangkok           2.42
+2        2017 drug_use_cases              200 ชัยนาท       Chai Nat          2.90
+3        2017 drug_use_cases              553 นนทบุรี       Nonthaburi        1.25
+4        2017 drug_use_cases              450 ปทุมธานี      Pathum Tha…       1.88
+5        2017 drug_use_cases              378 พระนครศรีอยุ… Phra Nakho…       3.04
+6        2017 drug_use_cases              727 ลพบุรี        Lop Buri          5.69
+# ℹ 15 more variables: Shape_Area &lt;dbl&gt;, ADM1_TH &lt;chr&gt;, ADM1_PCODE &lt;chr&gt;,
+#   ADM1_REF &lt;chr&gt;, ADM1ALT1EN &lt;chr&gt;, ADM1ALT2EN &lt;chr&gt;, ADM1ALT1TH &lt;chr&gt;,
+#   ADM1ALT2TH &lt;chr&gt;, ADM0_EN &lt;chr&gt;, ADM0_TH &lt;chr&gt;, ADM0_PCODE &lt;chr&gt;,
+#   date &lt;date&gt;, validOn &lt;date&gt;, validTo &lt;date&gt;, geometry &lt;MULTIPOLYGON [°]&gt;</code></pre>
+</div>
+</div>
+</section>
+<section id="data-cleaning" class="level2">
+<h2 class="anchored" data-anchor-id="data-cleaning">3.3 Data Cleaning</h2>
+<section id="detecting-na" class="level3">
+<h3 class="anchored" data-anchor-id="detecting-na">3.3.1 Detecting NA</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check for null values in key columns</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>na_count <span class="ot">&lt;-</span> du_sf <span class="sc">%&gt;%</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">na_geometry =</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(geometry)),</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">na_province =</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(province_en)),</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">na_drug_offense =</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(types_of_drug_offenses)),</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">na_cases =</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(no_cases)))</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(na_count)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 4
+  na_geometry na_province na_drug_offense na_cases
+        &lt;int&gt;       &lt;int&gt;           &lt;int&gt;    &lt;int&gt;
+1           0           0               0        0</code></pre>
+</div>
+</div>
+</section>
+<section id="ensuring-consistency" class="level3">
+<h3 class="anchored" data-anchor-id="ensuring-consistency">3.3.2 Ensuring Consistency</h3>
+<p>The data should have the years 2017 - 2022 for 16 types of drug offenses:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check for null values in key columns</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">unique</span>(du_sf<span class="sc">$</span>fiscal_year))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2017 2018 2019 2020 2021 2022</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">unique</span>(du_sf<span class="sc">$</span>types_of_drug_offenses))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "drug_use_cases"                                        
+ [2] "suspects_in_drug_use_cases"                            
+ [3] "possession_cases"                                      
+ [4] "suspects_in_possession_cases"                          
+ [5] "possession_with_intent_to_distribute_cases"            
+ [6] "suspects_in_possession_with_intent_to_distribute_cases"
+ [7] "trafficking_cases"                                     
+ [8] "suspects_in_trafficking_cases"                         
+ [9] "production_cases"                                      
+[10] "suspects_in_production_cases"                          
+[11] "import_cases"                                          
+[12] "suspects_in_import_cases"                              
+[13] "export_cases"                                          
+[14] "suspects_in_export_cases"                              
+[15] "conspiracy_cases"                                      
+[16] "suspects_in_conspiracy_cases"                          </code></pre>
+</div>
+</div>
+<p>Next we need to ensure all province should have 96 records each. We can also verify that since there 77 unique province which tallies to 7392 obs. in our <code>sf</code> given each province have 96 records</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Assuming du_sf is a data frame</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>province_counts <span class="ot">&lt;-</span> du_sf <span class="sc">%&gt;%</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(province_en) <span class="sc">%&gt;%</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">count =</span> <span class="fu">n</span>())</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Check if all counts are 96</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>all_96 <span class="ot">&lt;-</span> <span class="fu">all</span>(province_counts<span class="sc">$</span>count <span class="sc">==</span> <span class="dv">96</span>)</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (all_96) {</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"All provinces have 96 records.</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"Provinces with counts other than 96:</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(province_counts <span class="sc">%&gt;%</span> <span class="fu">filter</span>(count <span class="sc">!=</span> <span class="dv">96</span>))</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>All provinces have 96 records.</code></pre>
+</div>
+</div>
+</section>
+<section id="detecting-duplicates" class="level3">
+<h3 class="anchored" data-anchor-id="detecting-duplicates">3.3.3 Detecting Duplicates</h3>
+<p>Here we try to detect if there happen to be any duplicate given a state, fiscal year and typeo of offence.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>duplicates <span class="ot">&lt;-</span> du_sf <span class="sc">%&gt;%</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(province_en, fiscal_year, types_of_drug_offenses) <span class="sc">%&gt;%</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">n</span>() <span class="sc">&gt;</span> <span class="dv">1</span>)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">nrow</span>(duplicates) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"Duplicates found:</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(duplicates)</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"No duplicates found.</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>No duplicates found.</code></pre>
+</div>
+</div>
+</section>
+</section>
+</section>
+<section id="exploratory-data-analysis" class="level1">
+<h1>4. Exploratory Data Analysis</h1>
+
+
 </section>
 
 </main> <!-- /main -->
