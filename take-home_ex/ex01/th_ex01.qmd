@@ -23,8 +23,6 @@ execute:
 
 In 2024 armed conflict continues to be a devastating global issue, with millions of people affected each year. Recent years have seen a surge in conflicts, driven by factors such as political instability, regional tensions, and resource scarcity. Myanmar, in particular, has experienced significant armed conflict in recent years, including the 2021 military coup and subsequent violence.
 
-TODO: Lit review
-
 ## 1.2 Objectives
 
 1.  Analyze the spatial distribution of armed conflict events in Myanmar.
@@ -320,7 +318,7 @@ tmap_arrange(magway_plot, asp = 2, nrow = 2, ncol = 2)
 
 ## 4.3 Event/Fatalities Insights
 
-Our boxplot also suggests that battles are associated with the highest number of fatalities, while protests generally have lower fatality counts. 
+Our boxplot also suggests that battles are associated with the highest number of fatalities, while protests generally have lower fatality counts.
 
 ```{r}
 ggplot(acled_sf, aes(x = event_type, y = fatalities)) +
@@ -335,8 +333,7 @@ ggplot(acled_sf, aes(x = event_type, y = fatalities)) +
 ::: callout-note
 ##### Selection of Event Type
 
-Given the distinct patterns observed in fatalities and the development of event types, we will focus our subsequent analysis on Battles, Explosions, Violence against Civilians, and Protests. 
-
+Given the distinct patterns observed in fatalities and the development of event types, we will focus our subsequent analysis on Battles, Explosions, Violence against Civilians, and Protests.
 :::
 
 # 5. Spatial Point Pattern Analysis
@@ -349,11 +346,7 @@ To streamline our analysis, we have created reusable functions for common tasks.
 
 ### 5.1.1 Convert and Rescale
 
-In this function we perform the following:
-1. Convert event `sf` to `ppp`
-2. Convert boundary `sf` to `ppp`
-3. Jitter any duplicates (If any)
-4. Rescale from m to km 
+In this function we perform the following: 1. Convert event `sf` to `ppp` 2. Convert boundary `sf` to `ppp` 3. Jitter any duplicates (If any) 4. Rescale from m to km
 
 ```{r}
 rescale_ppp_km <- function(ppp_sf, owin_sf) {
@@ -511,12 +504,10 @@ plot(st_geometry(msm_sf), col = "lightblue", main = "State")
 ```
 
 ::: callout-note
-
 #### Observation
 
 Notice the initial clusters forming in Mandalay. Subsequently, the clusters within Sagaing expanded towards the border between with Magway, eventually spilling over into Magway. Suggesting a strong influence of neighboring regions on conflict dynamics within Magway.
-
-::: 
+:::
 
 ### 5.2.3 State Analysis (Magway)
 
@@ -632,11 +623,7 @@ plot(quadrat_counts, main = "Quadrat Counts")
 
 #### 5.2.4.2 Yearly Event Type KDE (Pakokku)
 
-Here we compare the event types over the years in Pakokku, each row representing an event type:
-1. Protests
-2. Explosions/Remote violence
-3. Battles
-4. Violence against civilians
+Here we compare the event types over the years in Pakokku, each row representing an event type: 1. Protests 2. Explosions/Remote violence 3. Battles 4. Violence against civilians
 
 ```{r}
 et_kde_results <- list()
@@ -665,18 +652,16 @@ for (res in et_kde_results) {
 ```
 
 ::: callout-note
-
 ##### Event Type Findings
 
-1. Protests tend to be concentrated in urban areas
-2. Explosions and battles frequently occur near the outskirts of the city and towns
-3. Violence against civilians, on the other hand, is primarily concentrated in rural areas outside the city boundaries.
-
+1.  Protests tend to be concentrated in urban areas
+2.  Explosions and battles frequently occur near the outskirts of the city and towns
+3.  Violence against civilians, on the other hand, is primarily concentrated in rural areas outside the city boundaries.
 :::
 
 ## 5.3 Second Order Analysis
 
-To gain a deeper understanding of the spatial distribution of conflict events within Pakokku, we will conduct a second-order spatial analysis using the Clark-Evans test and Ripley's K function. Before delving into these analyses, let's examine the types of events that occurred in Pakokku across different quarters. 
+To gain a deeper understanding of the spatial distribution of conflict events within Pakokku, we will conduct a second-order spatial analysis using the Clark-Evans test and Ripley's K function. Before delving into these analyses, let's examine the types of events that occurred in Pakokku across different quarters.
 
 ```{r}
 # Group by district, year, and event_type, then count events
@@ -692,10 +677,7 @@ datatable(acled_pak_grouped)
 
 ### 5.3.1 Clark Evan Test
 
-By employing the Clark-Evans test, we can assess whether the spatial distribution of conflict events within Pakokku deviates from complete spatial randomness. This analysis will help us identify any clustering or dispersion patterns that may exist.
-- H0: The distribution of events in Pakokku are randomly distributed.
-- H1: The distribution of events in Pakokku are not randomly distributed.
-- The 95% confident interval will be used.
+By employing the Clark-Evans test, we can assess whether the spatial distribution of conflict events within Pakokku deviates from complete spatial randomness. This analysis will help us identify any clustering or dispersion patterns that may exist. - H0: The distribution of events in Pakokku are randomly distributed. - H1: The distribution of events in Pakokku are not randomly distributed. - The 95% confident interval will be used.
 
 ::: panel-tabset
 #### Protests
@@ -708,7 +690,7 @@ clarkevans.test(rescale_ppp_km(acled_pak_sf %>% filter(event_type == "Protests")
             nsim = 999)
 ```
 
-Protests: R < 1 which suggest clustering. p-value < 0.05, H0 can be rejected.
+Protests: R \< 1 which suggest clustering. p-value \< 0.05, H0 can be rejected.
 
 #### Explosions
 
@@ -720,7 +702,7 @@ clarkevans.test(rescale_ppp_km(acled_pak_sf %>% filter(event_type == "Explosions
             nsim = 999)
 ```
 
-Explosions/Remote violence: R < 1 which suggest clustering. p-value < 0.05, H0 can be rejected.
+Explosions/Remote violence: R \< 1 which suggest clustering. p-value \< 0.05, H0 can be rejected.
 
 #### Battles
 
@@ -732,7 +714,7 @@ clarkevans.test(rescale_ppp_km(acled_pak_sf %>% filter(event_type == "Battles"),
             nsim = 999)
 ```
 
-Battles: R < 1 which suggest clustering. p-value < 0.05, H0 can be rejected.
+Battles: R \< 1 which suggest clustering. p-value \< 0.05, H0 can be rejected.
 
 #### Violence
 
@@ -744,12 +726,10 @@ clarkevans.test(rescale_ppp_km(acled_pak_sf %>% filter(event_type == "Violence a
             nsim = 999)
 ```
 
-Violence against civilians: R < 1 which suggest clustering. p-value < 0.05, H0 can be rejected.
-
+Violence against civilians: R \< 1 which suggest clustering. p-value \< 0.05, H0 can be rejected.
 :::
 
 ::: callout-note
-
 #### Understanding High Clustering
 
 1.  Increased Intensity: Clusters of conflict events often indicate areas of heightened intensity. Concentrated violence can lead to greater casualties, displacement, and destruction of infrastructure.
@@ -757,16 +737,11 @@ Violence against civilians: R < 1 which suggest clustering. p-value < 0.05, H0 c
 3.  Spillover Effects: High clustering in one area can increase the risk of conflict spreading to neighboring regions. This is especially true if the conflict involves armed groups with territorial ambitions.
 
 Given the observed shift from protests to battles over time, I am particularly interested in exploring the relationship between these two types of events. We will be using this 2 events for our subsequent analysis.
-
 :::
 
 ### 5.3.2 G Function Analysis
 
-To better appreciate the clustering we can start by visualizing on G function help us identify any clustering or dispersion patterns that may exist, providing valuable insights into the underlying dynamics of conflict in the region. Subsequently we will also be using the other variants of the Ripley's K Function to determine spatial auto correlations, here are their uses:
-- G function: Measures the probability of finding a point within a given distance of another point.
-- K function: Measures the average number of points within a given distance of a randomly chosen point.
-- L function: A transformation of the K function that makes it easier to interpret.
-- F function: Measures the distribution of distances between pairs of points.
+To better appreciate the clustering we can start by visualizing on G function help us identify any clustering or dispersion patterns that may exist, providing valuable insights into the underlying dynamics of conflict in the region. Subsequently we will also be using the other variants of the Ripley's K Function to determine spatial auto correlations, here are their uses: - G function: Measures the probability of finding a point within a given distance of another point. - K function: Measures the average number of points within a given distance of a randomly chosen point. - L function: A transformation of the K function that makes it easier to interpret. - F function: Measures the distribution of distances between pairs of points.
 
 ::: panel-tabset
 #### Battles
@@ -788,7 +763,6 @@ plot(G.csr, xlab = "Dist (km)", ylab = "G(r)", main = "G-Function (Protests)", l
 ```
 
 The observed G function steadily increasing suggests a clustering pattern for protests. This means that the probability of finding another protest within a given distance of a protest increases as the distance increases. Unlike battles which often involve larger-scale operations that can extend over wider areas, Protests tend to be more localized events, often concentrated in specific areas or near particular targets. This is why the G function for battles might have a larger range, indicating that points (events) can be found at greater distances from each other.
-
 :::
 
 ### 5.3.3 K-Function Analysis
@@ -803,6 +777,7 @@ acled_ppp_km <- rescale_ppp_km(acled_pak_sf %>% filter(year == 2021 & event_type
 K.csr <- envelope(acled_ppp_km, Kest, nsim = 50)
 plot(K.csr, xlab = "Dist (km)", ylab = "K(r)", main = "K-Function (Battles)", lwd = 2, cex.axis = 1.2)
 ```
+
 Similarly here we can observe the strong tendency for points to cluster on the on start up until 20+ km as it slowly converges with the envelope toward 25 km
 
 #### Protests
@@ -814,21 +789,18 @@ plot(K.csr, xlab = "Dist (km)", ylab = "K(r)", main = "K-Function (Protests)", l
 ```
 
 The K function for protest potrays even more pronounced clustering pattern for protests. The K function indicates a highly localized and intense concentration of protest events within a small radius.
-
 :::
 
 From the above observation we can confirm that our findings from
 
 ::: callout-note
+#### Understanding Ripley's K Function
 
-#### Understanding Ripley's K Function 
-
-- The solid line represents the observed K function. - If K(r) is above the envelope, it indicates clustering (points are closer together than expected by chance). - If K(r) is below the envelope, it indicates dispersion (points are farther apart than expected by chance). - If K(r) is within the envelope, it suggests a random pattern.
-- Envelope: The envelope is generated by simulating random point patterns under the assumption of CSR. If the observed K function falls outside the envelope, it suggests a significant deviation from randomness.
-- Dotted line through the center: This line represents the theoretical K function under complete spatial randomness. It serves as a benchmark for comparison with the observed K function.
+-   The solid line represents the observed K function. - If K(r) is above the envelope, it indicates clustering (points are closer together than expected by chance). - If K(r) is below the envelope, it indicates dispersion (points are farther apart than expected by chance). - If K(r) is within the envelope, it suggests a random pattern.
+-   Envelope: The envelope is generated by simulating random point patterns under the assumption of CSR. If the observed K function falls outside the envelope, it suggests a significant deviation from randomness.
+-   Dotted line through the center: This line represents the theoretical K function under complete spatial randomness. It serves as a benchmark for comparison with the observed K function.
 
 ![](assets/k_func.png)
-
 :::
 
 ### 5.3.3 L-Function Analysis
@@ -877,7 +849,6 @@ plot(K.csr, xlab = "Dist (km)", ylab = "F(r)", main = "F-Function (Protests)", l
 ```
 
 Similar observation as with Battles but with a more less steep observation line, indicating more intense clustering.
-
 :::
 
 # 6. Spatial-Temporal Analysis
@@ -947,7 +918,6 @@ for(i in tims) {
 ```
 
 Whereas the Protests is observed to remain localized and consistent in towns and cities.
-
 :::
 
 ## 6.3 Animating Events (Battles)
@@ -980,16 +950,12 @@ The Spatial Temporal Diffusion for Battles is animated with the following code, 
 ![](assets/fmd.gif)
 
 ::: callout-note
-
 The above code chunk is commented to prevent execution as it requires ffmpeg tool for running. Ensure you have the tool installed before running.
-
 :::
 
-# 7. Interpretation 
+# 7. Interpretation
 
 After gathering the insights from our previous analysis, we will integrate OpenStreetMap (OSM) data and explore the temporal relationships within our dataset.
-
-
 
 ## 7.1 Visualizing conflicts on OSM
 
@@ -1106,7 +1072,6 @@ tm_shape(magway_pak_sf) +
 ```
 
 There is not much relations to be observed with places of worship since the dominant and registered religion within the district is Buddhist.
-
 :::
 
 #### 7.1.3.2 Battles KDE
@@ -1133,7 +1098,7 @@ tm_shape(magway_pak_sf) +
   tm_layout(title = "Places (Battles)", title.position = c("center", "top")) 
 ```
 
-Battles tend to occur in wider radius around towns and cities, while protests are more concentrated in urban centers. 
+Battles tend to occur in wider radius around towns and cities, while protests are more concentrated in urban centers.
 
 ##### Places of Worhsip
 
@@ -1149,7 +1114,6 @@ tm_shape(magway_pak_sf) +
 ```
 
 There is not much relations to be observed with places of worship since the dominant and registered religion within the district is Buddhist.
-
 :::
 
 ## 7.2 Analysis of Timeline
@@ -1181,16 +1145,18 @@ Several factors may contribute to this trend. The increasing presence of securit
 
 ## 7.3 Key Policy and Mitigation Strategies
 
-1. Promote Dialogue and Reconciliation: To foster peace and stability, it is essential to facilitate inclusive dialogue among all relevant stakeholders. Neutral mediation and trust-building measures can support this process, creating a conducive environment for negotiation and agreement.
+1.  Promote Dialogue and Reconciliation: To foster peace and stability, it is essential to facilitate inclusive dialogue among all relevant stakeholders. Neutral mediation and trust-building measures can support this process, creating a conducive environment for negotiation and agreement.
 
-2. Address Root Causes: Addressing the underlying grievances and social injustices that fuel the conflict is crucial for long-term peace. This involves promoting socioeconomic development, ensuring human rights protection, and fostering inter-ethnic reconciliation.
+2.  Address Root Causes: Addressing the underlying grievances and social injustices that fuel the conflict is crucial for long-term peace. This involves promoting socioeconomic development, ensuring human rights protection, and fostering inter-ethnic reconciliation.
 
-3. Security Sector Reform: Reforming the security sector is essential for creating a more accountable, professional, and human rights-respecting force. This includes measures such as demilitarization, civilian control, and support for disarmament, demobilization, and reintegration programs.
+3.  Security Sector Reform: Reforming the security sector is essential for creating a more accountable, professional, and human rights-respecting force. This includes measures such as demilitarization, civilian control, and support for disarmament, demobilization, and reintegration programs.
 
 # 8. Personal Reflection
 
 ## 8.1 Technically
+
 I've learned how to use spatial analysis tools effectively, especially for first-order, second-order and spatial temporal analyses. The `spatstat` and `sparr` packages were invaluable for this. The EDA with `ggplot` was also tremendously helpful for my subsequent.
 
 ## 8.2 Conflict-Related
+
 I gained insights into the spatial distribution of conflict events, identified hotspots, and understood temporal patterns. I also explored the relationships between conflict and geographic factors such as places and POW. These findings also made me delve into ways of mitigating such conflicts as well as peacbuilding effots.

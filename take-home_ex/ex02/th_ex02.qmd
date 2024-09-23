@@ -1,0 +1,59 @@
+---
+title: "Take-home Exercise 2"
+author: "Jeffery Lau"
+date: 09-23-2024
+date-modified: "last-modified"
+description: |
+  In this exercise, We will be analyzing armed conflict data in Myanmar, using spatial point pattern analysis to understand the distribution and relationships between conflict events. We'll also create maps to visualize the results and interpret the spatial patterns.
+categories:
+  - Take-home
+format:
+  html:
+    toc: true
+execute: 
+  eval: true
+  echo: true
+  warning: false
+  freeze: false
+---
+
+# 1. Introduction
+
+## 1.1 Context
+
+In 2024 armed conflict continues to be a devastating global issue, with millions of people affected each year. Recent years have seen a surge in conflicts, driven by factors such as political instability, regional tensions, and resource scarcity. Myanmar, in particular, has experienced significant armed conflict in recent years, including the 2021 military coup and subsequent violence.
+
+TODO: Lit review
+
+## 1.2 Objectives
+
+1.  Analyze the spatial distribution of armed conflict events in Myanmar.
+2.  Identify patterns and trends in the temporal distribution of conflict events.
+3.  Identify potential hotspots of conflict activity.
+4.  Provide insights for policymakers and humanitarian organizations working to address the conflict in Myanmar.
+
+# 2. Setup
+
+## 2.1 Loading Packages
+
+In this project we will be using the following packages:
+
+-   **`tmap`:** A package for creating thematic maps in R. It provides a simple and flexible interface for customizing maps and exporting them in various formats.
+
+-   **`sf`:** A package for simple feature data, which is a modern standard for representing geographic features. It provides efficient data structures and functions for spatial operations.
+
+-   **`raster`:** A package for working with raster data, such as images and digital elevation models. It offers tools for reading, writing, manipulating, and analyzing raster data.
+
+-   **`spatstat`:** A package for spatial point pattern analysis. It provides functions for analyzing the distribution and relationships between points in a study area.
+
+-   **`maptools`:** A package for reading and writing various spatial data formats, including shapefiles and KML. It also provides tools for converting between different spatial data structures.
+
+-   **`sp`:** A package for spatial data in R. It provides classes and functions for representing and manipulating spatial data, such as points, lines, and polygons.
+
+-   **`tidyverse`:** A collection of R packages designed for data manipulation, visualization, and analysis. It includes packages like dplyr, ggplot2, and tidyr, which are commonly used in data science workflows.
+
+```{r}
+pacman::p_load(tmap, sf, raster, spatstat, sparr, maptools, sp, tidyverse, DT, gridExtra, animation)
+```
+
+## 2.2 Loading Data

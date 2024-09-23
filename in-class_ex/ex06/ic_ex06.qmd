@@ -1,0 +1,173 @@
+---
+title: "In-class Exercise 6"
+author: "Jeffery Lau"
+date: 09-23-2024
+date-modified: "last-modified"
+description: |
+  In this exercise we learn how to work with Spatial Autocorrelation
+categories:
+  - In-class
+format:
+  html:
+    toc: true
+execute: 
+  eval: true
+  echo: true
+  warning: false
+  freeze: true
+---
+
+# 1. Setup
+
+```{r}
+pacman::p_load(sf, sfdep, tmap, tidyverse, DT)
+```
+
+```{r}
+hunan <- st_read(dsn = "data/geospatial", layer = "Hunan")
+hunan2012 <- read_csv("data/aspatial/Hunan_2012.csv")
+```
+```{r}
+hunan <- left_join(hunan,hunan2012) %>%
+  select(1:3,7,15,16,31,32)
+```
+
+```{r}
+# nb: A neighbor list object created by st_neighbor
+# style: "W" for standardized weights
+# .before = 1: Insert into the front
+# Returns a table with the neighbors that can be viewed
+
+wm_q <- hunan %>%
+  mutate(nb = st_contiguity(geometry),
+         wt = st_weights(nb, style = "W"), .before = 1)
+
+datatable(wm_q)
+```
+
+```{r}
+moranI <- global_moran(wm_q$GDPPC, wm_q$nb, wm_q$wt)
+
+glimpse(moranI)
+```
+
+K is average neighbours found
+
+```{r}
+# Performs a basic test
+global_moran_test(wm_q$GDPPC, wm_q$nb, wm_q$wt)
+```
+p-value: < 0.05, enough statistical evidence we can reject null hypothesis, does not conform to random distribution (95% sure)
+ - Fail to reject null hypothesis if greater than 0.05 no point proceeding
+Moran I: Greater than 0 suggest clustering in the data, but is a relatively low clustering
+
+```{r}
+# Always best practice to set seed before simulation
+set.seed(1234)
+```
+
+## Global Moran I Permutation
+```{r}
+global_moran_perm(wm_q$GDPPC, wm_q$nb, wm_q$wt, nsim = 99)
+```
+p-value: Is smaller
+Moran I: Is the same
+
+## Local Moran I Permutation
+```{r}
+lisa <- wm_q %>%
+  mutate(local_moran = local_moran(GDPPC, nb, wt, nsim = 99), .before = 1) %>%
+  unnest(local_moran) # Turn it into a table form
+
+datatable(lisa)
+```
+ii: local moran i
+p_ii: p-value with base method
+p_ii_sim: Based on simulation
+mean: label hotspots
+median: Use if there is significant no. of positive or negative skew
+  Plot out skewness to see if you want to use median
+  
+  
+```{r}
+tmap_mode("plot")
+pii_m <- tm_shape(lisa) +
+  tm_fill("p_ii") + 
+  tm_borders(alpha=0.5) +
+  tm_view(set.zoom.limits = c(6,8)) +
+  tm_layout(main.title = "Local Moran's p-value", main.title.size = 1)
+
+ii_m <- tm_shape(lisa) +
+  tm_fill("ii") + 
+  tm_borders(alpha=0.5) +
+  tm_view(set.zoom.limits = c(6,8)) +
+  tm_layout(main.title = "Local Moran's I", main.title.size = 1)
+
+tmap_arrange(pii_m, ii_m, ncol = 2)
+```
+
+```{r}
+lisa_sig <- lisa %>%
+  filter(p_ii < 0.05) 
+
+tm_shape(lisa) +
+  tm_polygons() +
+  tm_borders(alpha = 0.5) +
+  tm_shape(lisa_sig) +
+  tm_fill("median") + 
+  tm_borders(alpha = 0.4)
+```
+
+## Hot Spot Cold Spot Analysis
+
+```{r}
+# MUST Use distance inverse distance, Further are smaller
+wm_idw <- hunan %>%
+  mutate(nb = st_contiguity(geometry),
+         wts = st_inverse_distance(nb, geometry, scale = 1, alpha = 1),
+         .before = 1)
+
+```
+
+
+```{r}
+HCSA <- wm_idw %>%
+  mutate(local_Gi = local_gstar_perm(GDPPC, nb, wts, nsim = 99), .before = 1) %>%
+  unnest(local_Gi) # Turn it into a table form
+
+datatable(HCSA)
+```
+gi_star value: 
+
+LISA use cluster and outlier
+G*: Hot and cold spot
+
+```{r}
+h_pii_m <- tm_shape(HCSA) +
+  tm_fill("p_sim") + 
+  tm_borders(alpha=0.5) +
+  tm_view(set.zoom.limits = c(6,8)) +
+  tm_layout(main.title = "Local G* p-value", main.title.size = 1)
+
+h_ii_m <- tm_shape(HCSA) +
+  tm_fill("gi_star") + 
+  tm_borders(alpha=0.5) +
+  tm_view(set.zoom.limits = c(6,8)) +
+  tm_layout(main.title = "Local G* I", main.title.size = 1)
+
+tmap_arrange(h_pii_m, h_ii_m, ncol = 2)
+```
+
+
+```{r}
+HCSA_sig <- HCSA %>%
+  filter(p_sim < 0.05) 
+
+tm_shape(HCSA) +
+  tm_polygons() +
+  tm_borders(alpha = 0.5) +
+  tm_shape(HCSA_sig) +
+  tm_fill("gi_star") + 
+  tm_borders(alpha = 0.4)
+```
+
