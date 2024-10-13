@@ -1,0 +1,52 @@
+---
+title: "Take-home Exercise 3"
+author: "Jeffery Lau"
+date: 10-13-2024
+date-modified: "last-modified"
+description: |
+  In this exercise, we will be looking prototyping for my team's Geospatial Analytics Shiny Application. I am responsible for 
+categories:
+  - Take-home
+format:
+  html:
+    toc: true
+execute: 
+  eval: true
+  echo: true
+  warning: false
+  freeze: false
+---
+
+# 1. Introduction
+
+## 1.1 Context
+
+
+## 1.2 Responsibility
+
+1.  Determine
+2.  Identify
+
+# 2. Packages and Data
+
+## 2.1 Packages Required
+
+## 2.2 Data Required
+
+## 2.3 Data Cleaning
+
+# 3. Analysis Flow
+
+# 4. Interactivity
+
+## 4.1 Prameters
+
+## 4.1 Outputs
+
+# 5. Proposed UI 
+
+## 5.1 Components Used
+
+## 5.2 Layout
+
+# 6. Reflection

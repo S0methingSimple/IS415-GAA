@@ -43,6 +43,8 @@ website:
             href: "take-home_ex/ex01/th_ex01.html"
           - text: "Exercise 2"
             href: "take-home_ex/ex02/th_ex02.html"
+          - text: "Exercise 3"
+            href: "take-home_ex/ex03/th_ex03.html"
 
 format:
   html:
