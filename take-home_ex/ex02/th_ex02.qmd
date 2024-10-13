@@ -14,7 +14,7 @@ execute:
   eval: true
   echo: true
   warning: false
-  freeze: false
+  freeze: true
 ---
 
 # 1. Introduction
@@ -30,8 +30,8 @@ Youth are particularly vulnerable to drug abuse, with approximately 2.7 million 
 ## 1.2 Objectives
 
 1.  Determine if drug abuse indicator are spatially dependent
-2.  Identify clusters, outliers and hotspots of drug abuse 
-3.  Analyse how the spatial patterns
+2.  Identify clusters, outliers and hotspots of drug abuse
+3.  Identify emerging hot and cold spots
 
 # 2. Setup
 
@@ -43,42 +43,39 @@ In this project we will be using the following packages:
 
 -   **`sf`:** A package for simple feature data, which is a modern standard for representing geographic features. It provides efficient data structures and functions for spatial operations.
 
--   **`sfdep`:** A collection of R packages designed for data manipulation, visualization, and analysis. It includes packages like dplyr, ggplot2, and tidyr, which are commonly used in data science workflows.
-
--   **`raster`:** A package for working with raster data, such as images and digital elevation models. It offers tools for reading, writing, manipulating, and analyzing raster data.
-
--   **`spatstat`:** A package for spatial point pattern analysis. It provides functions for analyzing the distribution and relationships between points in a study area.
-
--   **`maptools`:** A package for reading and writing various spatial data formats, including shapefiles and KML. It also provides tools for converting between different spatial data structures.
-
--   **`sp`:** A package for spatial data in R. It provides classes and functions for representing and manipulating spatial data, such as points, lines, and polygons.
+-   **`sfdep`:** A package specifically designed for spatial dependence analysis. It provides functions for calculating spatial weights matrices, conducting global and local spatial autocorrelation tests (e.g., Moran's I, Geary's C), and performing spatial regression analysis.
 
 -   **`tidyverse`:** A collection of R packages designed for data manipulation, visualization, and analysis. It includes packages like dplyr, ggplot2, and tidyr, which are commonly used in data science workflows.
 
+-   **`kendall`:** A package used for performing Kendall's rank correlation test. This test is often used to assess the degree of association between two variables when the data is ordinal or continuous but not normally distributed.
+
 ```{r}
-pacman::p_load(tmap, sf, sfdep, raster, spatstat, maptools, tidyverse, DT)
+#| warning: false
+pacman::p_load(sf, sfdep, tmap, tidyverse, ggplot2, gridExtra, kendall)
 ```
 
 ## 2.2 Loading Data
 
-The dataset used in this analysis is sourced from the Armed Conflict Location & Event Data (ACLED) database. It contains information on various types of armed conflict events, including Battles, Explosion/Remote violence, Strategic developments, Protest, Riots, and Violence against civilians. The data covers the period from January 2021 to June 2024 and provides specific details such as event date, location coordinates, actor information, and more.
+This dataset presents statistics related to different types of drug offenses in Thailand, categorized by fiscal year. The data provides insights into the prevalence of various drug-related cases and their distribution across different provinces.
 
 ```{r}
 off_sf <- read_csv("data/aspatial/thai_drug_offenses_2017_2022.csv")
 ```
 
-Here we will be using the read_sf as the st_read encountered 
+Here we will be loading Thailand's administrative 1 (province) boundaries, in accordance with the drug offense dataset.
 
 ```{r}
-prov_sf <- read_sf('data/geospatial/tha_adm_rtsd_itos_20210121_shp/tha_admbnda_adm1_rtsd_20220121.shp')
+prov_sf <- st_read(dsn = "data/geospatial/tha_adm_rtsd_itos_20210121_shp", layer = "tha_admbnda_adm1_rtsd_20220121") %>%
+              st_transform(crs = 24047)
 ```
-
 
 # 3. Data Wrangling
 
-## 3.1 Examining Data 
+In this section we will be wrangling our data and joining the drug offences dataframe with the provinces sf dataframe.
 
-Before performing the join we need to identify if the column we are joining share the same province spelling.
+## 3.1 Examining Data
+
+Before performing the join we need to identify if the column we are joining is clear for joining (ie. share the same spelling).
 
 ```{r}
 prov_diff <- function(off_sf_provinces, prov_sf_provinces) {
@@ -105,9 +102,18 @@ prov_diff <- function(off_sf_provinces, prov_sf_provinces) {
 prov_diff(unique(off_sf$province_en), unique(prov_sf$ADM1_EN))
 ```
 
+::: callout-note
+### Provinces to Update
+
 Notice in the above when we compare the unique set from both SF there is 2 misspellings, where we will be renaming the province in off_sf:
-1.    Loburi -> Lop Buri
-2.    Buogkan -> Bueng Kan
+
+1.  Loburi -\> Lop Buri
+2.  Buogkan -\> Bueng Kan
+:::
+
+## 3.2 Updaing Mixmatched Province
+
+We will perform the suggested naming and check if the provinces matches.
 
 ```{r}
 off_sf <- off_sf %>%
@@ -124,77 +130,930 @@ off_sf <- off_sf %>%
 prov_diff(unique(off_sf$province_en), unique(prov_sf$ADM1_EN))
 ```
 
-## 3.2 Joining `sf` on Province
+## 3.3 Joining `sf` on Province
+
+Now we can join the province and drug offense dataframe, left join on province since it is the `sf` df.
 
 ```{r}
-du_sf <- left_join(off_sf, prov_sf, by = c("province_en" = "ADM1_EN"))
+du_sf <- left_join(prov_sf, off_sf, by = c("ADM1_EN" = "province_en"))
 head(du_sf)
 ```
 
-## 3.3 Data Cleaning
+## 3.4 Filtering to just Drug Use
 
-### 3.3.1 Detecting NA
+The following are the types of drug related use cases captured within the data, for this particular project we will be scoping down the data for analysis to just `drug_use_cases`.
 
 ```{r}
-# Check for null values in key columns
-na_count <- du_sf %>%
-  summarise(na_geometry = sum(is.na(geometry)),
-            na_province = sum(is.na(province_en)),
-            na_drug_offense = sum(is.na(types_of_drug_offenses)),
-            na_cases = sum(is.na(no_cases)))
-
-print(na_count)
+unique(du_sf$types_of_drug_offenses)
 ```
 
-### 3.3.2 Ensuring Consistency
-
-The data should have the years 2017 - 2022 for 16 types of drug offenses:
+Since we will be predominately working with drug use offense, we will filter by `drug_use_cases` and remove columns that are not involved in analysis.
 
 ```{r}
-# Check for null values in key columns
-print(unique(du_sf$fiscal_year))
-print(unique(du_sf$types_of_drug_offenses))
+du_sf <- du_sf %>%
+  select(fiscal_year, types_of_drug_offenses, no_cases, ADM1_EN, geometry) %>%
+  filter(types_of_drug_offenses == "drug_use_cases") %>%
+  rename(year = fiscal_year,
+         cases = no_cases,
+         province = ADM1_EN) %>%
+  select(-types_of_drug_offenses)
+
+head(du_sf)
 ```
 
-Next we need to ensure all province should have 96 records each. We can also verify that since there 77 unique province which tallies to 7392 obs. in our `sf` given each province have 96 records
+### 3.5 Saving Dataframe
+
+We will save the filtered province and joined `sf` df for reuse later
 
 ```{r}
-# Assuming du_sf is a data frame
-province_counts <- du_sf %>%
-  group_by(province_en) %>%
-  summarize(count = n())
-
-# Check if all counts are 96
-all_96 <- all(province_counts$count == 96)
-
-if (all_96) {
-  cat("All provinces have 96 records.\n")
-} else {
-  cat("Provinces with counts other than 96:\n")
-  print(province_counts %>% filter(count != 96))
-}
+prov_sf <- prov_sf %>%
+  select(ADM1_EN, geometry) %>%
+  rename(province = ADM1_EN)
+write_rds(prov_sf, "data/rds/province.rds")
 ```
 
-### 3.3.3 Detecting Duplicates
+```{r}
+write_rds(du_sf, "data/rds/drug_use.rds")
+```
 
-Here we try to detect if there happen to be any duplicate given a state, fiscal year and typeo of offence.
+Load the province and joined df and create a drug use df without geometry for EDA
 
 ```{r}
-duplicates <- du_sf %>%
-  group_by(province_en, fiscal_year, types_of_drug_offenses) %>%
-  filter(n() > 1)
-
-if (nrow(duplicates) > 0) {
-  cat("Duplicates found:\n")
-  print(duplicates)
-} else {
-  cat("No duplicates found.\n")
-}
+prov_sf <- read_rds("data/rds/province.rds")
+du_sf <- read_rds("data/rds/drug_use.rds")
+du_df <- du_sf %>%
+  select(year, cases, province) %>%
+  st_drop_geometry()
 ```
 
 # 4. Exploratory Data Analysis
 
-```{r}
+Before we begin on our Spatial Autocorrelation analysis it will help to understand the data we will be working with and spot general trends within the data.
 
+## 4.1 Drug Use Cases (2017-2022)
+
+The data provided with the dataset is yearly record of the number of drug cases, let's start by observing the trend of drug use in the past few years.
+
+```{r}
+# Aggregate cases by year
+aggregated_data <- du_df %>%
+  group_by(year) %>%
+  summarize(total_cases = sum(cases))
+
+# Create the line chart with a curved line and a centered title
+ggplot(aggregated_data, aes(x = year, y = total_cases)) +
+  geom_smooth(method = "loess", se = FALSE, color = "red") +
+  geom_text(aes(label = total_cases), vjust = -0.5) + 
+  labs(title = "Total Cases Over Time",
+       x = "Year",
+       y = "Total Cases") +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
+We can see that the drug use cases spiked in 2021 doubling the number of cases in 2017.
+
+## 4.2 Top 10 Province
+
+```{r}
+# Create a function to generate the pie chart for a given year
+create_pie_chart <- function(yr) {
+  # Group the data by province and sum the cases
+  province_data <- du_df %>%
+    filter(year == yr) %>%
+    group_by(province) %>%
+    summarize(total_cases = sum(cases))
+
+  # Sort the data by total_cases in descending order
+  province_data <- province_data[order(-province_data$total_cases), ]
+
+  # Select the top 10 provinces
+  top_10_provinces <- province_data[1:10, ]
+
+  # Create the pie chart with labels, smaller legend, text, and title
+  ggplot(top_10_provinces, aes(x = "", y = total_cases, fill = province)) +
+    geom_bar(stat = "identity", color = "white") +
+    coord_polar(theta = "y") +
+    geom_text(aes(label = total_cases), position = position_stack(vjust = 0.5), size = 2) +  # Smaller text size
+    labs(title = yr, size = 3) +  # Smaller title size
+    scale_fill_brewer(palette = "YlOrRd") +  # Use RdYlGn palette
+    theme_void() +
+    theme(legend.text = element_text(size = 3),
+          legend.key.size = unit(0.3, "cm"))  # Smaller legend text size
+}
+
+# Create a list of pie charts for each year
+pie_charts <- list()
+for (year in 2017:2022) {
+  pie_charts[[year-2016]] <- create_pie_chart(year)
+}
+
+# Arrange the charts in a 2x2 grid
+grid.arrange(grobs = pie_charts, ncol = 3, nrow = 2)
+```
+
+From the above pie charts the we can observe Bangkok, Chang Mai, Chon Buri have consistently remained at the top. It is also interesting to note Bangkok was off the list in 2022.
+
+## 4.3 Spatial Distrbution of Drug Use
+
+::: panel-tabset
+### Distribution
+
+```{r}
+min_cases <- min(du_sf$cases)
+max_cases <- max(du_sf$cases)
+
+tm_shape(du_sf) +
+    tm_fill("cases",
+            breaks = seq(min_cases, max_cases, length.out = 6),
+            palette = "YlOrRd") +
+    tm_borders(alpha = 0.5) +
+    tm_layout(legend.outside = TRUE,
+              legend.outside.position = "right") +
+    tm_facets(by="year",
+              free.coords = F,
+              drop.units = T)
+```
+
+From the choropleth plot we can observe that there seemed to be more cases of drug use 2021.
+
+### Province
+
+```{r}
+tm_shape(prov_sf) +
+  tm_polygons() +
+  tm_text("province", size = 0.3) +
+  tm_layout(main.title = "Province", main.title.size = 1)
+```
+:::
+
+::: callout-note
+### Year Selection
+
+Given the recency and the spike in cases during 2021, we shall work on the 3 years of 2020 - 2022 to narrow our focus and gather deeper insights from these years.
+:::
+
+# 5. Global Spatial Autocorrelation
+
+To assess the overall spatial distribution of drug use across Thailand's provinces, we will begin by conducting global spatial autocorrelation analysis. We will employ both Moran's I and Geary's C tests to provide a more comprehensive understanding of the spatial patterns. Moran's I is sensitive to both clustering and dispersion, while Geary's C is more focused on detecting dispersion. By examining the results from both tests, we can gain valuable insights into the spatial structure of drug use in the country.
+
+::: callout-note
+## Moran's I vs Geary's C
+
+Moran's I: is a good starting point for most spatial autocorrelation analyses. Computes how features differ across entire study area Geary's C: can be considered if you are specifically interested in assessing variability. Computes how features differ from immediate neighobours.
+:::
+
+## 5.1 Examine Contiguity
+
+### 5.1.1 Computing Contiguity
+
+Here we will be computing the contiguity of our provinces, where we use the `queen` contiguity by default
+
+```{r}
+#| warning: false
+# Calculate contiguity neighbors
+nb <- st_contiguity(prov_sf$geometry)
+```
+
+The st_contiguity analysis reveals that there are 77 contiguous regions in the data. The majority of regions have between 3 and 5 neighbors, indicating a moderate level of spatial connectivity. However, there are also some regions with fewer neighbors, including one region that has no neighbors at all. This region might be an outlier or an island that is not connected to any other regions in the data.
+
+```{r}
+summary(nb)
+```
+
+Region 67 is indicated to have no links and it is identified to be Phuket which happens to be an island on it's own.
+
+```{r}
+prov_sf$province[[67]]
+```
+
+::: callout-note
+##### Land link
+
+Despite Phuket being an island there is actually a land link between Phuket and Phang Nga. ![](assets/phuket.png)
+:::
+
+### 5.1.2 Fixing Contiguity
+
+To ensure we account for the landlink we will be adding Phang Nga as part of Phuket's neighbor for the sake of our subsequent analysis.
+
+```{r}
+which(unique(prov_sf$province) == "Phangnga")
+```
+
+```{r}
+# Adding into each others link
+nb[[67]] <- as.integer(c(66))
+nb[[66]] <- c(nb[[66]], as.integer(67))
+```
+
+### 5.1.3 Visualizing Contiguity
+
+The following plot portrays the connectivity between the provinces using the queens contiguity, note that Phuket is also now linked with Phang Nga. With the `nb` we can proceed with perform the Spatial Autocorrelation analysis
+
+```{r}
+#| warning: false
+# Visualize the contiguity
+plot(st_geometry(prov_sf), border = 'lightgrey')
+plot(nb, st_geometry(prov_sf), pch = 19, cex = 0.6, col = 'red', add = TRUE)
+```
+
+## 5.2 Moran's I
+
+To identify general clustering and dispersion of drug use across provinces we shall employ Moran's I test.
+
+### 5.2.1 Moran's I Test
+
+We will begin by computing the the weight matrix across the years 2020 - 2022.
+
+```{r}
+# Storing our weights into a list
+du_wm <- list()
+for (yr in 2020:2022) {
+  du_wm[[yr-2019]] <- du_sf %>%
+    filter(year == yr) %>%
+    mutate(nb = nb, wt = st_weights(nb, style = "W"), .before = 1)
+}
+
+head(du_wm[[1]])
+```
+
+::: panel-tabset
+#### 2020
+
+```{r}
+glimpse(global_moran(du_wm[[1]]$cases, du_wm[[1]]$nb, du_wm[[1]]$wt))
+global_moran_test(du_wm[[1]]$cases, du_wm[[1]]$nb, du_wm[[1]]$wt)
+```
+
+Based on these results, there is some evidence of positive spatial autocorrelation in drug use in 2020 (I: 0.0876). However, the observed clustering is not statistically significant where p-value \> 0.05. This suggests that while there might be a tendency for drug use to cluster geographically, the observed pattern could be due to chance.
+
+#### 2021
+
+```{r}
+glimpse(global_moran(du_wm[[2]]$cases, du_wm[[2]]$nb, du_wm[[2]]$wt))
+global_moran_test(du_wm[[2]]$cases, du_wm[[2]]$nb, du_wm[[2]]$wt)
+```
+
+Based on these results, there is strong evidence of positive spatial autocorrelation in drug use in 2021 (I: 0.201). The observed clustering is statistically significant where p-value \< 0.05, suggesting that the pattern is unlikely to be due to chance. This indicates a more pronounced tendency for drug use to cluster geographically in 2021 compared to 2020.
+
+#### 2022
+
+```{r}
+glimpse(global_moran(du_wm[[3]]$cases, du_wm[[3]]$nb, du_wm[[3]]$wt))
+global_moran_test(du_wm[[3]]$cases, du_wm[[3]]$nb, du_wm[[3]]$wt)
+```
+
+Based on these results, similar to 2021, there is strong evidence of positive spatial autocorrelation in drug use in 2022 (I: 0.216). The observed clustering is statistically significant where p-value \< 0.05, suggesting that the pattern is unlikely to be due to chance.
+:::
+
+### 5.2.2 Moran I Perm Test
+
+Given that we are running simulations, we start by setting the seed to ensure subsequent reproducibility.
+
+```{r}
+set.seed(888)
+```
+
+::: panel-tabset
+#### 2020
+
+```{r}
+du_mi_perm_20 <- global_moran_perm(du_wm[[1]]$cases, du_wm[[1]]$nb, du_wm[[1]]$wt, nsim = 99)
+du_mi_perm_20
+summary(du_mi_perm_20$res)
+```
+
+Based on the observed Moran's I statistic of 0.087573 has a rank of 93 out of 100 simulations, resulting in a p-value of 0.16. This suggests a weak positive spatial autocorrelation, however the observed spatial autocorrelation is not statistically significant at a 5% level.
+
+```{r}
+hist(du_mi_perm_20$res, freq=TRUE, breaks=20, xlab="Simulated Moran's I", main="Histogram of Simulated Moran's I (2020, sims = 99)")
+abline(v=0, col="red")
+```
+
+#### 2021
+
+```{r}
+du_mi_perm_21 <- global_moran_perm(du_wm[[2]]$cases, du_wm[[2]]$nb, du_wm[[2]]$wt, nsim = 99)
+du_mi_perm_21
+summary(du_mi_perm_21$res)
+```
+
+Based on the observed Moran's I statistic of 0.201 has a rank of 99 out of 100 simulations, resulting in a p-value of 0.02. This suggests a positive spatial autocorrelation in the data and that the observed spatial autocorrelation is statistically significant at a 5% level, as the p-value is less than 0.05.
+
+```{r}
+hist(du_mi_perm_21$res, freq=TRUE, breaks=20, xlab="Simulated Moran's I", main="Histogram of Simulated Moran's I (2021, sims = 99)")
+abline(v=0, col="red")
+```
+
+#### 2022
+
+```{r}
+du_mi_perm_22 <- global_moran_perm(du_wm[[3]]$cases, du_wm[[3]]$nb, du_wm[[3]]$wt, nsim = 99)
+du_mi_perm_22
+summary(du_mi_perm_22$res)
+```
+
+Based on the observed Moran's I statistic of 0.21565 has a rank of 100 out of 100 simulations, resulting in a p-value of 2.2e-16. This suggests a positive spatial autocorrelation in the data and that the observed spatial autocorrelation is statistically significant at a 5% level, as the p-value is less than 0.05.
+
+```{r}
+hist(du_mi_perm_22$res, freq=TRUE, breaks=20, xlab="Simulated Moran's I", main="Histogram of Simulated Moran's I (2022, sims = 99)")
+abline(v=0, col="red")
+```
+:::
+
+## 5.3 Geary C
+
+Next we shall further understand and verify if our findings with Moran's I is consistent with the Geary's C test.
+
+### 5.2.1 Geary C Test
+
+::: panel-tabset
+#### 2020
+
+```{r}
+glimpse(global_c(du_wm[[1]]$cases, du_wm[[1]]$nb, du_wm[[1]]$wt))
+global_c_test(du_wm[[1]]$cases, du_wm[[1]]$nb, du_wm[[1]]$wt)
+```
+
+Based on these results, there is weak evidence of spatial clustering in drug use in 2020. The Geary's C statistic of 0.9516 is close to the expected value of 1, and the p-value of 0.3182 is not statistically significant. This suggests that the observed pattern of drug use is not significantly dispersed across space.
+
+#### 2021
+
+```{r}
+glimpse(global_c(du_wm[[2]]$cases, du_wm[[2]]$nb, du_wm[[2]]$wt))
+global_c_test(du_wm[[2]]$cases, du_wm[[2]]$nb, du_wm[[2]]$wt)
+```
+
+Based on these results, there is some evidence of spatial clustering in drug use in 2021. The Geary's C statistic of 0.847281286 is lower than the expected value of 1, and the p-value of 0.0413 is statistically significant. Suggesting a tendency for provinces with high drug use rates to be surrounded by provinces with low drug use rates (dispersion).
+
+#### 2022
+
+```{r}
+glimpse(global_c(du_wm[[3]]$cases, du_wm[[3]]$nb, du_wm[[3]]$wt))
+global_c_test(du_wm[[3]]$cases, du_wm[[3]]$nb, du_wm[[3]]$wt)
+```
+
+Based on these results, similar to 2021 there is some evidence of spatial clustering in drug use in 2022. The Geary's C statistic of 0.835677203 is lower than the expected value of 1, and the p-value of 0.0276 is statistically significant. Suggesting a tendency for provinces with high drug use rates to be surrounded by provinces with low drug use rates (dispersion).
+:::
+
+### 5.2.2 Geary C Perm Test
+
+::: panel-tabset
+#### 2020
+
+```{r}
+du_gc_perm_20 <- global_c_perm(du_wm[[1]]$cases, du_wm[[1]]$nb, du_wm[[1]]$wt, nsim = 99)
+du_gc_perm_20
+summary(du_gc_perm_20$res)
+```
+
+Based on the observed Geary C statistic of 0.95159 has a rank of 29 out of 100 simulations, resulting in a p-value of 0.29. This suggests a weak positive spatial autocorrelation in the data and that the observed spatial dispersion is not statistically significant at a 5% level.
+
+```{r}
+hist(du_gc_perm_20$res, freq=TRUE, breaks=20, xlab="Simulated Geary c", main="Histogram of Simulated Geary's c (2020, sims = 99)")
+abline(v=1, col="red")
+abline(v=du_gc_perm_20$statistic, col="blue", lwd=2)
+```
+
+#### 2021
+
+```{r}
+du_gc_perm_21 <- global_c_perm(du_wm[[2]]$cases, du_wm[[2]]$nb, du_wm[[2]]$wt, nsim = 99)
+du_gc_perm_21
+summary(du_gc_perm_21$res)
+```
+
+Based on the observed Geary C statistic of 0.84728 has a rank of 8 out of 100 simulations, resulting in a p-value of 0.08. This suggests a weak positive spatial autocorrelation in the data and that the observed spatial autocorrelation is statistically significant at a 5% level.
+
+```{r}
+hist(du_gc_perm_21$res, freq=TRUE, breaks=20, xlab="Simulated Geary c", main="Histogram of Simulated Geary's c (2021, sims = 99)")
+abline(v=1, col="red")
+abline(v=du_gc_perm_21$statistic, col="blue", lwd=2)
+```
+
+#### 2022
+
+```{r}
+du_gc_perm_22 <- global_c_perm(du_wm[[3]]$cases, du_wm[[3]]$nb, du_wm[[3]]$wt, nsim = 99)
+du_gc_perm_22
+summary(du_gc_perm_22$res)
+```
+
+Based on the observed Geary C statistic of 0.83568 has a rank of 2 out of 100 simulations, resulting in a p-value of 0.02. This suggests a weak positive spatial autocorrelation in the data and that the observed spatial autocorrelation is statistically significant at a 5% level.
+
+```{r}
+hist(du_gc_perm_22$res, freq=TRUE, breaks=20, xlab="Simulated Geary c", main="Histogram of Simulated Geary's c (2022, sims = 99)")
+abline(v=1, col="red")
+abline(v=du_gc_perm_22$statistic, col="blue", lwd=2)
+```
+:::
+
+# 6. Local Spatial Autocorrelation
+
+To identify specific regions with high or low concentrations of drug use, we will conduct local spatial autocorrelation analysis using the Local Moran's I statistic. This will allow us to pinpoint areas that exhibit statistically significant clustering or dispersion of drug use, providing valuable insights into the spatial distribution of the phenomenon at a local level.
+
+## 6.1 Moran I
+
+### 6.1.1 Computing Local Moran I
+
+We start by computing the local Moran's I for each year.
+
+::: panel-tabset
+#### 2020
+
+```{r}
+du_lm_20 <- du_wm[[1]] %>%
+  mutate(local_moran = local_moran(cases, nb, wt, nsim = 99), .before = 1) %>%
+  unnest(local_moran)
+
+head(du_lm_20)
+```
+
+#### 2021
+
+```{r}
+du_lm_21 <- du_wm[[2]] %>%
+  mutate(local_moran = local_moran(cases, nb, wt, nsim = 99), .before = 1) %>%
+  unnest(local_moran)
+
+head(du_lm_21)
+```
+
+#### 2022
+
+```{r}
+du_lm_22 <- du_wm[[3]] %>%
+  mutate(local_moran = local_moran(cases, nb, wt, nsim = 99), .before = 1) %>%
+  unnest(local_moran)
+
+head(du_lm_22)
+```
+:::
+
+::: callout-note
+#### Intepretation of Attributes
+
+ii: local moran i p_ii: p-value with base method p_ii_sim: Based on simulation
+
+mean: Cluster type Labels median: Similar to mean (Better option if there are significant skewness in data)
+:::
+
+### 6.1.2 Visualizing I Values
+
+::: panel-tabset
+#### 2020
+
+```{r}
+pii_m <- tm_shape(du_lm_20) +
+  tm_fill("p_ii_sim", palette = "Purples") + 
+  tm_borders(alpha=0.5) +
+  tm_view(set.zoom.limits = c(6,8)) +
+  tm_layout(main.title = "Local Moran's p-value (2020)", main.title.size = 1)
+
+ii_m <- tm_shape(du_lm_20) +
+  tm_fill("ii", palette = "-RdYlBu") + 
+  tm_borders(alpha=0.5) +
+  tm_view(set.zoom.limits = c(6,8)) +
+  tm_layout(main.title = "Local Moran's I (2020)", main.title.size = 1)
+
+tmap_arrange(ii_m, pii_m, ncol = 2)
+```
+
+Based on the plot, we observed clusters of higher drug use in central provinces like Chon Buri and Rayong, while Mae Hong Son appeared as an outlier with significantly different drug use patterns (low) as compared to it's neighbors. The low p-values associated with these clusters indicate a high likelihood of statistically significant spatial autocorrelation, suggesting that the observed patterns may likely not be due to chance.
+
+#### 2021
+
+```{r}
+pii_m <- tm_shape(du_lm_21) +
+  tm_fill("p_ii_sim", palette = "Purples") + 
+  tm_borders(alpha=0.5) +
+  tm_view(set.zoom.limits = c(6,8)) +
+  tm_layout(main.title = "Local Moran's p-value (2021)", main.title.size = 1)
+
+ii_m <- tm_shape(du_lm_21) +
+  tm_fill("ii", palette = "-RdYlBu") + 
+  tm_borders(alpha=0.5) +
+  tm_view(set.zoom.limits = c(6,8)) +
+  tm_layout(main.title = "Local Moran's I (2021)", main.title.size = 1)
+
+tmap_arrange(ii_m, pii_m, ncol = 2)
+```
+
+Based on the plot, we observed clusters of higher drug use increased across Thailand. Besides the central provinces like Chon Buri and Rayong, the southern province of Surat Thani and Nakhon as well as the eastern province of Ubon all experienced higher drug and clustering patterns, while Mae Hong Son remains as an outlier as compared to it's neighbors. The p-values however seems to be mixed, indicating a varied likelihood of statistically significant spatial autocorrelation.
+
+#### 2022
+
+```{r}
+pii_m <- tm_shape(du_lm_22) +
+  tm_fill("p_ii_sim", palette = "Purples") + 
+  tm_borders(alpha=0.5) +
+  tm_view(set.zoom.limits = c(6,8)) +
+  tm_layout(main.title = "Local Moran's p-value (2022)", main.title.size = 1)
+
+ii_m <- tm_shape(du_lm_22) +
+  tm_fill("ii", palette = "-RdYlBu") + 
+  tm_borders(alpha=0.5) +
+  tm_view(set.zoom.limits = c(6,8)) +
+  tm_layout(main.title = "Local Moran's I (2022)", main.title.size = 1)
+
+tmap_arrange(ii_m, pii_m, ncol = 2)
+```
+
+Based on the plot, we observed a general decrease in drug use across Thailand. However we observe strong clustering patterns in central provinces of Udon, Kalasin and Khon Kaen, while Mae Hong Son remains as an outlier as compared to it's neighbors. The p-values associated with the central province seems to be low, indicating a high likelihood of statistically significant spatial autocorrelation.
+
+#### Province
+
+```{r}
+tm_shape(prov_sf) +
+  tm_polygons() +
+  tm_text("province", size = 0.3) +
+  tm_layout(main.title = "Province", main.title.size = 1)
+```
+:::
+
+### 6.1.3 LISA Cluster Map
+
+Next we will examining the significant locations color coded by type of spatial autocorrelation.
+
+::: panel-tabset
+#### 2020
+
+```{r}
+lisa_sig <- du_lm_20 %>%
+  filter(p_ii_sim < 0.1) 
+
+tm_shape(du_lm_20) +
+  tm_polygons() +
+  tm_borders(alpha = 0.5) +
+  tm_shape(lisa_sig) +
+  tm_fill("median") + 
+  tm_borders(alpha = 0.4)
+```
+
+Based on the LISA map, we observed a high-high cluster of drug use in the central provinces surrounding Bangkok. This suggests that areas with high drug use rates are clustered together in this region. Additionally, several low-high outliers were identified, indicating areas with high drug use rates surrounded by areas with low drug use rates. These findings are statistically significant at the 10% level, suggesting that the observed patterns are unlikely to be due to chance.
+
+#### 2021
+
+```{r}
+lisa_sig <- du_lm_21 %>%
+  filter(p_ii_sim < 0.1) 
+
+tm_shape(du_lm_21) +
+  tm_polygons() +
+  tm_borders(alpha = 0.5) +
+  tm_shape(lisa_sig) +
+  tm_fill("median") + 
+  tm_borders(alpha = 0.4)
+```
+
+Based on the LISA map, we observed a low-low cluster of drug use in the western provinces. Additionally, we can observe several smaller high-high clusters scattered around. These findings are statistically significant at the 10% level, suggesting that the observed patterns are unlikely to be due to chance.
+
+#### 2022
+
+```{r}
+lisa_sig <- du_lm_22 %>%
+  filter(p_ii_sim < 0.1) 
+
+tm_shape(du_lm_22) +
+  tm_polygons() +
+  tm_borders(alpha = 0.5) +
+  tm_shape(lisa_sig) +
+  tm_fill("median") + 
+  tm_borders(alpha = 0.4)
+```
+
+Based on the LISA map, similar to 2021 we observed a low-low cluster of drug use in the western provinces. Additionally, we can observe large high-high clusters in the northen-central provinces of Kalasin and Udon Thani. These findings are statistically significant at the 10% level, suggesting that the observed patterns are unlikely to be due to chance.
+
+:::
+
+## 6.2 Hotspot and Coldspot Analysis
+
+To further analyze the spatial distribution of drug use, we can employ the Getis-Ord Gi\* statistic to identify local hotspots and coldspots. This analysis will help pinpoint specific areas with significantly high or low concentrations of drug use, providing valuable insights into the spatial patterns of the phenomenon. Before we start we will need to get the inverse weight matrix for Gi\* statistics to work.
+
+```{r}
+# Storing our weights into a list
+du_iwm <- list()
+for (yr in 2020:2022) {
+  du_iwm[[yr-2019]] <- du_sf %>%
+    filter(year == yr) %>%
+    mutate(nb = nb,
+           wts = st_inverse_distance(nb, geometry, scale = 1, alpha = 1),
+           .before = 1)
+}
+
+head(du_iwm[[1]])
+```
+
+### 6.2.1 Computing Local Gi\*
+
+::: panel-tabset
+#### 2020
+
+```{r}
+hcsa_20 <- du_iwm[[1]] %>%
+  mutate(local_Gi = local_gstar_perm(cases, nb, wts, nsim = 99), .before = 1) %>%
+  unnest(local_Gi) 
+
+head(hcsa_20)
+```
+
+#### 2021
+
+```{r}
+hcsa_21 <- du_iwm[[2]] %>%
+  mutate(local_Gi = local_gstar_perm(cases, nb, wts, nsim = 99), .before = 1) %>%
+  unnest(local_Gi) 
+
+head(hcsa_21)
+```
+
+#### 2022
+
+```{r}
+hcsa_22 <- du_iwm[[3]] %>%
+  mutate(local_Gi = local_gstar_perm(cases, nb, wts, nsim = 99), .before = 1) %>%
+  unnest(local_Gi) 
+
+head(hcsa_22)
+```
+:::
+
+### 6.2.2 Visualizing Gi\* Values
+
+::: panel-tabset
+#### 2020
+
+```{r}
+h_pii_m <- tm_shape(hcsa_20) +
+  tm_fill("p_sim", palette = "Purples") + 
+  tm_borders(alpha=0.5) +
+  tm_view(set.zoom.limits = c(6,8)) +
+  tm_layout(main.title = "Local G* p-value (2020)", main.title.size = 1)
+
+h_ii_m <- tm_shape(hcsa_20) +
+  tm_fill("gi_star", palette = "-RdYlBu") + 
+  tm_borders(alpha=0.5) +
+  tm_view(set.zoom.limits = c(6,8)) +
+  tm_layout(main.title = "Local G* I (2020)", main.title.size = 1)
+
+tmap_arrange(h_ii_m, h_pii_m, ncol = 2)
+```
+
+Based on the plot, similar to Moran's I plot we observed a cluster of hotspots in central provinces, slightly north around Nakhon Sawan we observe a cluster of coldspot. The generally low p-values associated with these clusters indicate a high likelihood of statistically significant hotspot and coldspot.
+
+#### 2021
+
+```{r}
+h_pii_m <- tm_shape(hcsa_21) +
+  tm_fill("p_sim", palette = "Purples") + 
+  tm_borders(alpha=0.5) +
+  tm_view(set.zoom.limits = c(6,8)) +
+  tm_layout(main.title = "Local G* p-value (2021)", main.title.size = 1)
+
+h_ii_m <- tm_shape(hcsa_21) +
+  tm_fill("gi_star", palette = "-RdYlBu") + 
+  tm_borders(alpha=0.5) +
+  tm_view(set.zoom.limits = c(6,8)) +
+  tm_layout(main.title = "Local G* I (2021)", main.title.size = 1)
+
+tmap_arrange(h_ii_m, h_pii_m, ncol = 2)
+```
+
+Based on the plot, we observed a cluster of hotspots in eastern provinces, and similar to Moran's I analysis a cluster of coldspot to the western provinces. The mixed p-values associated with these clusters indicate a varying likelihood of statistically significant hotspot and coldspot.
+
+#### 2022
+
+```{r}
+h_pii_m <- tm_shape(hcsa_22) +
+  tm_fill("p_sim", palette = "Purples") + 
+  tm_borders(alpha=0.5) +
+  tm_view(set.zoom.limits = c(6,8)) +
+  tm_layout(main.title = "Local G* p-value (2022)", main.title.size = 1)
+
+h_ii_m <- tm_shape(hcsa_22) +
+  tm_fill("gi_star", palette = "-RdYlBu") + 
+  tm_borders(alpha=0.5) +
+  tm_view(set.zoom.limits = c(6,8)) +
+  tm_layout(main.title = "Local G* I (2022)", main.title.size = 1)
+
+tmap_arrange(h_ii_m, h_pii_m, ncol = 2)
+```
+
+Based on the plot, we observed a cluster of hotspots in north-central province, and similary a cluster of coldspot to the western provinces. The relatively low p-values associated with these clusters indicate a highly likelihood of statistically significant hotspot and coldspot.
+
+#### Province
+
+```{r}
+tm_shape(prov_sf) +
+  tm_polygons() +
+  tm_text("province", size = 0.3) +
+  tm_layout(main.title = "Province", main.title.size = 1)
+```
+:::
+
+### 6.1.3 HCSA LISA Map
+
+::: panel-tabset
+#### 2020
+
+```{r}
+HCSA_sig <- hcsa_20 %>%
+  filter(p_sim < 0.1) 
+
+tm_shape(hcsa_20) +
+  tm_polygons() +
+  tm_borders(alpha = 0.5) +
+  tm_shape(HCSA_sig) +
+  tm_fill("gi_star", palette = "-RdYlBu") + 
+  tm_borders(alpha = 0.4)
+```
+
+Based on the LISA map, we observed a hotspot in the central near Chantha Buri, and a couple of coldspots in the proximity of Nakhon Sawan. These findings are statistically significant at the 10% level, suggesting that the observed patterns are unlikely to be due to chance.
+
+#### 2021
+
+```{r}
+HCSA_sig <- hcsa_21 %>%
+  filter(p_sim < 0.1) 
+
+tm_shape(hcsa_21) +
+  tm_polygons() +
+  tm_borders(alpha = 0.5) +
+  tm_shape(HCSA_sig) +
+  tm_fill("gi_star", palette = "-RdYlBu") + 
+  tm_borders(alpha = 0.4)
+```
+
+Based on the LISA map, we observe a cluster of coldspots in the western provinces and several hotspots to the east. These findings are statistically significant at the 10% level, suggesting that the observed patterns are unlikely to be due to chance.
+
+#### 2022
+
+```{r}
+HCSA_sig <- hcsa_22 %>%
+  filter(p_sim < 0.1) 
+
+tm_shape(hcsa_22) +
+  tm_polygons() +
+  tm_borders(alpha = 0.5) +
+  tm_shape(HCSA_sig) +
+  tm_fill("gi_star", palette = "-RdYlBu") + 
+  tm_borders(alpha = 0.4)
+```
+
+Based on the LISA map, similar to 2021 we observe a cluster of coldspots in the western provinces although not as significant. Additionally we also the development of a cluster of hotspots in and around the northern province of Kalasin in 2022. These findings are statistically significant at the 10% level, suggesting that the observed patterns are unlikely to be due to chance.
+
+:::
+
+# 7. Emerging Hotspot Analysis
+
+Next we will be employing Emerging Hotspot Analysis with Getis-Ord Gi\* to identify areas where a specific phenomenon (in this case, drug use) is rapidly increasing or decreasing over time. It involves combining spatial autocorrelation analysis with temporal trend analysis to detect emerging clusters or outliers.
+
+## 7.1 Computing BOS
+
+We start by calculating the spacetime object with the drug use df and the province `sf` df.
+
+```{r}
+bos <- spacetime(du_df, prov_sf,
+                 .loc_col = "province",
+                 .time_col = "year")
+```
+
+Next we compute the neighbor and weights for the spacetime object.
+
+```{r}
+#| warning: false
+bos_nb <- bos %>% 
+  activate("geometry") %>%
+  mutate(
+    nb = include_self(st_contiguity(geometry)),
+    wt = st_weights(nb)
+  ) %>%
+  set_nbs("nb") %>%
+  set_wts("wt")
+```
+
+## 7.2 Emerging Hotspot Analysis
+
+Emerging Hot Spot Analysis identifies trends in spatial clustering over a period of time. Emerging hot spot analysis combines the Getis-Ord Gi\* statistic with the Mann-Kendall trend test to determine if there is a temporal trend associated with local clustering of hot and cold spots.
+
+```{r}
+ehsa <- emerging_hotspot_analysis(
+  x = bos_nb,
+  .var = "cases",
+  k = 1,
+  nsim = 99,
+  nb_col = "nb",
+  wt_col = "wt"
+)
+head(ehsa)
+```
+
+::: callout-note
+##### EHSA Intepretation
+
+tau: The tau value represents the Kendall's tau coefficient, which measures the strength and direction of the monotonic trend in the Gi\* values over time. tau \> 0: Indicates a positive trend, suggesting that the location is becoming a hotspot (increasing Gi\* values). tau \< 0: Indicates a negative trend, suggesting that the location is becoming a coldspot (decreasing Gi\* values). tau ≈ 0: Indicates no significant trend.
+:::
+
+We will be joining the ehsa df with the province `sf` df for the spatial attribute.
+
+```{r}
+ehsa_sf <- left_join(prov_sf, ehsa, by = c("province" = "location"))
+head(ehsa_sf)
+```
+
+## 7.3 Visualizing EHCA
+
+### 7.3.1 Tau, Classification and p-value
+
+```{r}
+e_p_m <- tm_shape(ehsa_sf) +
+  tm_fill("p_value", palette = "Purples") + 
+  tm_borders(alpha=0.5) +
+  tm_view(set.zoom.limits = c(6,8)) +
+  tm_layout(main.title = "EHSA p-value", main.title.size = 1)
+
+e_c_m <- tm_shape(ehsa_sf) +
+  tm_fill("classification", palette = "Spectral") + 
+  tm_borders(alpha=0.5) +
+  tm_view(set.zoom.limits = c(6,8)) +
+  tm_layout(main.title = "EHSA Classification", main.title.size = 1)
+
+e_t_m <- tm_shape(ehsa_sf) +
+  tm_fill("tau", palette = "-RdYlBu") + 
+  tm_borders(alpha=0.5) +
+  tm_view(set.zoom.limits = c(6,8)) +
+  tm_layout(main.title = "EHSA tau-value", main.title.size = 1)
+
+tmap_arrange(e_t_m, e_c_m, e_p_m, ncol = 3)
+```
+
+We can observe a scatter of emerging hot and cold spots within our tau plot while the classification plot further points out several new hotspots. However the p-value is highly mixed which results in varying statistically significance. To help narrow down our analysis we can filter by p-value in a EHSA LISA map for further analysis.
+
+### 7.2.3 EHSA LISA Map (85% Confidence)
+
+```{r}
+EHSA_sig <- ehsa_sf %>%
+  filter(p_value < 0.15) 
+
+e_tp_m <- tm_shape(ehsa_sf) +
+  tm_polygons() +
+  tm_borders(alpha = 0.5) +
+  tm_shape(EHSA_sig) +
+  tm_fill("tau", palette = "-RdYlBu") + 
+  tm_borders(alpha = 0.4) +
+  tm_layout(main.title = "EHSA tau (>85%)", main.title.size = 1)
+
+e_cp_m <- tm_shape(ehsa_sf) +
+  tm_polygons() +
+  tm_borders(alpha = 0.5) +
+  tm_shape(EHSA_sig) +
+  tm_fill("classification", palette = "Spectral") + 
+  tm_borders(alpha = 0.4) +
+  tm_layout(main.title = "EHSA Classification (>85%)", main.title.size = 1)
+
+p_m <- tm_shape(prov_sf) +
+  tm_polygons() +
+  tm_text("province", size = 0.3) +
+  tm_layout(main.title = "Province", main.title.size = 1)
+
+tmap_arrange(e_tp_m, e_cp_m, p_m, ncol = 3)
+```
+
+Based on the LISA map, we can confirm the emergence of several hotspots in Chon Buri as a sporadic hotspot and Nakhon Nayok as a new emerging hotspot. Additionally we can also identify several emerging hotspots in the northern provinces such as Chang mai, with sporadic coldspots. These findings are statistically significant at the 10% level, suggesting that the observed patterns are unlikely to be due to chance.
+
+# 8. Findings
+
+## 8.1 Overall Trend
+
+The analysis reveals a significant spike in drug use cases between 2017 and 2021, with the number of cases doubling during this period. Bangkok, Chiang Mai, and Chon Buri consistently ranked among the top provinces with the highest drug use rates, although Bangkok was not among the top 10 in 2022.
+
+## 8.2 Breakdown
+
+### 8.2.1 Global Spatial Autocorrelation
+
+  - 2020: Weak evidence of positive spatial autocorrelation, suggesting a slight tendency for drug use to cluster geographically. 
+  - 2021: Strong evidence of positive spatial autocorrelation, indicating a pronounced clustering pattern. 
+  - 2022: Similar to 2021, strong evidence of positive spatial autocorrelation.
+
+### 8.2.2 Global Spatial Autocorrelation
+
+-   2020: Clusters identified in central provinces (Chon Buri, Rayong) and an outlier in Mae Hong Son.
+-   2021: Increased clustering observed in central and southern provinces, with Mae Hong Son remaining an outlier.
+-   2022: Decreased overall drug use, but persistent clustering in central provinces (Udon, Kalasin, Khon Kaen) and continued outlier status for Mae Hong Son.
+
+### 8.2.3 Global Spatial Autocorrelation
+
+-   Sporadic emerging hotspots: Identified in various regions, including Chon Buri, Nakhon Nayok, and northern provinces. 
+-   Varying statistical significance: The significance of emerging hotspots varies, indicating the need for further analysis.
+
+## 8.3 Key Findings
+
+-   Spatial clustering: Some evidence of spatial autocorrelation suggests that drug use is clustered geographically.
+-   Persistent hotspots: Certain regions (e.g., central provinces) consistently exhibit higher drug use rates.
+-   Outlier regions: Mae Hong Son consistently stands out as an outlier with different drug use patterns.
+
+# 9. Reflections
+
+In the project I manage to pick up on the different techniques used for perform Spatial Autocorrelation. Understood how interpret autocorrelation as a global and local measure and how to support findings with other technique (e.g. Moran's I with Geary's C). I've also learnt to pay more attention to details, such as noticing regions with no links (Phuket) and figuring out if we can consider it to be linked with another province. 
+
+The project have also allowed me to gain deeper insights into pervasive issues of drug offenses in Thailand. It was interesting finding out clusters does not tend to remain in a single spot across the years and how this cluster could also affect neighboring provinces. We can also attribute the amount of drug offenses to the population density of certain provines too. These findings highligths the importance of spatial autocorrelation in addressing drug abuse, considering both spatial and sociodemographic factors.
