@@ -274,7 +274,7 @@ tm_shape(du_sf) +
               drop.units = T)
 ```
 
-From the choropleth plot we can observe that there seemed to be more cases of drug use 2021.
+From the choropleth plot we can observe that there seemed to be more cases of drug use 2021. Cases are seen in clusters in the central provinces around Bangkok and Chon Buri, north in Chang Mai and down south in Nakhon Si Thammarat.
 
 ### Province
 
@@ -299,7 +299,8 @@ To assess the overall spatial distribution of drug use across Thailand's provinc
 ::: callout-note
 ## Moran's I vs Geary's C
 
-Moran's I: is a good starting point for most spatial autocorrelation analyses. Computes how features differ across entire study area Geary's C: can be considered if you are specifically interested in assessing variability. Computes how features differ from immediate neighobours.
+-   Moran's I: is a good starting point for most spatial autocorrelation analyses. Computes how features differ across entire study area
+-   Geary's C: can be considered if you are specifically interested in assessing variability. Computes how features differ from immediate neighobours.
 :::
 
 ## 5.1 Examine Contiguity
@@ -593,9 +594,15 @@ head(du_lm_22)
 ::: callout-note
 #### Intepretation of Attributes
 
-ii: local moran i p_ii: p-value with base method p_ii_sim: Based on simulation
+-   ii: local moran i
 
-mean: Cluster type Labels median: Similar to mean (Better option if there are significant skewness in data)
+-   p_ii: p-value with base method
+
+-   p_ii_sim: Based on simulation
+
+-   mean: Cluster type Labels
+
+-   median: Similar to mean (Better option if there are significant skewness in data)
 :::
 
 ### 6.1.2 Visualizing I Values
@@ -724,6 +731,14 @@ tm_shape(du_lm_22) +
 
 Based on the LISA map, similar to 2021 we observed a low-low cluster of drug use in the western provinces. Additionally, we can observe large high-high clusters in the northen-central provinces of Kalasin and Udon Thani. These findings are statistically significant at the 10% level, suggesting that the observed patterns are unlikely to be due to chance.
 
+#### Province
+
+```{r}
+tm_shape(prov_sf) +
+  tm_polygons() +
+  tm_text("province", size = 0.3) +
+  tm_layout(main.title = "Province", main.title.size = 1)
+```
 :::
 
 ## 6.2 Hotspot and Coldspot Analysis
@@ -902,6 +917,14 @@ tm_shape(hcsa_22) +
 
 Based on the LISA map, similar to 2021 we observe a cluster of coldspots in the western provinces although not as significant. Additionally we also the development of a cluster of hotspots in and around the northern province of Kalasin in 2022. These findings are statistically significant at the 10% level, suggesting that the observed patterns are unlikely to be due to chance.
 
+#### Province
+
+```{r}
+tm_shape(prov_sf) +
+  tm_polygons() +
+  tm_text("province", size = 0.3) +
+  tm_layout(main.title = "Province", main.title.size = 1)
+```
 :::
 
 # 7. Emerging Hotspot Analysis
@@ -951,7 +974,7 @@ head(ehsa)
 ::: callout-note
 ##### EHSA Intepretation
 
-tau: The tau value represents the Kendall's tau coefficient, which measures the strength and direction of the monotonic trend in the Gi\* values over time. tau \> 0: Indicates a positive trend, suggesting that the location is becoming a hotspot (increasing Gi\* values). tau \< 0: Indicates a negative trend, suggesting that the location is becoming a coldspot (decreasing Gi\* values). tau ≈ 0: Indicates no significant trend.
+tau: The tau value represents the Kendall's tau coefficient, which measures the strength and direction of the monotonic trend in the Gi\* values over time. - tau \> 0: Indicates a positive trend, suggesting that the location is becoming a hotspot (increasing Gi\* values). - tau \< 0: Indicates a negative trend, suggesting that the location is becoming a coldspot (decreasing Gi\* values). - tau ≈ 0: Indicates no significant trend.
 :::
 
 We will be joining the ehsa df with the province `sf` df for the spatial attribute.
@@ -1031,9 +1054,9 @@ The analysis reveals a significant spike in drug use cases between 2017 and 2021
 
 ### 8.2.1 Global Spatial Autocorrelation
 
-  - 2020: Weak evidence of positive spatial autocorrelation, suggesting a slight tendency for drug use to cluster geographically. 
-  - 2021: Strong evidence of positive spatial autocorrelation, indicating a pronounced clustering pattern. 
-  - 2022: Similar to 2021, strong evidence of positive spatial autocorrelation.
+-   2020: Weak evidence of positive spatial autocorrelation, suggesting a slight tendency for drug use to cluster geographically.
+-   2021: Strong evidence of positive spatial autocorrelation, indicating a pronounced clustering pattern.
+-   2022: Similar to 2021, strong evidence of positive spatial autocorrelation.
 
 ### 8.2.2 Global Spatial Autocorrelation
 
@@ -1043,7 +1066,7 @@ The analysis reveals a significant spike in drug use cases between 2017 and 2021
 
 ### 8.2.3 Global Spatial Autocorrelation
 
--   Sporadic emerging hotspots: Identified in various regions, including Chon Buri, Nakhon Nayok, and northern provinces. 
+-   Sporadic emerging hotspots: Identified in various regions, including Chon Buri, Nakhon Nayok, and northern provinces.
 -   Varying statistical significance: The significance of emerging hotspots varies, indicating the need for further analysis.
 
 ## 8.3 Key Findings
@@ -1054,6 +1077,6 @@ The analysis reveals a significant spike in drug use cases between 2017 and 2021
 
 # 9. Reflections
 
-In the project I manage to pick up on the different techniques used for perform Spatial Autocorrelation. Understood how interpret autocorrelation as a global and local measure and how to support findings with other technique (e.g. Moran's I with Geary's C). I've also learnt to pay more attention to details, such as noticing regions with no links (Phuket) and figuring out if we can consider it to be linked with another province. 
+In the project I manage to pick up on the different techniques used for perform Spatial Autocorrelation. Understood how interpret autocorrelation as a global and local measure and how to support findings with other technique (e.g. Moran's I with Geary's C). I've also learnt to pay more attention to details, such as noticing regions with no links (Phuket) and figuring out if we can consider it to be linked with another province.
 
 The project have also allowed me to gain deeper insights into pervasive issues of drug offenses in Thailand. It was interesting finding out clusters does not tend to remain in a single spot across the years and how this cluster could also affect neighboring provinces. We can also attribute the amount of drug offenses to the population density of certain provines too. These findings highligths the importance of spatial autocorrelation in addressing drug abuse, considering both spatial and sociodemographic factors.
