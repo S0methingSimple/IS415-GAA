@@ -407,7 +407,7 @@ global_moran_test(du_wm[[3]]$cases, du_wm[[3]]$nb, du_wm[[3]]$wt)
 Based on these results, similar to 2021, there is strong evidence of positive spatial autocorrelation in drug use in 2022 (I: 0.216). The observed clustering is statistically significant where p-value \< 0.05, suggesting that the pattern is unlikely to be due to chance.
 :::
 
-### 5.2.2 Moran I Perm Test
+### 5.2.2 Moran's I Perm Test
 
 Given that we are running simulations, we start by setting the seed to ensure subsequent reproducibility.
 
@@ -462,11 +462,11 @@ abline(v=0, col="red")
 ```
 :::
 
-## 5.3 Geary C
+## 5.3 Geary's C
 
 Next we shall further understand and verify if our findings with Moran's I is consistent with the Geary's C test.
 
-### 5.2.1 Geary C Test
+### 5.2.1 Geary's C Test
 
 ::: panel-tabset
 #### 2020
@@ -497,7 +497,7 @@ global_c_test(du_wm[[3]]$cases, du_wm[[3]]$nb, du_wm[[3]]$wt)
 Based on these results, similar to 2021 there is some evidence of spatial clustering in drug use in 2022. The Geary's C statistic of 0.835677203 is lower than the expected value of 1, and the p-value of 0.0276 is statistically significant. Suggesting a tendency for provinces with high drug use rates to be surrounded by provinces with low drug use rates (dispersion).
 :::
 
-### 5.2.2 Geary C Perm Test
+### 5.2.2 Geary's C Perm Test
 
 ::: panel-tabset
 #### 2020
@@ -553,9 +553,9 @@ abline(v=du_gc_perm_22$statistic, col="blue", lwd=2)
 
 To identify specific regions with high or low concentrations of drug use, we will conduct local spatial autocorrelation analysis using the Local Moran's I statistic. This will allow us to pinpoint areas that exhibit statistically significant clustering or dispersion of drug use, providing valuable insights into the spatial distribution of the phenomenon at a local level.
 
-## 6.1 Moran I
+## 6.1 Moran's I
 
-### 6.1.1 Computing Local Moran I
+### 6.1.1 Computing Local Moran's I
 
 We start by computing the local Moran's I for each year.
 
@@ -1058,13 +1058,13 @@ The analysis reveals a significant spike in drug use cases between 2017 and 2021
 -   2021: Strong evidence of positive spatial autocorrelation, indicating a pronounced clustering pattern.
 -   2022: Similar to 2021, strong evidence of positive spatial autocorrelation.
 
-### 8.2.2 Global Spatial Autocorrelation
+### 8.2.2 Local Spatial Autocorrelation
 
 -   2020: Clusters identified in central provinces (Chon Buri, Rayong) and an outlier in Mae Hong Son.
 -   2021: Increased clustering observed in central and southern provinces, with Mae Hong Son remaining an outlier.
 -   2022: Decreased overall drug use, but persistent clustering in central provinces (Udon, Kalasin, Khon Kaen) and continued outlier status for Mae Hong Son.
 
-### 8.2.3 Global Spatial Autocorrelation
+### 8.2.3 Emerging Hotspot Analysis
 
 -   Sporadic emerging hotspots: Identified in various regions, including Chon Buri, Nakhon Nayok, and northern provinces.
 -   Varying statistical significance: The significance of emerging hotspots varies, indicating the need for further analysis.

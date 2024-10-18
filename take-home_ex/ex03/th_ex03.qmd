@@ -37,16 +37,18 @@ execute:
 
 # 3. Analysis Flow
 
-# 4. Interactivity
+# 4. UI Design
 
-## 4.1 Prameters
+## 4.1 Components Used
 
-## 4.1 Outputs
+### 4.1.1 Prameters
 
-# 5. Proposed UI 
+### 4.1.2 Outputs
 
-## 5.1 Components Used
+## 4.2 Layout
 
-## 5.2 Layout
+## 4.3 Story Board
 
-# 6. Reflection
+(Story Board)[https://giniceseah.netlify.app/posts/2021-07-31-storyboard/]
+
+# 5. Reflection
