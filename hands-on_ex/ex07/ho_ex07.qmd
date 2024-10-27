@@ -25,9 +25,9 @@ This hands-on exercise we are aiming to identify distinct areas within Shan Stat
 
 ## 2.1 Loading Packages
 
-1.   Spatial data handling: sf, rgdal and spdep
-2.   Multivariate data analysis: coorplot, ggpubr, and heatmaply
-3.   Cluster analysis: cluster, ClustGeo
+1.  Spatial data handling: sf, rgdal and spdep
+2.  Multivariate data analysis: coorplot, ggpubr, and heatmaply
+3.  Cluster analysis: cluster, ClustGeo
 
 ```{r}
 pacman::p_load(spdep, tmap, sf, ClustGeo, 
@@ -216,9 +216,9 @@ shan_ict.std <- normalize(shan_ict)
 summary(shan_ict.std)
 ```
 
-### 4.2.2 Z-score 
+### 4.2.2 Z-score
 
-It is another data standardization technique that transforms features to have a mean of 0 and a standard deviation of 1. It involves subtracting the mean from each data point and then dividing by the standard deviation. This method is useful when dealing with algorithms that assume **normally distributed data**, as it helps to ensure that the data is centered around 0 and has a consistent scale. Z-score standardization is less sensitive to outliers than min-max scaling, as outliers are scaled based on their distance from the mean. 
+It is another data standardization technique that transforms features to have a mean of 0 and a standard deviation of 1. It involves subtracting the mean from each data point and then dividing by the standard deviation. This method is useful when dealing with algorithms that assume **normally distributed data**, as it helps to ensure that the data is centered around 0 and has a consistent scale. Z-score standardization is less sensitive to outliers than min-max scaling, as outliers are scaled based on their distance from the mean.
 
 ```{r}
 shan_ict.z <- scale(shan_ict)
@@ -343,7 +343,7 @@ gap_stat <- clusGap(shan_ict,
 print(gap_stat, method = "firstmax")
 ```
 
-This can be visualized with `fviz_gap_stat`. According to graph the number of cluster to retain is 1. 
+This can be visualized with `fviz_gap_stat`. According to graph the number of cluster to retain is 1.
 
 ```{r}
 fviz_gap_stat(gap_stat)
@@ -476,7 +476,7 @@ plot.mst(shan.mst,
 
 ## 5.4 Computing spatially constrained clusters using SKATER method
 
-Using `skater` we can compute the spatially constrained cluster 
+Using `skater` we can compute the spatially constrained cluster
 
 ```{r}
 clust6 <- spdep::skater(edges = shan.mst[,1:2], 
@@ -568,14 +568,13 @@ dist <- st_distance(shan_sf, shan_sf)
 distmat <- as.dist(dist)
 ```
 
-Using `choicealpha` will be used to determine a suitable value for the mixing parameter alpha as shown in the code chunk below. 
+Using `choicealpha` will be used to determine a suitable value for the mixing parameter alpha as shown in the code chunk below.
 
 ```{r}
 cr <- choicealpha(proxmat, distmat, range.alpha = seq(0, 1, 0.1), K=6, graph = TRUE)
 ```
 
-
-Next we perform the clustering and we will be using 0.2 for alpha with the above graph 
+Next we perform the clustering and we will be using 0.2 for alpha with the above graph
 
 ```{r}
 clustG <- hclustgeo(proxmat, distmat, alpha = 0.2)

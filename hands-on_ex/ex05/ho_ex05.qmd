@@ -4,7 +4,7 @@ author: "Jeffery Lau"
 date: 09-13-2024
 date-modified: "last-modified"
 description: |
-  In this exercise we discorver the 1st and 2nd Order Spatial Point Patterns Analysis Methods
+  In this exercise we learn about spatial weights and applications
 categories:
   - Hands-on
 format:
@@ -37,6 +37,7 @@ pacman::p_load(sf, spdep, tmap, tidyverse, knitr)
 hunan <- st_read(dsn = "data/geospatial", 
                  layer = "Hunan")
 ```
+
 ```{r}
 hunan2012 <- read_csv("data/aspatial/Hunan_2012.csv")
 ```
@@ -65,9 +66,7 @@ tmap_arrange(basemap, gdppc, asp=1, ncol=2)
 
 # 3. Contiguity Based Neighbours
 
-There are 2 types of Contiguity Based Neighbours
-1. Queen contiguity is often used when you want to capture both direct and indirect spatial relationships between features. It is suitable for situations where features are irregularly shaped or have complex spatial relationships, just like how a queen can move diagonally whereas a rook may not.
-2. Rook contiguity is often used when you want to focus on direct spatial relationships between features. It is suitable for situations where features are regularly shaped or have simple spatial relationships.
+There are 2 types of Contiguity Based Neighbours 1. Queen contiguity is often used when you want to capture both direct and indirect spatial relationships between features. It is suitable for situations where features are irregularly shaped or have complex spatial relationships, just like how a queen can move diagonally whereas a rook may not. 2. Rook contiguity is often used when you want to focus on direct spatial relationships between features. It is suitable for situations where features are regularly shaped or have simple spatial relationships.
 
 ## 3.1 QUEEN Contiguity Based Neighbours
 
@@ -98,6 +97,7 @@ Weight Matrix
 ```{r}
 str(wm_q)
 ```
+
 ## 3.2 ROOK Contiguity Based Neighbours
 
 Notice how now with rook we have lesser max link at county taoyuan (85), from 10 to 11. Lets try to visualize this in the next section.
@@ -162,9 +162,7 @@ k1dists <- unlist(nbdists(k1, coords, longlat = TRUE))
 summary(k1dists)
 ```
 
-
 ## 4.2 Computing fixed distance weight matrix
-
 
 From the previous summary we could tell the largest first nearest neighbour distance is 61.79km, so using an upper limit can guarantee that we will at least have 1 neighbour.
 
@@ -220,7 +218,7 @@ plot(knn6, coords, pch = 19, cex = 0.6, add = TRUE, col = "red")
 
 # 5. Inversed Distance Weights (IDW)
 
-Inversed distance weighting is a method used to assign weights to geographic features based on their distance from a reference point. Features closer to the reference point are assigned higher weights, while those farther away are assigned lower weights. This weighting scheme is often used in spatial interpolation and analysis to estimate values at unsampled locations based on the values of nearby sampled locations. 
+Inversed distance weighting is a method used to assign weights to geographic features based on their distance from a reference point. Features closer to the reference point are assigned higher weights, while those farther away are assigned lower weights. This weighting scheme is often used in spatial interpolation and analysis to estimate values at unsampled locations based on the values of nearby sampled locations.
 
 ```{r}
 dist <- nbdists(wm_q, coords, longlat = TRUE)
@@ -269,11 +267,10 @@ summary(unlist(rswm_ids$weights))
 
 Spatial lag variables are created by incorporating spatial relationships into a statistical model. They capture the influence of neighboring observations on a particular variable. In essence, a spatial lag of a variable at a given location is the weighted average of the variable's values at neighboring locations.
 
-1. Spatial lag with row-standardized weights: Weights are calculated by dividing each weight in a row by the sum of all weights in that row, normalizing the weights.
-This ensures that the sum of weights for each feature equals 1, effectively normalizing the weights.
-2. Spatial lag as a sum of neighboring values: Weights are simply set to 1 for each neighbor.
-3. Spatial window average: Similar to the sum of neighboring values, but the spatial lag is divided by the number of neighbors to obtain an average.
-4. Spatial window sum: This is equivalent to the spatial lag as a sum of neighboring values.
+1.  Spatial lag with row-standardized weights: Weights are calculated by dividing each weight in a row by the sum of all weights in that row, normalizing the weights. This ensures that the sum of weights for each feature equals 1, effectively normalizing the weights.
+2.  Spatial lag as a sum of neighboring values: Weights are simply set to 1 for each neighbor.
+3.  Spatial window average: Similar to the sum of neighboring values, but the spatial lag is divided by the number of neighbors to obtain an average.
+4.  Spatial window sum: This is equivalent to the spatial lag as a sum of neighboring values.
 
 ## 7.1 Spatial lag with row-standardized weights
 
@@ -439,10 +436,9 @@ Comparison of GDPPC vs GDPPC spatial lag value (SNV vs SWS)
 w_sum_gdppc <- qtm(hunan, "w_sum GDPPC")
 tmap_arrange(lag_sum_gdppc, w_sum_gdppc, asp=1, ncol=2)
 ```
+
 ## 7.5 Comparison of all 4
 
 ```{r}
 tmap_arrange(lag_gdppc, lag_sum_gdppc, w_avg_gdppc, w_sum_gdppc, asp=1, nrow =2 , ncol=2)
 ```
-
-

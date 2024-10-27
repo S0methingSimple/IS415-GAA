@@ -25,9 +25,9 @@ This hands-on exercise we are aiming to develop hedonic pricing models for condo
 
 ## 2.1 Loading Packages
 
-1.   Building OLS and performing diagnostic tests: olsrr
-2.   Calibrate Geopgrahical weighted models: GWmodel
-3.   Multivariate Data Visualization: corrplot
+1.  Building OLS and performing diagnostic tests: olsrr
+2.  Calibrate Geopgrahical weighted models: GWmodel
+3.  Multivariate Data Visualization: corrplot
 
 ```{r}
 #| warning: false
@@ -46,7 +46,6 @@ Using `st_bbox` to see the extent of mpsz_svy21
 ```{r}
 st_bbox(mpsz_svy21) 
 ```
-
 
 ```{r}
 condo_resale = read_csv("data/aspatial/Condo_resale_2015.csv")
@@ -86,7 +85,7 @@ ggplot(data=condo_resale.sf, aes(x=`SELLING_PRICE`)) +
 
 ## 3.2 Selling Price Distribution (Normalised)
 
-We can fix skewness by normalising using log transformation. 
+We can fix skewness by normalising using log transformation.
 
 ```{r}
 condo_resale.sf <- condo_resale.sf %>%
@@ -161,7 +160,7 @@ Using `lm` we will leawrn how to build hedonic pricing models for condo resale
 
 ## 4.1 Simple Linear Regression Method
 
-Independent (x) -> AREA_SQM and Dependent (y) -> SELLING_PRICE
+Independent (x) -\> AREA_SQM and Dependent (y) -\> SELLING_PRICE
 
 ```{r}
 condo.slr <- lm(formula=SELLING_PRICE ~ AREA_SQM, data = condo_resale.sf)
@@ -235,7 +234,7 @@ We will be using `olsrr` to build better multiple regression models, we start by
 ols_vif_tol(condo.mlr1)
 ```
 
-Since VIF are all lesser than 10 we can assume there is no sign of multicollinearity. 
+Since VIF are all lesser than 10 we can assume there is no sign of multicollinearity.
 
 ### 4.2.4 Test for Non-linearity
 
@@ -311,6 +310,7 @@ summary(nb_lw)
 ```{r}
 lm.morantest(condo.mlr1, nb_lw)
 ```
+
 The Global Moran's I test revealed significant residual spatial autocorrelation in the data. With a p-value of less than 0.00000000000000022, we rejected the null hypothesis of random residual distribution. The observed Global Moran's I value of 0.1424418, being positive, indicates a clustering pattern in the residuals. This suggests that the errors are not randomly distributed but rather exhibit spatial dependencies.
 
 # 5. Building Hedonic Pricing Models using GWmodel
@@ -334,7 +334,7 @@ bw.fixed <- bw.gwr(formula = SELLING_PRICE ~ AREA_SQM + AGE + PROX_CBD +
 
 ::: callout-note
 The result shows that the recommended bandwidth is 971.3405 meters because it seen in +units=m
-::: 
+:::
 
 Next we can use the calibrate the model using our fixed bandwidth
 
@@ -390,12 +390,7 @@ The report shows that the AICc the adaptive distance gwr is 41982.22 which is ev
 
 ## 5.3 Visualising the GWR Output
 
-Terminology of output features:
--   Condition Number: Evaluates local collinearity; high values (over 30) indicate unreliable results.
--   Local R2: Measures local model fit; low values suggest poor performance.
--   Predicted: Estimated y values computed by GWR.
--   Residuals: Differences between observed and fitted y values; standardized residuals have mean 0 and standard deviation 1.
--   Coefficient Standard Error: Measures reliability of coefficient estimates; small values indicate high confidence, large values may indicate local collinearity issues.
+Terminology of output features: - Condition Number: Evaluates local collinearity; high values (over 30) indicate unreliable results. - Local R2: Measures local model fit; low values suggest poor performance. - Predicted: Estimated y values computed by GWR. - Residuals: Differences between observed and fitted y values; standardized residuals have mean 0 and standard deviation 1. - Coefficient Standard Error: Measures reliability of coefficient estimates; small values indicate high confidence, large values may indicate local collinearity issues.
 
 ### 5.3.1 Convert into sf dataframe
 
@@ -408,6 +403,7 @@ condo_resale.sf.adaptive <- st_as_sf(gwr.adaptive$SDF) %>%
 condo_resale.sf.adaptive.svy21 <- st_transform(condo_resale.sf.adaptive, 3414)
 condo_resale.sf.adaptive.svy21  
 ```
+
 ```{r}
 gwr.adaptive.output <- as.data.frame(gwr.adaptive$SDF)
 condo_resale.sf.adaptive <- cbind(condo_resale.res.sf, as.matrix(gwr.adaptive.output))
@@ -476,4 +472,3 @@ tm_shape(condo_resale.sf.adaptive) +
            border.col = "gray60",
            border.lwd = 1)
 ```
-
