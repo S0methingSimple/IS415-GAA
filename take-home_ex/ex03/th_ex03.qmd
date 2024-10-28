@@ -38,7 +38,7 @@ pacman::p_load(sf, st, tidyverse, raster, tmap, tmaptools, ggplot2, spatstat, sf
 
 ## 2.2 Data Required
 
-## 2.2.1 Datasets being used
+## 2.2.1 Datasets
 
 There are two datasets being used in this exercise.
 
@@ -56,25 +56,118 @@ Next, we import the administrative regions of Malaysia.
 
 ```{r}
 mys_sf <- read_sf(dsn = "data/geospatial/mys_adm_unhcr_20210211_shp", 
-                 layer = "mys_admbnda_adm1_unhcr_20210211") %>%
+                 layer = "mys_admbnda_adm2_unhcr_20210211") %>%
   st_as_sf(coords =c(
     "longitude", "latitude"),
            crs = 4326) %>%
   st_transform(crs = 3167)
 ```
 
+## 2.2.2 Filtering
+
 However in this case study, for ease of analysis, we choose to focus on West Malaysia, and thus will be filtering out Sarawak, Sabah and Labuan.
 
 ```{r}
 mys_sf <- mys_sf %>%
-  filter(ADM1_EN != 'Sabah') %>%
-  filter(ADM1_EN != 'Sarawak') %>%
-  filter(ADM1_EN != 'W.P. Labuan') %>%
-  mutate(state = replace(ADM1_EN, ADM1_EN == 'W.P. Kuala Lumpur', 'Kuala Lumpur'))
+          filter(ADM1_EN != 'W.P. Labuan' & ADM1_EN != 'Sabah' & ADM1_EN != 'Sarawak') %>%
+          mutate(ADM1_EN = replace(ADM1_EN, ADM1_EN == 'W.P. Kuala Lumpur', 'Kuala Lumpur'),
+                 ADM1_EN = replace(ADM1_EN, ADM1_EN == 'W.P. Putrajaya', 'Selangor'), 
+                 ADM1_EN = toupper(ADM1_EN),
+                 ADM2_EN = toupper(ADM2_EN))
+
+mys_sf
 ```
 
 ```{r}
-mys_sf
+crime_df <- crime_df %>%
+              filter(state != 'Malaysia' & state != 'Sabah' & state != 'Sarawak' & district != 'All') %>%
+              mutate(year = year(date),
+                     state = replace(state, state == 'W.P. Kuala Lumpur', 'Kuala Lumpur'),
+                     state = toupper(state),
+                     district = toupper(district))
+crime_df
+```
+
+```{r}
+# Assuming you have two character vectors:
+state_crime <- unique(crime_df$state)
+state_sf <- unique(mys_sf$ADM1_EN)
+
+# Find states in crime_df that are not in mys_sf
+missing_in_sf <- setdiff(state_crime, state_sf)
+
+# Find states in mys_sf that are not in crime_df
+missing_in_crime <- setdiff(state_sf, state_crime)
+
+# Print the mismatches
+print("States in crime_df not found in mys_sf:")
+print(missing_in_sf)
+
+print("States in mys_sf not found in crime_df:")
+print(missing_in_crime)
+```
+
+```{r}
+# Assuming you have two character vectors:
+
+district_crime <- unique(crime_df$district)
+
+district_sf <- unique(mys_sf$ADM2_EN)
+
+
+
+# Find districts in crime_df that are not in mys_sf
+
+missing_in_sf <- setdiff(district_crime, district_sf)
+
+
+
+# Find districts in mys_sf that are not in crime_df
+
+missing_in_crime <- setdiff(district_sf, district_crime)
+
+
+
+# Print the mismatches
+
+print("Districts in crime_df not found in mys_sf:")
+
+print(missing_in_sf)
+
+
+
+print("Districts in mys_sf not found in crime_df:")
+
+print(missing_in_crime)
+```
+
+
+
+```{r}
+# Create a new column in crime_df
+crime_df <- crime_df %>%
+  mutate(state_district = paste(state, district, sep = "_"))
+
+# Create a new column in mys_sf
+mys_sf <- mys_sf %>%
+  mutate(state_district = paste(ADM1_EN, ADM2_EN, sep = "_"))
+
+# Now, you can compare the unique values in the `state_district` column of both data frames:
+
+# Assuming you have two character vectors:
+state_district_crime <- unique(crime_df$state_district)
+state_district_sf <- unique(mys_sf$state_district)
+
+# Find mismatches
+missing_in_sf <- setdiff(state_district_crime, state_district_sf)
+missing_in_crime <- setdiff(state_district_sf, state_district_crime)
+
+# Print the mismatches
+print("State-District combinations in crime_df not found in mys_sf:")
+print(missing_in_sf)
+
+print("State-District combinations in mys_sf not found in crime_df:")
+print(missing_in_crime)
 ```
 
 
@@ -101,26 +194,18 @@ crime_df
 
 Some of the province names are mismatched between the crime rate csv file and the shpfile.
 
-```{r}
-crime_df <- crime_df %>% 
-                  mutate(state = replace(state, state == 'W.P. Kuala Lumpur', 'Kuala Lumpur'))
-```
-
 ### 2.3.3 Performing relational join
 
 ```{r}
 crime_df_mys <- mys_sf %>%
   left_join(crime_df,
             by = c("ADM1_EN" = "state")) %>%
-  dplyr::select(1, 8:10, 13:16)
+  dplyr::select(ADM1_EN, ADM2_EN, category, type, crimes, year, Shape_Leng,  Shape_Area,  geometry)
+
+crime_df_mys <- st_as_sf(crime_df_mys)
+st_crs(crime_df_mys) <- st_crs(mys_sf)
 
 crime_df_mys
-```
-
-```{r}
-crime_df_mys_sf <- st_as_sf(crime_df_mys)
-
-st_crs(crime_df_mys_sf) <- st_crs(mys_sf)
 ```
 
 ### 2.3.4 Visualizing the distribution of crime
@@ -152,19 +237,17 @@ choro
 
 ## 3.1 Exploratory Data Analysis (EDA)
 
-
+## 3.1.1 Coorelation Plot
 
 # 4. UI Design
 
-## 4.1 Components Used
+## 4.1 Story Board
 
 ### 4.1.1 Prameters
 
 ### 4.1.2 Outputs
 
 ## 4.2 Layout
-
-## 4.3 Story Board
 
 (Story Board)\[https://giniceseah.netlify.app/posts/2021-07-31-storyboard/\]
 

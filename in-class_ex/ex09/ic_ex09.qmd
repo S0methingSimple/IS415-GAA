@@ -4,7 +4,7 @@ author: "Jeffery Lau"
 date: 09-23-2024
 date-modified: "last-modified"
 description: |
-  In this exercise we learn how to 
+  In this exercise we learn how to perform spatially constraint clustering
 categories:
   - In-class
 format:
@@ -83,6 +83,7 @@ plot(shan.nb, pts, col="blue", add=TRUE)
 ```
 
 ## 3.3 Compute edge cost and visualzie MST
+
 ```{r}
 lcosts <- nbcosts(shan.nb, shan_ict)
 ```
@@ -137,6 +138,7 @@ plot(skater.clust6,
      cex.circles=0.005, 
      add=TRUE)
 ```
+
 ## 3.9 Visualize Cluster
 
 ```{r}
@@ -165,8 +167,8 @@ tmap_arrange(hclust.map, shclust.map,
 
 Uses Hierarchical Clustering (Soft User decide) vs SKATER (HARD, Picks optimium)
 
-## 4.1 Computing Spatial Dist Mat
--   
+## \## 4.1 Computing Spatial Dist Mat
+
 ```{r}
 dist <- st_distance(shan_sf, shan_sf)
 distmat <- as.dist(dist)
@@ -228,5 +230,4 @@ ggparcoord(data = shan_sf_clustGeo,
   theme(axis.text.x = element_text(angle = 30))
 ```
 
-Use parallel coordinates to understand your cluster
-< 0.8 correlation can consider
+Use parallel coordinates to understand your cluster \< 0.8 correlation can consider
