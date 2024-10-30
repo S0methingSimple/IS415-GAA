@@ -38,13 +38,19 @@ pacman::p_load(sf, st, tidyverse, raster, tmap, tmaptools, ggplot2, spatstat, sf
 
 ## 2.2 Data Required
 
-## 2.2.1 Datasets
-
 There are two datasets being used in this exercise.
 
 -   [Malaysia – Crime by District and Crime Type](https://data.gov.my/data-catalogue/crime_district) from data.gov.my in csv format.
 
 -   [Malaysia - Subnational Administrative Boundaries](https://data.humdata.org/dataset/cod-ab-mys) with included administrative regions in shapefile format.
+
+-   [Malaysia – Annual Principal Labour Force Statistics by District](https://data.gov.my/data-catalogue/lfs_district) from data.gov.my in csv format.
+
+-   [Malaysia – Household Income and Expenditure: Administrative Districts](https://data.gov.my/data-catalogue/hies_district) from data.gov.my in csv format.
+
+-   [Malaysia – Enrolment in Government Schools by District](https://data.gov.my/data-catalogue/enrolment_school_district) from data.gov.my in csv format.
+
+-   [Malaysia – Enrolment in Government Schools by District](https://data.gov.my/data-catalogue/enrolment_school_district) from data.gov.my in csv format.
 
 We first import the crime rate csv file into R.
 
@@ -57,36 +63,67 @@ Next, we import the administrative regions of Malaysia.
 ```{r}
 mys_sf <- read_sf(dsn = "data/geospatial/mys_adm_unhcr_20210211_shp", 
                  layer = "mys_admbnda_adm2_unhcr_20210211") %>%
-  st_as_sf(coords =c(
-    "longitude", "latitude"),
-           crs = 4326) %>%
-  st_transform(crs = 3167)
+          st_transform(crs = 3168)
 ```
 
-## 2.2.2 Filtering
 
-However in this case study, for ease of analysis, we choose to focus on West Malaysia, and thus will be filtering out Sarawak, Sabah and Labuan.
+## 2.3 Wrangling
+
+1. Load mys, crime and pop
+1.1 Extract year and convert state district to upper
+
+2. Fix state level
+2.1 Crime data
+2.1.1 Take out west mys, district (all) and type (all)
+2.2.1 Rename KL 
+2.2 Population data
+2.2.1 Take out west mys
+2.2.1 Rename KL 
+2.3 Mys Sf data
+2.3.1 Filter out west mys
+2.2.1 Rename KL, Purtajaya (into selangor)
+
+3. Fix district level
+3.1 Crime data
+3.1.1 Compare diff
+3.1.2 Remap the district
+3.2 Population data
+3.2.1 Compare diff
+3.2.2 Remap the district
+
+4. Join crime, pop and mys
+4.1 Compute crime per capita
+4.2 Scoping down for type and final clean
+
+### 2.3.1 Data Preparation
+
+
+```{r}
+print("Unique states in crime_df:")
+unique(crime_df$state)
+
+print("Unique states in mys_sf:")
+unique(mys_sf$ADM1_EN)
+```
+
+Convert state and district to upper for matching
+```{r}
+crime_df <- crime_df %>%
+              mutate(year = year(date),
+                     state = toupper(state),
+                     district = toupper(district))
+crime_df
+```
 
 ```{r}
 mys_sf <- mys_sf %>%
-          filter(ADM1_EN != 'W.P. Labuan' & ADM1_EN != 'Sabah' & ADM1_EN != 'Sarawak') %>%
-          mutate(ADM1_EN = replace(ADM1_EN, ADM1_EN == 'W.P. Kuala Lumpur', 'Kuala Lumpur'),
-                 ADM1_EN = replace(ADM1_EN, ADM1_EN == 'W.P. Putrajaya', 'Selangor'), 
-                 ADM1_EN = toupper(ADM1_EN),
+          mutate(ADM1_EN = toupper(ADM1_EN),
                  ADM2_EN = toupper(ADM2_EN))
 
 mys_sf
 ```
 
-```{r}
-crime_df <- crime_df %>%
-              filter(state != 'Malaysia' & state != 'Sabah' & state != 'Sarawak' & district != 'All') %>%
-              mutate(year = year(date),
-                     state = replace(state, state == 'W.P. Kuala Lumpur', 'Kuala Lumpur'),
-                     state = toupper(state),
-                     district = toupper(district))
-crime_df
-```
+### 2.3.2 Checking for Mismatch (State)
 
 ```{r}
 # Assuming you have two character vectors:
@@ -107,53 +144,43 @@ print("States in mys_sf not found in crime_df:")
 print(missing_in_crime)
 ```
 
+### 2.3.3 Cleaning (State)
+However in this case study, for ease of analysis, we choose to focus on West Malaysia, and thus will be filtering out Sarawak, Sabah and Labuan.
+
 ```{r}
-# Assuming you have two character vectors:
+mys_sf <- mys_sf %>%
+          filter(ADM1_EN != 'W.P. LABUAN' & ADM1_EN != 'SABAH' & ADM1_EN != 'SARAWAK') %>%
+          mutate(ADM1_EN = replace(ADM1_EN, ADM1_EN == 'W.P. KUALA LUMPUR', 'KUALA LUMPUR'),
+                 ADM1_EN = replace(ADM1_EN, ADM1_EN == 'W.P. PUTRAJAYA', 'SELANGOR'))
 
-district_crime <- unique(crime_df$district)
-
-district_sf <- unique(mys_sf$ADM2_EN)
-
-
-
-# Find districts in crime_df that are not in mys_sf
-
-missing_in_sf <- setdiff(district_crime, district_sf)
-
-
-
-# Find districts in mys_sf that are not in crime_df
-
-missing_in_crime <- setdiff(district_sf, district_crime)
-
-
-
-# Print the mismatches
-
-print("Districts in crime_df not found in mys_sf:")
-
-print(missing_in_sf)
-
-
-
-print("Districts in mys_sf not found in crime_df:")
-
-print(missing_in_crime)
+mys_sf
 ```
 
+```{r}
+crime_df <- crime_df %>%
+              filter(state != 'MALAYSIA' & state != 'SABAH' & state != 'SARAWAK' & 
+                     district != 'ALL' & type != 'all') %>%
+              mutate(state = replace(state, state == 'W.P. KUALA LUMPUR', 'KUALA LUMPUR'))
+crime_df
+```
 
+### 2.3.4 Checking for Mismatch (State-District) 
 
 ```{r}
 # Create a new column in crime_df
-crime_df <- crime_df %>%
-  mutate(state_district = paste(state, district, sep = "_"))
+crime_df <- crime_df %>% mutate(state_district = paste(state, district, sep = "-"))
 
 # Create a new column in mys_sf
-mys_sf <- mys_sf %>%
-  mutate(state_district = paste(ADM1_EN, ADM2_EN, sep = "_"))
+mys_sf <- mys_sf %>% mutate(state_district = paste(ADM1_EN, ADM2_EN, sep = "-"))
+```
 
-# Now, you can compare the unique values in the `state_district` column of both data frames:
 
+```{r}
+plot(st_geometry(south_mys_sf))
+```
+
+
+```{r}
 # Assuming you have two character vectors:
 state_district_crime <- unique(crime_df$state_district)
 state_district_sf <- unique(mys_sf$state_district)
@@ -170,53 +197,77 @@ print("State-District combinations in mys_sf not found in crime_df:")
 print(missing_in_crime)
 ```
 
+### 2.3.5 Cleaning (State-District)
 
-## 2.3 Data Wrangling
+JOHOR
+1.    ISKANDAR PUTERI -> JOHOR BAHRU
+2.    NUSAJAYA -> JOHOR BAHRU
+3.    JOHOR BAHRU SELATAN -> JOHOR BAHRU
+4.    JOHOR BAHRU UTARA -> JOHOR BAHRU
+5.    SERI ALAM -> JOHOR BAHRU
 
-### 2.3.1 Resolving data duplication
+NEGERI SEMBILAN
+1.    NILAI -> SEREMBAN
 
-There is also an issue of double counting data, where state 'Malaysia' comprises of all the crimes, and type of crime 'all' also comprises of its type of crime.
-
-As we are doing by state and not by district, we remove the double counting caused by district. At the same time, we will also remove Sabah and Sarawak, which are not the focus of our current analysis.
+MELAKA
+2.    OK
 
 ```{r}
 crime_df <- crime_df %>%
-                  filter(state !='Malaysia') %>% 
-                  filter(type !='all') %>% 
-                  filter(district =='All') %>%
-                  filter(state != 'Sabah') %>%
-                  filter(state != 'Sarawak') %>%
-                  filter(state != 'Labuan')
-crime_df
+  mutate(district = case_when(
+    state == "JOHOR" & district %in% c("ISKANDAR PUTERI", "NUSAJAYA", "JOHOR BAHRU SELATAN", "JOHOR BAHRU UTARA", "SERI ALAM") ~ "JOHOR BAHRU",
+    state == "NEGERI SEMBILAN" & district == "NILAI" ~ "SEREMBAN",
+    TRUE ~ district
+  )) %>%
+  group_by(state, district, year, category, type) %>%
+  summarise(crimes = sum(crimes))
 ```
 
-### 2.3.2 Resolving mismatch of state names
-
-Some of the province names are mismatched between the crime rate csv file and the shpfile.
-
-### 2.3.3 Performing relational join
 
 ```{r}
-crime_df_mys <- mys_sf %>%
-  left_join(crime_df,
-            by = c("ADM1_EN" = "state")) %>%
-  dplyr::select(ADM1_EN, ADM2_EN, category, type, crimes, year, Shape_Leng,  Shape_Area,  geometry)
+print("NEGERI SEMBILAN:")
+sort(unique((mys_sf %>% filter(ADM1_EN == "NEGERI SEMBILAN"))$ADM2_EN))
+sort(unique((crime_df %>% filter(state == "NEGERI SEMBILAN"))$district))
+
+print("MELAKA:")
+unique((mys_sf %>% filter(ADM1_EN == "MELAKA"))$ADM2_EN)
+unique((crime_df %>% filter(state == "MELAKA"))$district)
+
+print("JOHOR:")
+sort(unique((mys_sf %>% filter(ADM1_EN == "JOHOR"))$ADM2_EN))
+sort(unique((crime_df %>% filter(state == "JOHOR"))$district))
+```
+
+### 2.3.6 Performing join (South)
+
+```{r}
+south_states = c("JOHOR", "NEGERI SEMBILAN", "MELAKA")
+south_mys_sf <- mys_sf %>% filter(ADM1_EN %in% south_states)
+
+crime_df_mys <- crime_df %>% 
+  filter(state %in% south_states &
+         year >= 2019 & year <= 2022) %>%
+  left_join(south_mys_sf, by = c("district" = "ADM2_EN")) %>%
+  left_join(population_df, by = c("state", "district", "year")) %>%
+  mutate(crimes_pc = crimes/population) %>%
+  dplyr::select(state, district, year, category, type, crimes, crimes_pc, population, geometry)
 
 crime_df_mys <- st_as_sf(crime_df_mys)
-st_crs(crime_df_mys) <- st_crs(mys_sf)
-
 crime_df_mys
 ```
 
-### 2.3.4 Visualizing the distribution of crime
+### 2.3.7 Visualizing the distribution of crime
 
 ```{r}
-#| eval: false
-
 tmap_mode("plot")
-choro <- tm_shape(crime_df_mys) +
-  tm_fill("crimes", 
-          style = "quantile", 
+
+crime_df_mys_grp <- crime_df_mys %>%
+  group_by(state, district) %>%
+  summarize(total_crimes_pc = sum(crimes_pc)/4)
+
+choro <- tm_shape(crime_df_mys_grp) +
+  tm_fill("total_crimes_pc", 
+          style = "pretty", 
           palette = "Blues",
           title = "Crimes") +
   tm_layout(main.title = "Distribution of crime in West Malaysia",
@@ -232,6 +283,368 @@ choro <- tm_shape(crime_df_mys) +
 
 choro
 ```
+
+```{r}
+piv_crime_df_mys <- crime_df_mys %>%
+  mutate(cat_type = paste(category, type, sep = "-")) %>%
+  select(-category, -type, -crimes, -population) %>%
+  pivot_wider(
+    names_from = cat_type,
+    values_from = crimes_pc,
+    values_fill = 0
+  ) 
+
+corrplot.mixed(cor(st_drop_geometry(piv_crime_df_mys)[, 4:15]),
+         lower = "ellipse", 
+               upper = "number",
+               tl.pos = "lt",
+               diag = "l",
+               tl.col = "black",
+               tl.srt = 45, 
+               tl.cex = 0.5)
+```
+
+To further narrow our correlation analysis we will group robbery as one category and vehicle theft as the other
+
+```{r}
+piv_crime_df_mys <- piv_crime_df_mys %>%
+  mutate(
+    robbery = `assault-robbery_gang_armed` + `assault-robbery_gang_unarmed` + 
+              `assault-robbery_solo_armed` + `assault-robbery_solo_unarmed`,
+    vehicle_theft = `property-theft_vehicle_lorry` + `property-theft_vehicle_motorcar` + 
+                    `property-theft_vehicle_motorcycle`
+  ) %>%
+  select(-`assault-robbery_gang_armed`, -`assault-robbery_gang_unarmed`, 
+         -`assault-robbery_solo_armed`, -`assault-robbery_solo_unarmed`,
+         -`property-theft_vehicle_lorry`, -`property-theft_vehicle_motorcar`, 
+         -`property-theft_vehicle_motorcycle`) %>%
+  rename_with(~str_remove(., "^assault-|^property-"))
+
+piv_crime_df_mys
+```
+
+```{r}
+corrplot.mixed(cor(st_drop_geometry(piv_crime_df_mys)[, 4:10]),
+         lower = "ellipse", 
+               upper = "number",
+               tl.pos = "lt",
+               diag = "l",
+               tl.col = "black",
+               tl.srt = 45, 
+               tl.cex = 0.5)
+```
+
+## 2.4 Data Enrichment
+
+We realize we ran into some issue with the dataset, as they were too highly correlated, hence we decided enrich our data with several more relevant datasets which may affect crime rates such enrollment in schools, labour participation, and poverty by district
+
+```{r}
+enrol_df <- read_csv("data/aspatial/enrolment_district.csv")
+hies_df <- read_csv("data/aspatial/hies_district.csv")
+poverty_df <- read_csv("data/aspatial/poverty_district.csv")
+inequality_df <- read_csv("data/aspatial/inequality_district.csv")
+labour_df <- read_csv("data/aspatial/labour_district.csv")
+population_df <- read_csv("data/aspatial/population_district.csv")
+```
+
+```{r}
+print("Unique states in mys_sf:")
+unique(mys_sf$ADM1_EN)
+
+print("Unique states in poverty_df:")
+unique(poverty_df$state)
+
+print("Unique states in inequality_df:")
+unique(inequality_df$state)
+
+print("Unique states in labour_df:")
+unique(labour_df$state)
+
+print("Unique states in population_df:")
+unique(population_df$state)
+```
+
+### 2.4.1 Wrangling (State)
+
+#### 2.4.1.1 Initial Mapping
+
+```{r}
+poverty_df <- poverty_df %>%
+          mutate(year = year(date),
+                 state = toupper(state),
+                 district = toupper(district)) %>%
+          filter(state != 'SABAH' & state != 'SARAWAK' & state != 'W.P. LABUAN' & district != 'ALL') %>%
+          mutate(state = replace(state, state == 'W.P. KUALA LUMPUR', 'KUALA LUMPUR'),
+                 state = replace(state, state == 'W.P. PUTRAJAYA', 'SELANGOR'))
+```
+
+```{r}
+inequality_df <- inequality_df %>%
+          mutate(year = year(date),
+                 state = toupper(state),
+                 district = toupper(district)) %>%
+          filter(state != 'SABAH' & state != 'SARAWAK' & state != 'W.P. LABUAN' & district != 'ALL') %>%
+          mutate(state = replace(state, state == 'W.P. KUALA LUMPUR', 'KUALA LUMPUR'),
+                 state = replace(state, state == 'W.P. PUTRAJAYA', 'SELANGOR'))
+```
+
+```{r}
+labour_df <- labour_df %>%
+          mutate(year = year(date),
+                 state = toupper(state),
+                 district = toupper(district)) %>%
+          filter(state != 'SABAH' & state != 'SARAWAK' & district != 'ALL')
+```
+
+```{r}
+population_df <- population_df %>%
+          mutate(year = year(date),
+                 state = toupper(state),
+                 district = toupper(district)) %>%
+          filter(state != 'SABAH' & state != 'SARAWAK' & state != 'W.P. LABUAN' & district != 'ALL') %>%
+          mutate(state = replace(state, state == 'W.P. KUALA LUMPUR', 'KUALA LUMPUR'),
+                 state = replace(state, state == 'W.P. PUTRAJAYA', 'SELANGOR'))
+```
+
+
+```{r}
+print("Unique states & years in mys_sf:")
+sort(unique(mys_sf$ADM1_EN))
+
+print("Unique states & years in poverty_df:")
+sort(unique(poverty_df$state))
+sort(unique(poverty_df$date))
+
+print("Unique states & years in inequality_df:")
+sort(unique(inequality_df$state))
+sort(unique(inequality_df$date))
+
+print("Unique states & years in labour_df:")
+sort(unique(labour_df$state))
+sort(unique(labour_df$date))
+```
+
+```{r}
+print("Unique states & years in population_df:")
+sort(unique(population_df$state))
+sort(unique(population_df$date))
+```
+
+
+From the data we identified 2 issues:
+1.    Poverty and Inequality data is missing years 2020 and 2021
+2.    Labour data is missing PERLIS and KUALA LUMPUR
+3.    Population data is missing year 2019
+
+#### 2.4.1.2 Additional Mapping (Poverty and Inequality)
+
+Since years 2020 and 2021 are missing from data set, we will do a best effort mapping for year:
+-   2020 -> 2019
+-   2021 -> 2022
+
+```{r}
+poverty_rows <- poverty_df %>%
+  mutate(year = ifelse(year == 2019, 2020, 2021))
+poverty_df <- bind_rows(poverty_df, poverty_rows)
+unique(poverty_df$year)
+```
+
+```{r}
+inequality_rows <- inequality_df %>%
+  mutate(year = ifelse(year == 2019, 2020, 2021))
+inequality_df <- bind_rows(inequality_df, inequality_rows)
+unique(inequality_df$year)
+```
+
+#### 2.4.1.3 Additional Mapping (Labour)
+
+Since our analysis for now will be centered around Southern Malaysia we will omit mapping of PERLIS and KUALA LUMPUR
+ 
+#### 2.4.1.4 Additional Mapping (Population)
+
+Similarly the year 2019 is missing from data set, hence we will map year 2020 -> 2019.
+
+```{r}
+population_row <- population_df %>%
+  filter(year == 2020) %>%
+  mutate(year = 2019) 
+population_df <- bind_rows(population_df, population_row)
+unique(population_df$year)
+```
+
+### 2.4.2 Wrangling Poverty & Inequaltiy
+
+```{r}
+poverty_df <- poverty_df %>% mutate(state_district = paste(state, district, sep = "-"))
+inequality_df <- inequality_df %>% mutate(state_district = paste(state, district, sep = "-"))
+population_df <- population_df %>% mutate(state_district = paste(state, district, sep = "-"))
+```
+
+
+```{r}
+# Assuming you have two character vectors:
+state_district_poverty <- unique(poverty_df$state_district)
+
+# Find mismatches
+missing_in_sf <- setdiff(state_district_poverty, state_district_sf)
+missing_in_poverty <- setdiff(state_district_sf, state_district_poverty)
+
+# Print the mismatches
+print("State-District combinations in poverty_df not found in mys_sf:")
+print(missing_in_sf)
+
+print("State-District combinations in mys_sf not found in poverty_df:")
+print(missing_in_poverty)
+```
+
+JOHOR
+1.    KULAI -> KULAIJAYA
+2.    TANGKAK -> LEDANG
+
+NEGERI SEMBILAN
+1.    OK
+
+MELAKA
+1.    OK
+
+```{r}
+poverty_df <- poverty_df %>%
+  mutate(district = case_when(
+    state == "JOHOR" & district == "KULAI" ~ "KULAIJAYA",
+    state == "JOHOR" & district == "TANGKAK" ~ "LEDANG",
+    TRUE ~ district
+  )) 
+
+poverty_df
+```
+```{r}
+inequality_df <- inequality_df %>%
+  mutate(district = case_when(
+    state == "JOHOR" & district == "KULAI" ~ "KULAIJAYA",
+    state == "JOHOR" & district == "TANGKAK" ~ "LEDANG",
+    TRUE ~ district
+  )) 
+
+inequality_df
+```
+
+### 2.4.2 Wrangling Labour
+
+```{r}
+labour_df <- labour_df %>% mutate(state_district = paste(state, district, sep = "-"))
+```
+
+
+```{r}
+# Assuming you have two character vectors:
+state_district_labour <- unique(labour_df$state_district)
+
+# Find mismatches
+missing_in_sf <- setdiff(state_district_labour, state_district_sf)
+missing_in_labour <- setdiff(state_district_sf, state_district_labour)
+
+# Print the mismatches
+print("State-District combinations in labour_df not found in mys_sf:")
+print(missing_in_sf)
+
+print("State-District combinations in mys_sf not found in labour_df:")
+print(missing_in_labour)
+```
+
+```{r}
+labour_df <- labour_df %>%
+  mutate(district = case_when(
+    state == "JOHOR" & district == "KULAI" ~ "KULAIJAYA",
+    state == "JOHOR" & district == "TANGKAK" ~ "LEDANG",
+    TRUE ~ district
+  )) 
+
+labour_df
+```
+
+### 2.4.3 Wrangling Population
+```{r}
+# Assuming you have two character vectors:
+state_district_population <- unique(population_df$state_district)
+
+# Find mismatches
+missing_in_sf <- setdiff(state_district_population, state_district_sf)
+missing_in_population <- setdiff(state_district_sf, state_district_population)
+
+# Print the mismatches
+print("State-District combinations in population_df not found in mys_sf:")
+print(missing_in_sf)
+
+print("State-District combinations in mys_sf not found in population_df:")
+print(missing_in_population)
+```
+
+```{r}
+population_df <- population_df %>%
+  mutate(district = case_when(
+    state == "JOHOR" & district == "KULAI" ~ "KULAIJAYA",
+    state == "JOHOR" & district == "TANGKAK" ~ "LEDANG",
+    TRUE ~ district
+  )) 
+
+population_df
+```
+
+
+### 2.4.4 Joining
+
+### 2.4.4.1 Selecting Relevant Years
+
+```{r}
+piv_crime_df_mys <- piv_crime_df_mys %>%
+    filter(year >= 2019 & year <= 2022)
+```
+
+```{r}
+population_df <- population_df %>%
+    filter(sex == "both" & age == "overall" & ethnicity == "overall") %>%
+    dplyr::select(state, district, year, population)
+population_df
+```
+
+
+### 2.4.4.2 Selecting Relevant Years
+
+```{r}
+piv_full_df_mys <- piv_crime_df_mys %>%
+  left_join(select(poverty_df, -date, -state_district), by = c("state", "district", "year")) %>%
+  left_join(select(inequality_df, -date, -state_district), by = c("state", "district", "year")) %>%
+  left_join(select(labour_df, -date, -state_district), by = c("state", "district", "year")) %>%
+  left_join(population_df, by = c("state", "district", "year"))
+
+piv_full_df_mys
+```
+
+### 2.4.4.3 Normalising Crime by Population
+
+We need to transform 
+
+```{r}
+piv_full_df_mys <- piv_full_df_mys %>%
+    mutate(assault_pc = assault/population,
+           property_pc = property/population) %>%
+piv_full_df_mys
+```
+
+
+### 2.4.4.4 Visualizing the Correlation of Data
+
+```{r}
+corrplot.mixed(cor(st_drop_geometry(piv_full_df_mys)[, 4:18]),
+         lower = "ellipse", 
+               upper = "number",
+               tl.pos = "lt",
+               diag = "l",
+               tl.col = "black",
+               tl.srt = 45,  # Slant the labels by 45 degrees
+               tl.cex = 0.5)
+```
+
 
 # 3. Analysis
 
