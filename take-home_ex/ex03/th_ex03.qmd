@@ -56,6 +56,7 @@ We first import the crime rate csv file into R.
 
 ```{r}
 crime_df <- read_csv("data/aspatial/crime_district.csv")
+population_df <- read_csv("data/aspatial/population_district.csv")
 ```
 
 Next, we import the administrative regions of Malaysia.
@@ -69,37 +70,13 @@ mys_sf <- read_sf(dsn = "data/geospatial/mys_adm_unhcr_20210211_shp",
 
 ## 2.3 Wrangling
 
-1. Load mys, crime and pop
-1.1 Extract year and convert state district to upper
-
-2. Fix state level
-2.1 Crime data
-2.1.1 Take out west mys, district (all) and type (all)
-2.2.1 Rename KL 
-2.2 Population data
-2.2.1 Take out west mys
-2.2.1 Rename KL 
-2.3 Mys Sf data
-2.3.1 Filter out west mys
-2.2.1 Rename KL, Purtajaya (into selangor)
-
-3. Fix district level
-3.1 Crime data
-3.1.1 Compare diff
-3.1.2 Remap the district
-3.2 Population data
-3.2.1 Compare diff
-3.2.2 Remap the district
-
-4. Join crime, pop and mys
-4.1 Compute crime per capita
-4.2 Scoping down for type and final clean
-
 ### 2.3.1 Data Preparation
-
 
 ```{r}
 print("Unique states in crime_df:")
+unique(crime_df$state)
+
+print("Unique states in population_df:")
 unique(crime_df$state)
 
 print("Unique states in mys_sf:")
@@ -107,12 +84,21 @@ unique(mys_sf$ADM1_EN)
 ```
 
 Convert state and district to upper for matching
+
 ```{r}
 crime_df <- crime_df %>%
               mutate(year = year(date),
                      state = toupper(state),
                      district = toupper(district))
 crime_df
+```
+
+```{r}
+population_df <- population_df %>%
+              mutate(year = year(date),
+                     state = toupper(state),
+                     district = toupper(district))
+population_df
 ```
 
 ```{r}
@@ -151,7 +137,7 @@ However in this case study, for ease of analysis, we choose to focus on West Mal
 mys_sf <- mys_sf %>%
           filter(ADM1_EN != 'W.P. LABUAN' & ADM1_EN != 'SABAH' & ADM1_EN != 'SARAWAK') %>%
           mutate(ADM1_EN = replace(ADM1_EN, ADM1_EN == 'W.P. KUALA LUMPUR', 'KUALA LUMPUR'),
-                 ADM1_EN = replace(ADM1_EN, ADM1_EN == 'W.P. PUTRAJAYA', 'SELANGOR'))
+                 ADM1_EN = replace(ADM1_EN, ADM1_EN == 'W.P. PUTRAJAYA', 'KUALA LUMPUR'))
 
 mys_sf
 ```
@@ -164,19 +150,23 @@ crime_df <- crime_df %>%
 crime_df
 ```
 
-### 2.3.4 Checking for Mismatch (State-District) 
-
 ```{r}
-# Create a new column in crime_df
-crime_df <- crime_df %>% mutate(state_district = paste(state, district, sep = "-"))
-
-# Create a new column in mys_sf
-mys_sf <- mys_sf %>% mutate(state_district = paste(ADM1_EN, ADM2_EN, sep = "-"))
+population_df <- population_df %>%
+          filter(state != 'SABAH' & state != 'SARAWAK' & state != 'W.P. LABUAN' &
+                 sex == "both" & age == "overall" & ethnicity == "overall" ) %>%
+          mutate(state = replace(state, state == 'W.P. KUALA LUMPUR', 'KUALA LUMPUR'),
+                 state = replace(state, state == 'W.P. PUTRAJAYA', 'KUALA LUMPUR')) %>%
+          dplyr::select(state, district, year, population)
+population_df
 ```
 
+### 2.3.4 Crime (State-District) 
+
+#### 2.3.4.1 Check for Mismatch 
 
 ```{r}
-plot(st_geometry(south_mys_sf))
+crime_df <- crime_df %>% mutate(state_district = paste(state, district, sep = "-"))
+mys_sf <- mys_sf %>% mutate(state_district = paste(ADM1_EN, ADM2_EN, sep = "-"))
 ```
 
 
@@ -197,59 +187,185 @@ print("State-District combinations in mys_sf not found in crime_df:")
 print(missing_in_crime)
 ```
 
-### 2.3.5 Cleaning (State-District)
+#### 2.3.4.2 Cleaning
 
-JOHOR
-1.    ISKANDAR PUTERI -> JOHOR BAHRU
-2.    NUSAJAYA -> JOHOR BAHRU
-3.    JOHOR BAHRU SELATAN -> JOHOR BAHRU
-4.    JOHOR BAHRU UTARA -> JOHOR BAHRU
-5.    SERI ALAM -> JOHOR BAHRU
-
-NEGERI SEMBILAN
-1.    NILAI -> SEREMBAN
-
-MELAKA
-2.    OK
 
 ```{r}
 crime_df <- crime_df %>%
   mutate(district = case_when(
     state == "JOHOR" & district %in% c("ISKANDAR PUTERI", "NUSAJAYA", "JOHOR BAHRU SELATAN", "JOHOR BAHRU UTARA", "SERI ALAM") ~ "JOHOR BAHRU",
     state == "NEGERI SEMBILAN" & district == "NILAI" ~ "SEREMBAN",
+    state == "KEDAH" & district == "BANDAR BHARU" ~ "BANDAR BAHARU",
+    state == "PAHANG" & district == "CAMERON HIGHLAND" ~ "CAMERON HIGHLANDS",
+    state == "PAHANG" & district == "KUALA LIPIS" ~ "LIPIS",
+    state == "PERAK" & district  %in% c("BATU GAJAH", "IPOH") ~ "KINTA",
+    state == "PERAK" & district == "GERIK" ~ "ULU PERAK",
+    state == "PERAK" & district == "MANJUNG" ~ "MANJUNG (DINDING)",
+    state == "PERAK" & district == "PENGKALAN HULU" ~ "ULU PERAK",
+    state == "PERAK" & district %in% c("SELAMA", "TAIPING") ~ "LARUT DAN MATANG",
+    state == "PERAK" & district == "SUNGAI SIPUT" ~ "KUALA KANGSAR",
+    state == "PERAK" & district %in% c("TANJONG MALIM", "TAPAH") ~ "BATANG PADANG",
+    state == "PERLIS" & district %in% c("ARAU", "KANGAR", "PADANG BESAR") ~ "PERLIS",
+    state == "PULAU PINANG" & district == "SEBERANG PERAI SELATAN" ~ "S.P.SELATAN",
+    state == "PULAU PINANG" & district == "SEBERANG PERAI TENGAH" ~ "S.P. TENGAH",
+    state == "PULAU PINANG" & district == "SEBERANG PERAI UTARA" ~ "S.P. UTARA",
+    state == "SELANGOR" & district == "AMPANG JAYA" ~ "GOMBAK",
+    state == "SELANGOR" & district == "HULU SELANGOR" ~ "ULU SELANGOR",
+    state == "SELANGOR" & district == "KAJANG" ~ "ULU LANGAT",
+    state == "SELANGOR" & district %in% c("KLANG SELATAN", "KLANG UTARA") ~ "KLANG",
+    state == "SELANGOR" & district %in% c("PETALING JAYA", "SERDANG", "SG. BULOH", "SHAH ALAM", "SUBANG JAYA", "SUNGAI BULOH") ~ "PETALING",
+    state == "KUALA LUMPUR" & district %in% c("BRICKFIELDS", "CHERAS", "DANG WANGI", "SENTUL", "WANGSA MAJU") ~ "WP. KUALA LUMPUR",
     TRUE ~ district
   )) %>%
   group_by(state, district, year, category, type) %>%
   summarise(crimes = sum(crimes))
 ```
 
-
 ```{r}
-print("NEGERI SEMBILAN:")
-sort(unique((mys_sf %>% filter(ADM1_EN == "NEGERI SEMBILAN"))$ADM2_EN))
-sort(unique((crime_df %>% filter(state == "NEGERI SEMBILAN"))$district))
-
-print("MELAKA:")
-unique((mys_sf %>% filter(ADM1_EN == "MELAKA"))$ADM2_EN)
-unique((crime_df %>% filter(state == "MELAKA"))$district)
-
-print("JOHOR:")
-sort(unique((mys_sf %>% filter(ADM1_EN == "JOHOR"))$ADM2_EN))
-sort(unique((crime_df %>% filter(state == "JOHOR"))$district))
+tm_shape(mys_sf) +
+  tm_polygons() +
+  tm_text("ADM2_EN", size = 0.3)
 ```
 
-### 2.3.6 Performing join (South)
+#### 2.3.4.3 Visualizing Crime Distribution
 
 ```{r}
-south_states = c("JOHOR", "NEGERI SEMBILAN", "MELAKA")
-south_mys_sf <- mys_sf %>% filter(ADM1_EN %in% south_states)
+crime_df_mys <- crime_df %>%
+  filter(year >= 2019 & year <= 2022) %>%
+  left_join(mys_sf, by = c("state" = "ADM1_EN", "district" = "ADM2_EN")) %>%
+  dplyr::select(state, district, year, category, type, crimes, geometry)
 
+crime_df_mys <- st_as_sf(crime_df_mys)
+crime_df_mys
+```
+
+```{r}
+tmap_mode("plot")
+
+crime_df_mys_grp <- crime_df_mys %>%
+  group_by(state, district) %>%
+  summarize(total_crimes = sum(crimes))
+
+choro <- tm_shape(crime_df_mys_grp) +
+  tm_fill("total_crimes", 
+          style = "pretty", 
+          palette = "Blues",
+          title = "Crimes") +
+  tm_layout(main.title = "Distribution of crime in West Malaysia",
+            main.title.position = "center",
+            main.title.size = 1.2,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar() +
+  tm_grid(alpha =0.2)
+
+choro
+```
+
+### 2.3.5 Population (State-District)
+
+#### 2.3.5.1 Check for Mismatch
+
+The year 2019 is missing from data set, hence we will map year 2020 -> 2019.
+
+```{r}
+population_row <- population_df %>%
+  filter(year == 2020) %>%
+  mutate(year = 2019) 
+population_df <- bind_rows(population_df, population_row)
+unique(population_df$year)
+```
+
+```{r}
+population_df <- population_df %>% mutate(state_district = paste(state, district, sep = "-"))
+```
+
+```{r}
+# Assuming you have two character vectors:
+state_district_population <- unique(population_df$state_district)
+
+# Find mismatches
+missing_in_sf <- setdiff(state_district_population, state_district_sf)
+missing_in_population <- setdiff(state_district_sf, state_district_population)
+
+# Print the mismatches
+print("State-District combinations in population_df not found in mys_sf:")
+print(missing_in_sf)
+
+print("State-District combinations in mys_sf not found in population_df:")
+print(missing_in_population)
+```
+
+#### 2.3.5.2 Cleaning
+
+```{r}
+population_df <- population_df %>%
+  mutate(district = case_when(
+    state == "JOHOR" & district == "KULAI" ~ "KULAIJAYA",
+    state == "JOHOR" & district == "TANGKAK" ~ "LEDANG",
+    state == "KELANTAN" & district == "KECIL LOJING" ~ "GUA MUSANG",
+    state == "PAHANG" & district == "CAMERON HIGHLAND" ~ "CAMERON HIGHLANDS",
+    state == "PERAK" & district == "HULU PERAK" ~ "ULU PERAK",
+    state == "PERAK" & district == "BAGAN DATUK" ~ "HILIR PERAK",
+    state == "PERAK" & district == "MANJUNG" ~ "MANJUNG (DINDING)",
+    state == "PERAK" & district == "MUALLIM" ~ "BATANG PADANG",
+    state == "PERAK" & district == "SELAMA" ~ "LARUT DAN MATANG",
+    state == "PULAU PINANG" & district == "SEBERANG PERAI SELATAN" ~ "S.P.SELATAN",
+    state == "PULAU PINANG" & district == "SEBERANG PERAI TENGAH" ~ "S.P. TENGAH",
+    state == "PULAU PINANG" & district == "SEBERANG PERAI UTARA" ~ "S.P. UTARA",
+    state == "PULAU PINANG" & district == "SP SELATAN" ~ "S.P.SELATAN",
+    state == "PULAU PINANG" & district == "SP TENGAH" ~ "S.P. TENGAH",
+    state == "PULAU PINANG" & district == "SP UTARA" ~ "S.P. UTARA",
+    state == "KUALA LUMPUR" & district == "W.P. KUALA LUMPUR" ~ "WP. KUALA LUMPUR",
+    TRUE ~ district
+  )) %>%
+  group_by(state, district, year) %>%
+  summarise(population = sum(population))
+
+population_df
+```
+
+```{r}
+tm_shape(mys_sf) +
+  tm_polygons() +
+  tm_text("ADM2_EN", size = 0.3)
+```
+
+### 2.3.6 Joining
+
+#### 2.3.6.1 Join with Population Data
+
+```{r}
 crime_df_mys <- crime_df %>% 
-  filter(state %in% south_states &
-         year >= 2019 & year <= 2022) %>%
-  left_join(south_mys_sf, by = c("district" = "ADM2_EN")) %>%
+  filter(year >= 2019 & year <= 2022) %>%
   left_join(population_df, by = c("state", "district", "year")) %>%
   mutate(crimes_pc = crimes/population) %>%
+  dplyr::select(state, district, year, category, type, crimes, crimes_pc, population)
+```
+
+#### 2.3.6.2 Create for Pokok Sena District 
+
+```{r}
+pokok_sena_rows <- crime_df_mys %>%
+  filter(state == "KEDAH") %>%
+  group_by(state, year, category, type) %>%
+  summarise(crimes = mean(crimes),
+            crimes_pc = mean(crimes_pc),
+            population = mean(population)) %>% 
+  mutate(district = "POKOK SENA")
+
+pokok_sena_rows
+crime_df_mys <- bind_rows(crime_df_mys, pokok_sena_rows)
+```
+
+#### 2.3.6.3 Join with District Boundary 
+
+```{r}
+crime_df_mys <- crime_df_mys %>%
+  left_join(mys_sf, by = c("state" = "ADM1_EN", "district" = "ADM2_EN")) %>%
   dplyr::select(state, district, year, category, type, crimes, crimes_pc, population, geometry)
 
 crime_df_mys <- st_as_sf(crime_df_mys)
@@ -283,6 +399,8 @@ choro <- tm_shape(crime_df_mys_grp) +
 
 choro
 ```
+
+### 2.3.8 Data Enrichment
 
 ```{r}
 piv_crime_df_mys <- crime_df_mys %>%
