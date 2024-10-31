@@ -319,6 +319,7 @@ population_df <- population_df %>%
     state == "PULAU PINANG" & district == "SP SELATAN" ~ "S.P.SELATAN",
     state == "PULAU PINANG" & district == "SP TENGAH" ~ "S.P. TENGAH",
     state == "PULAU PINANG" & district == "SP UTARA" ~ "S.P. UTARA",
+    state == "TERENGGANU" & district == "KUALA NERUS" ~ "KUALA TERENGGANU",
     state == "KUALA LUMPUR" & district == "W.P. KUALA LUMPUR" ~ "WP. KUALA LUMPUR",
     TRUE ~ district
   )) %>%
@@ -400,7 +401,7 @@ choro <- tm_shape(crime_df_mys_grp) +
 choro
 ```
 
-### 2.3.8 Data Enrichment
+### 2.3.8 Correlation Plot
 
 ```{r}
 piv_crime_df_mys <- crime_df_mys %>%
@@ -457,13 +458,12 @@ corrplot.mixed(cor(st_drop_geometry(piv_crime_df_mys)[, 4:10]),
 We realize we ran into some issue with the dataset, as they were too highly correlated, hence we decided enrich our data with several more relevant datasets which may affect crime rates such enrollment in schools, labour participation, and poverty by district
 
 ```{r}
-enrol_df <- read_csv("data/aspatial/enrolment_district.csv")
-hies_df <- read_csv("data/aspatial/hies_district.csv")
 poverty_df <- read_csv("data/aspatial/poverty_district.csv")
 inequality_df <- read_csv("data/aspatial/inequality_district.csv")
 labour_df <- read_csv("data/aspatial/labour_district.csv")
-population_df <- read_csv("data/aspatial/population_district.csv")
 ```
+
+### 2.4.1 Clearning (State)
 
 ```{r}
 print("Unique states in mys_sf:")
@@ -477,51 +477,33 @@ unique(inequality_df$state)
 
 print("Unique states in labour_df:")
 unique(labour_df$state)
-
-print("Unique states in population_df:")
-unique(population_df$state)
 ```
-
-### 2.4.1 Wrangling (State)
-
-#### 2.4.1.1 Initial Mapping
 
 ```{r}
 poverty_df <- poverty_df %>%
           mutate(year = year(date),
                  state = toupper(state),
                  district = toupper(district)) %>%
-          filter(state != 'SABAH' & state != 'SARAWAK' & state != 'W.P. LABUAN' & district != 'ALL') %>%
+          filter(state != 'SABAH' & state != 'SARAWAK' & state != 'W.P. LABUAN') %>%
           mutate(state = replace(state, state == 'W.P. KUALA LUMPUR', 'KUALA LUMPUR'),
-                 state = replace(state, state == 'W.P. PUTRAJAYA', 'SELANGOR'))
-```
+                 state = replace(state, state == 'W.P. PUTRAJAYA', 'KUALA LUMPUR'))
 
-```{r}
 inequality_df <- inequality_df %>%
           mutate(year = year(date),
                  state = toupper(state),
                  district = toupper(district)) %>%
-          filter(state != 'SABAH' & state != 'SARAWAK' & state != 'W.P. LABUAN' & district != 'ALL') %>%
+          filter(state != 'SABAH' & state != 'SARAWAK' & state != 'W.P. LABUAN') %>%
           mutate(state = replace(state, state == 'W.P. KUALA LUMPUR', 'KUALA LUMPUR'),
-                 state = replace(state, state == 'W.P. PUTRAJAYA', 'SELANGOR'))
+                 state = replace(state, state == 'W.P. PUTRAJAYA', 'KUALA LUMPUR'))
 ```
+
 
 ```{r}
 labour_df <- labour_df %>%
           mutate(year = year(date),
                  state = toupper(state),
                  district = toupper(district)) %>%
-          filter(state != 'SABAH' & state != 'SARAWAK' & district != 'ALL')
-```
-
-```{r}
-population_df <- population_df %>%
-          mutate(year = year(date),
-                 state = toupper(state),
-                 district = toupper(district)) %>%
-          filter(state != 'SABAH' & state != 'SARAWAK' & state != 'W.P. LABUAN' & district != 'ALL') %>%
-          mutate(state = replace(state, state == 'W.P. KUALA LUMPUR', 'KUALA LUMPUR'),
-                 state = replace(state, state == 'W.P. PUTRAJAYA', 'SELANGOR'))
+          filter(state != 'SABAH' & state != 'SARAWAK')
 ```
 
 
@@ -531,30 +513,25 @@ sort(unique(mys_sf$ADM1_EN))
 
 print("Unique states & years in poverty_df:")
 sort(unique(poverty_df$state))
-sort(unique(poverty_df$date))
+sort(unique(poverty_df$year))
 
 print("Unique states & years in inequality_df:")
 sort(unique(inequality_df$state))
-sort(unique(inequality_df$date))
+sort(unique(inequality_df$year))
 
 print("Unique states & years in labour_df:")
 sort(unique(labour_df$state))
-sort(unique(labour_df$date))
-```
-
-```{r}
-print("Unique states & years in population_df:")
-sort(unique(population_df$state))
-sort(unique(population_df$date))
+sort(unique(labour_df$year))
 ```
 
 
 From the data we identified 2 issues:
 1.    Poverty and Inequality data is missing years 2020 and 2021
-2.    Labour data is missing PERLIS and KUALA LUMPUR
-3.    Population data is missing year 2019
+2.    Labour data is missing PERLIS, KUALA LUMPUR and PUTRAJAYA
 
-#### 2.4.1.2 Additional Mapping (Poverty and Inequality)
+### 2.4.2 Poverty & Inequaltiy (State-District)
+
+#### 2.4.2.1 Duplicating Data
 
 Since years 2020 and 2021 are missing from data set, we will do a best effort mapping for year:
 -   2020 -> 2019
@@ -565,37 +542,21 @@ poverty_rows <- poverty_df %>%
   mutate(year = ifelse(year == 2019, 2020, 2021))
 poverty_df <- bind_rows(poverty_df, poverty_rows)
 unique(poverty_df$year)
-```
 
-```{r}
 inequality_rows <- inequality_df %>%
   mutate(year = ifelse(year == 2019, 2020, 2021))
 inequality_df <- bind_rows(inequality_df, inequality_rows)
 unique(inequality_df$year)
 ```
 
-#### 2.4.1.3 Additional Mapping (Labour)
 
-Since our analysis for now will be centered around Southern Malaysia we will omit mapping of PERLIS and KUALA LUMPUR
- 
-#### 2.4.1.4 Additional Mapping (Population)
+#### 2.4.2.2 Check for Mismatch 
 
-Similarly the year 2019 is missing from data set, hence we will map year 2020 -> 2019.
-
-```{r}
-population_row <- population_df %>%
-  filter(year == 2020) %>%
-  mutate(year = 2019) 
-population_df <- bind_rows(population_df, population_row)
-unique(population_df$year)
-```
-
-### 2.4.2 Wrangling Poverty & Inequaltiy
+Creating rows for state-district
 
 ```{r}
 poverty_df <- poverty_df %>% mutate(state_district = paste(state, district, sep = "-"))
 inequality_df <- inequality_df %>% mutate(state_district = paste(state, district, sep = "-"))
-population_df <- population_df %>% mutate(state_district = paste(state, district, sep = "-"))
 ```
 
 
@@ -615,38 +576,73 @@ print("State-District combinations in mys_sf not found in poverty_df:")
 print(missing_in_poverty)
 ```
 
-JOHOR
-1.    KULAI -> KULAIJAYA
-2.    TANGKAK -> LEDANG
-
-NEGERI SEMBILAN
-1.    OK
-
-MELAKA
-1.    OK
+#### 2.4.2.3 Cleaning
 
 ```{r}
 poverty_df <- poverty_df %>%
   mutate(district = case_when(
     state == "JOHOR" & district == "KULAI" ~ "KULAIJAYA",
     state == "JOHOR" & district == "TANGKAK" ~ "LEDANG",
+    state == "KELANTAN" & district == "KECIL LOJING" ~ "GUA MUSANG",
+    state == "PERAK" & district == "HULU PERAK" ~ "ULU PERAK",
+    state == "PERAK" & district == "BAGAN DATUK" ~ "HILIR PERAK",
+    state == "PERAK" & district == "MANJUNG" ~ "MANJUNG (DINDING)",
+    state == "PERAK" & district == "MUALLIM" ~ "BATANG PADANG",
+    state == "PERAK" & district == "SELAMA" ~ "LARUT DAN MATANG",
+    state == "PULAU PINANG" & district == "SEBERANG PERAI SELATAN" ~ "S.P.SELATAN",
+    state == "PULAU PINANG" & district == "SEBERANG PERAI TENGAH" ~ "S.P. TENGAH",
+    state == "PULAU PINANG" & district == "SEBERANG PERAI UTARA" ~ "S.P. UTARA",
+    state == "TERENGGANU" & district == "KUALA NERUS" ~ "KUALA TERENGGANU",
+    state == "KUALA LUMPUR" & district == "W.P. KUALA LUMPUR" ~ "WP. KUALA LUMPUR",
     TRUE ~ district
   )) 
 
 poverty_df
 ```
+
 ```{r}
 inequality_df <- inequality_df %>%
   mutate(district = case_when(
     state == "JOHOR" & district == "KULAI" ~ "KULAIJAYA",
     state == "JOHOR" & district == "TANGKAK" ~ "LEDANG",
+    state == "KELANTAN" & district == "KECIL LOJING" ~ "GUA MUSANG",
+    state == "PERAK" & district == "HULU PERAK" ~ "ULU PERAK",
+    state == "PERAK" & district == "BAGAN DATUK" ~ "HILIR PERAK",
+    state == "PERAK" & district == "MANJUNG" ~ "MANJUNG (DINDING)",
+    state == "PERAK" & district == "MUALLIM" ~ "BATANG PADANG",
+    state == "PERAK" & district == "SELAMA" ~ "LARUT DAN MATANG",
+    state == "PULAU PINANG" & district == "SEBERANG PERAI SELATAN" ~ "S.P.SELATAN",
+    state == "PULAU PINANG" & district == "SEBERANG PERAI TENGAH" ~ "S.P. TENGAH",
+    state == "PULAU PINANG" & district == "SEBERANG PERAI UTARA" ~ "S.P. UTARA",
+    state == "TERENGGANU" & district == "KUALA NERUS" ~ "KUALA TERENGGANU",
+    state == "KUALA LUMPUR" & district == "W.P. KUALA LUMPUR" ~ "WP. KUALA LUMPUR",
     TRUE ~ district
   )) 
 
 inequality_df
 ```
 
-### 2.4.2 Wrangling Labour
+
+```{r}
+# Assuming you have two character vectors:
+poverty_df <- poverty_df %>% mutate(state_district = paste(state, district, sep = "-"))
+state_district_poverty <- unique(poverty_df$state_district)
+
+# Find mismatches
+missing_in_sf <- setdiff(state_district_poverty, state_district_sf)
+missing_in_poverty <- setdiff(state_district_sf, state_district_poverty)
+
+# Print the mismatches
+print("State-District combinations in poverty_df not found in mys_sf:")
+print(missing_in_sf)
+
+print("State-District combinations in mys_sf not found in poverty_df:")
+print(missing_in_poverty)
+```
+
+### 2.4.3 Wrangling Labour
+
+#### 2.4.3.1 Check for Mismatch 
 
 ```{r}
 labour_df <- labour_df %>% mutate(state_district = paste(state, district, sep = "-"))
@@ -669,91 +665,82 @@ print("State-District combinations in mys_sf not found in labour_df:")
 print(missing_in_labour)
 ```
 
+#### 2.4.3.1 Cleaning
+
 ```{r}
 labour_df <- labour_df %>%
   mutate(district = case_when(
     state == "JOHOR" & district == "KULAI" ~ "KULAIJAYA",
     state == "JOHOR" & district == "TANGKAK" ~ "LEDANG",
+    state == "PERAK" & district == "HULU PERAK" ~ "ULU PERAK",
+    state == "PERAK" & district == "MANJUNG" ~ "MANJUNG (DINDING)",
+    state == "PULAU PINANG" & district == "SEBERANG PERAI SELATAN" ~ "S.P.SELATAN",
+    state == "PULAU PINANG" & district == "SEBERANG PERAI TENGAH" ~ "S.P. TENGAH",
+    state == "PULAU PINANG" & district == "SEBERANG PERAI UTARA" ~ "S.P. UTARA",
     TRUE ~ district
   )) 
 
 labour_df
 ```
 
-### 2.4.3 Wrangling Population
-```{r}
-# Assuming you have two character vectors:
-state_district_population <- unique(population_df$state_district)
 
-# Find mismatches
-missing_in_sf <- setdiff(state_district_population, state_district_sf)
-missing_in_population <- setdiff(state_district_sf, state_district_population)
-
-# Print the mismatches
-print("State-District combinations in population_df not found in mys_sf:")
-print(missing_in_sf)
-
-print("State-District combinations in mys_sf not found in population_df:")
-print(missing_in_population)
-```
-
-```{r}
-population_df <- population_df %>%
-  mutate(district = case_when(
-    state == "JOHOR" & district == "KULAI" ~ "KULAIJAYA",
-    state == "JOHOR" & district == "TANGKAK" ~ "LEDANG",
-    TRUE ~ district
-  )) 
-
-population_df
-```
-
+However we do not have labor data, hence we will use the national average
+ "PERLIS-PERLIS"
+ "KUALA LUMPUR-WP. KUALA LUMPUR" 
+ "KUALA LUMPUR-W.P. PUTRAJAYA"  
 
 ### 2.4.4 Joining
 
-### 2.4.4.1 Selecting Relevant Years
-
-```{r}
-piv_crime_df_mys <- piv_crime_df_mys %>%
-    filter(year >= 2019 & year <= 2022)
-```
-
-```{r}
-population_df <- population_df %>%
-    filter(sex == "both" & age == "overall" & ethnicity == "overall") %>%
-    dplyr::select(state, district, year, population)
-population_df
-```
-
-
-### 2.4.4.2 Selecting Relevant Years
+#### 2.4.4.1 Selecting Relevant Years
 
 ```{r}
 piv_full_df_mys <- piv_crime_df_mys %>%
   left_join(select(poverty_df, -date, -state_district), by = c("state", "district", "year")) %>%
   left_join(select(inequality_df, -date, -state_district), by = c("state", "district", "year")) %>%
-  left_join(select(labour_df, -date, -state_district), by = c("state", "district", "year")) %>%
-  left_join(population_df, by = c("state", "district", "year"))
+  left_join(select(labour_df, -date, -state_district), by = c("state", "district", "year"))
 
 piv_full_df_mys
 ```
 
-### 2.4.4.3 Normalising Crime by Population
-
-We need to transform 
+#### 2.4.4.2 Data Subsitution (Labour)
 
 ```{r}
+# Identify the specific state-district combinations
+target_states <- c("PERLIS", "KUALA LUMPUR")
+target_districts <- c("PERLIS", "WP. KUALA LUMPUR", "W.P. PUTRAJAYA")
+
+# Calculate the average values for the missing columns (assuming the columns exist)
+avg_values <- piv_full_df_mys %>%
+  filter(!(state %in% target_states & district %in% target_districts)) %>%
+  summarize(
+    avg_lf = mean(lf, na.rm = TRUE),
+    avg_lf_employed = mean(lf_employed, na.rm = TRUE),
+    avg_lf_unemployed = mean(lf_unemployed, na.rm = TRUE),
+    avg_lf_outside = mean(lf_outside, na.rm = TRUE),
+    avg_p_rate = mean(p_rate, na.rm = TRUE),
+    avg_u_rate = mean(u_rate, na.rm = TRUE),
+    avg_ep_ratio = mean(ep_ratio, na.rm = TRUE)
+  )
+
+# Replace missing values in the target rows
 piv_full_df_mys <- piv_full_df_mys %>%
-    mutate(assault_pc = assault/population,
-           property_pc = property/population) %>%
-piv_full_df_mys
+  mutate(
+    lf = ifelse(state %in% target_states & district %in% target_districts & is.na(lf), avg_values$avg_lf, lf),
+    lf_employed = ifelse(state %in% target_states & district %in% target_districts & is.na(lf_employed), avg_values$avg_lf_employed, lf_employed),
+    lf_unemployed = ifelse(state %in% target_states & district %in% target_districts & is.na(lf_unemployed), avg_values$avg_lf_unemployed, lf_unemployed),
+    lf_outside = ifelse(state %in% target_states & district %in% target_districts & is.na(lf_outside), avg_values$avg_lf_outside, lf_outside),
+    p_rate = ifelse(state %in% target_states & district %in% target_districts & is.na(p_rate), avg_values$avg_p_rate, p_rate),
+    u_rate = ifelse(state %in% target_states & district %in% target_districts & is.na(u_rate), avg_values$avg_u_rate, u_rate),
+    ep_ratio = ifelse(state %in% target_states & district %in% target_districts & is.na(ep_ratio), avg_values$avg_ep_ratio, ep_ratio)
+  )
 ```
 
+## 2.5 Data Selection
 
-### 2.4.4.4 Visualizing the Correlation of Data
+### 2.5.1 Visualizing the Correlation of Data
 
 ```{r}
-corrplot.mixed(cor(st_drop_geometry(piv_full_df_mys)[, 4:18]),
+corrplot.mixed(cor(st_drop_geometry(piv_full_df_mys)[, 4:19]),
          lower = "ellipse", 
                upper = "number",
                tl.pos = "lt",
@@ -763,12 +750,33 @@ corrplot.mixed(cor(st_drop_geometry(piv_full_df_mys)[, 4:18]),
                tl.cex = 0.5)
 ```
 
+### 2.5.2 Final Selection
+
+Since the variable `lf` is highly correlated with `lf_employed`, `lf_unemployed` and `lf_outside` we can drop them from the dataframe
+
+```{r}
+piv_full_df_mys <- piv_full_df_mys %>%
+  select(-lf_employed, -lf_unemployed, -lf_outside)
+colnames(piv_full_df_mys)
+```
+
+
+```{r}
+corrplot.mixed(cor(st_drop_geometry(piv_full_df_mys)[, 4:16]),
+         lower = "ellipse", 
+               upper = "number",
+               tl.pos = "lt",
+               diag = "l",
+               tl.col = "black",
+               tl.srt = 45,  # Slant the labels by 45 degrees
+               tl.cex = 0.5)
+```
 
 # 3. Analysis
 
 ## 3.1 Exploratory Data Analysis (EDA)
 
-## 3.1.1 Coorelation Plot
+## 3.2 Data Standardisation
 
 # 4. UI Design
 
