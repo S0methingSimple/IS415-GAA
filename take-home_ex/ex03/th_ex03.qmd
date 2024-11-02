@@ -1010,9 +1010,9 @@ grid.arrange(grobs = hist_list, ncol = 5, nrow = 3)
 ```
 ::: 
 
-## 3.2 Selecting Clusters
+## 3.2 Selecting No. of Clusters
 
-### 3.2.1 Gap Statistics
+### 3.2.1 Compute Gap Statistics
 
 ```{r}
 set.seed(12345)
@@ -1025,11 +1025,13 @@ gap_stat <- clusGap(clust_vars,
 print(gap_stat, method = "firstmax")
 ```
 
-### 3.2.2 Visualisign Gap Statistics
+### 3.2.2 Visualizing Gap Statistics
 
 ```{r}
 fviz_gap_stat(gap_stat)
 ```
+
+### 3.2.3 Compute NB Clust
 
 ```{r}
 nbc <- NbClust(clust_vars, distance = "euclidean", min.nc = 2, max.nc = 15, method = "kmeans")
@@ -1037,9 +1039,16 @@ nbc <- NbClust(clust_vars, distance = "euclidean", min.nc = 2, max.nc = 15, meth
 print(nbc, method = "firstmax")
 ```
 
+### 3.2.4 Visualizing NB Clust
+
 ```{r}
 fviz_nbclust(clust_vars, FUNcluster = pam)
 ```
+
+```{r}
+n_clust = 13
+```
+
 
 ## 3.2 Hierarchical Clustering
 
@@ -1078,17 +1087,18 @@ hclust_ward <- hclust(proxmat, method = 'ward.D')
 ```{r}
 plot(hclust_ward, cex = 0.6)
 rect.hclust(hclust_ward, 
-            k = 13, 
+            k = n_clust, 
             border = 2:5)
 ```
 
 ##### Clusters
 
 ```{r}
-groups <- as.factor(cutree(hclust_ward, k=13))
-mys_sf_cluster <- cbind(piv_full_df_mys, as.matrix(groups)) %>%
+groups <- as.factor(cutree(hclust_ward, k=n_clust))
+hclust_ward_cluster <- cbind(piv_full_df_mys, as.matrix(groups)) %>%
   rename(`CLUSTER`=`as.matrix.groups.`)
-qtm(mys_sf_cluster, "CLUSTER")
+hclust_ward_plot <- qtm(hclust_ward_cluster, "CLUSTER")
+hclust_ward_plot
 ```
 :::
 
@@ -1104,7 +1114,7 @@ distmat <- as.dist(dist)
 #### 3.2.5.2 Compute Choicalpha
 
 ```{r}
-cr <- choicealpha(proxmat, distmat, range.alpha = seq(0, 1, 0.1), K=13, graph = TRUE)
+cr <- choicealpha(proxmat, distmat, range.alpha = seq(0, 1, 0.1), K=n_clust, graph = TRUE)
 ```
 
 #### 3.2.5.3 Perform Clustering
@@ -1121,27 +1131,24 @@ hclust_geo <- hclustgeo(proxmat, distmat, alpha = 0.1)
 ```{r}
 plot(hclust_geo, cex = 0.6)
 rect.hclust(hclust_geo, 
-            k = 13, 
+            k = n_clust, 
             border = 2:5)
 ```
 
 ##### Clusters
 
 ```{r}
-groups <- as.factor(cutree(hclust_geo, k=13))
-mys_sf_geo_cluster <- cbind(piv_full_df_mys, as.matrix(groups)) %>%
+groups <- as.factor(cutree(hclust_geo, k=n_clust))
+hclust_geo_cluster <- cbind(piv_full_df_mys, as.matrix(groups)) %>%
   rename(`CLUSTER`=`as.matrix.groups.`)
-qtm(mys_sf_geo_cluster, "CLUSTER")
+hclust_geo_plot <- qtm(hclust_geo_cluster, "CLUSTER")
+hclust_geo_plot
 ```
 
 ##### Comparison
 
 ```{r}
-clust <- qtm(mys_sf_cluster, "CLUSTER")
-clust2 <- qtm(mys_sf_geo_cluster, "CLUSTER")
-
-tmap_arrange(clust, clust2, ncol = 2)
-
+tmap_arrange(hclust_ward_plot, hclust_geo_plot, ncol = 2)
 ```
 :::
 
@@ -1273,14 +1280,9 @@ plot.mst(clust_vars.mst,
 clust <- spdep::skater(edges = clust_vars.mst[,1:2], 
                  data = clust_vars, 
                  method = "euclidean", 
-                 ncuts = 12)
+                 ncuts = (n_clust - 1))
 
 str(clust)
-```
-
-```{r}
-ccs <- clust$groups
-ccs
 ```
 
 ### 3.3.5 Visualizing Clusters
@@ -1302,9 +1304,10 @@ plot(clust,
 
 ```{r}
 groups_mat <- as.matrix(clust$groups)
-crime_mys_spatialcluster <- cbind(piv_full_df_mys, as.factor(groups_mat)) %>%
-  rename(`SP_CLUSTER`=`as.factor.groups_mat.`)
-qtm(crime_mys_spatialcluster, "SP_CLUSTER")
+skater_cluster <- cbind(piv_full_df_mys, as.factor(groups_mat)) %>%
+  rename(`CLUSTER`=`as.factor.groups_mat.`)
+skater_plot <- qtm(skater_cluster, "CLUSTER")
+skater_plot
 ```
 :::
 
@@ -1314,31 +1317,53 @@ qtm(crime_mys_spatialcluster, "SP_CLUSTER")
 ### 3.4.1 Comparing Clusters
 
 ```{r}
-clust <- qtm(crime_mys_spatialcluster, "SP_CLUSTER")
-clust2 <- qtm(mys_sf_geo_cluster, "CLUSTER")
-
-tmap_arrange(clust, clust2, ncol = 2)
+tmap_arrange(skater_plot, hclust_geo_plot, ncol = 2)
 ```
 
-### 3.4.2 Parral Cordinates
+### 3.4.2 Parral Coordinates
+
+::: panel-tabset
+
+#### Crime Par-Coords
 
 ```{r}
-ggparcoord(data = crime_mys_spatialcluster, 
+#| fig-width: 16
+#| fig-height: 6
+
+ggparcoord(data = skater_cluster, 
            columns = c(2:8), 
            scale = "globalminmax",
            alphaLines = 0.2,
            boxplot = TRUE, 
            title = "Multiple Parallel Coordinates Plots of ICT Variables by Cluster") +
-  facet_grid(~ SP_CLUSTER) + 
+  facet_grid(~ CLUSTER) + 
   theme(axis.text.x = element_text(angle = 30))
 ```
+
+#### Demographic Par Coords
+
+```{r}
+#| fig-width: 16
+#| fig-height: 6
+
+ggparcoord(data = skater_cluster, 
+           columns = c(9:14), 
+           scale = "globalminmax",
+           alphaLines = 0.2,
+           boxplot = TRUE, 
+           title = "Multiple Parallel Coordinates Plots of ICT Variables by Cluster") +
+  facet_grid(~ CLUSTER) + 
+  theme(axis.text.x = element_text(angle = 30))
+```
+
+:::
 
 ### 3.4.3 Cluster Profiling
 
 ```{r}
-crime_mys_spatialcluster %>% 
+skater_cluster %>% 
   st_drop_geometry() %>%
-  group_by(SP_CLUSTER) %>%
+  group_by(CLUSTER) %>%
   summarise(mean_causing_injury = mean(causing_injury),
             mean_murder = mean(murder),
             mean_rape = mean(rape),
@@ -1347,7 +1372,6 @@ crime_mys_spatialcluster %>%
             mean_theft_other = mean(theft_other),
             mean_vehicle_theft = mean(vehicle_theft))
 ```
-
 
 # 4. App Story Board
 
