@@ -19,6 +19,8 @@ execute:
 
 # 1. Introduction
 
+
+
 ## 1.1 Responsibility
 
 ## 1.2 Motivation
@@ -31,7 +33,7 @@ execute:
 ## 2.1 Packages Required
 
 ```{r}
-pacman::p_load(sf, st, tidyverse, raster, tmap, tmaptools, ggplot2, spatstat, sfdep, ClustGeo, 
+pacman::p_load(sf, st, tidyverse, raster, tmap, tmaptools, ggplot2, spatstat, sfdep, spdep, ClustGeo, 
                ggpubr, cluster, factoextra, NbClust,
                heatmaply, corrplot, psych, tidyverse, GGally)
 ```
@@ -54,10 +56,14 @@ There are two datasets being used in this exercise.
 
 We first import the crime rate csv file into R.
 
+### 2.2.1 Aspatial Data
+
 ```{r}
 crime_df <- read_csv("data/aspatial/crime_district.csv")
 population_df <- read_csv("data/aspatial/population_district.csv")
 ```
+
+### 2.2.2 Geospatial Data
 
 Next, we import the administrative regions of Malaysia.
 
@@ -67,21 +73,21 @@ mys_sf <- read_sf(dsn = "data/geospatial/mys_adm_unhcr_20210211_shp",
           st_transform(crs = 3168)
 ```
 
+### 2.2.3 Enrichment Data
+
+```{r}
+poverty_df <- read_csv("data/aspatial/poverty_district.csv")
+inequality_df <- read_csv("data/aspatial/inequality_district.csv")
+labour_df <- read_csv("data/aspatial/labour_district.csv")
+```
 
 ## 2.3 Wrangling
 
 ### 2.3.1 Data Preparation
 
-```{r}
-print("Unique states in crime_df:")
-unique(crime_df$state)
+::: panel-tabset
 
-print("Unique states in population_df:")
-unique(crime_df$state)
-
-print("Unique states in mys_sf:")
-unique(mys_sf$ADM1_EN)
-```
+#### Crime
 
 Convert state and district to upper for matching
 
@@ -93,6 +99,8 @@ crime_df <- crime_df %>%
 crime_df
 ```
 
+#### Population
+
 ```{r}
 population_df <- population_df %>%
               mutate(year = year(date),
@@ -100,6 +108,8 @@ population_df <- population_df %>%
                      district = toupper(district))
 population_df
 ```
+
+#### Malaysia
 
 ```{r}
 mys_sf <- mys_sf %>%
@@ -109,20 +119,34 @@ mys_sf <- mys_sf %>%
 mys_sf
 ```
 
-### 2.3.2 Checking for Mismatch (State)
+:::
+
+### 2.3.2 State Mismatch
+
+::: panel-tabset 
+
+#### Overview
 
 ```{r}
-# Assuming you have two character vectors:
+print("Unique states in crime_df:")
+unique(crime_df$state)
+
+print("Unique states in population_df:")
+unique(population_df$state)
+
+print("Unique states in mys_sf:")
+unique(mys_sf$ADM1_EN)
+```
+
+#### Difference
+
+```{r}
 state_crime <- unique(crime_df$state)
 state_sf <- unique(mys_sf$ADM1_EN)
 
-# Find states in crime_df that are not in mys_sf
 missing_in_sf <- setdiff(state_crime, state_sf)
-
-# Find states in mys_sf that are not in crime_df
 missing_in_crime <- setdiff(state_sf, state_crime)
 
-# Print the mismatches
 print("States in crime_df not found in mys_sf:")
 print(missing_in_sf)
 
@@ -130,17 +154,14 @@ print("States in mys_sf not found in crime_df:")
 print(missing_in_crime)
 ```
 
-### 2.3.3 Cleaning (State)
+::: 
+
+### 2.3.3 State Wrangling
 However in this case study, for ease of analysis, we choose to focus on West Malaysia, and thus will be filtering out Sarawak, Sabah and Labuan.
 
-```{r}
-mys_sf <- mys_sf %>%
-          filter(ADM1_EN != 'W.P. LABUAN' & ADM1_EN != 'SABAH' & ADM1_EN != 'SARAWAK') %>%
-          mutate(ADM1_EN = replace(ADM1_EN, ADM1_EN == 'W.P. KUALA LUMPUR', 'KUALA LUMPUR'),
-                 ADM1_EN = replace(ADM1_EN, ADM1_EN == 'W.P. PUTRAJAYA', 'KUALA LUMPUR'))
+::: panel-tabset
 
-mys_sf
-```
+#### Crime
 
 ```{r}
 crime_df <- crime_df %>%
@@ -149,6 +170,8 @@ crime_df <- crime_df %>%
               mutate(state = replace(state, state == 'W.P. KUALA LUMPUR', 'KUALA LUMPUR'))
 crime_df
 ```
+
+#### Population
 
 ```{r}
 population_df <- population_df %>%
@@ -160,26 +183,35 @@ population_df <- population_df %>%
 population_df
 ```
 
-### 2.3.4 Crime (State-District) 
+#### Malaysia
 
-#### 2.3.4.1 Check for Mismatch 
+```{r}
+mys_sf <- mys_sf %>%
+          filter(ADM1_EN != 'W.P. LABUAN' & ADM1_EN != 'SABAH' & ADM1_EN != 'SARAWAK') %>%
+          mutate(ADM1_EN = replace(ADM1_EN, ADM1_EN == 'W.P. KUALA LUMPUR', 'KUALA LUMPUR'),
+                 ADM1_EN = replace(ADM1_EN, ADM1_EN == 'W.P. PUTRAJAYA', 'KUALA LUMPUR'))
+
+mys_sf
+```
+
+:::
+
+### 2.3.4 State-District Wrangling (Crime)
+
+#### 2.3.4.1 State-District Mismatch 
 
 ```{r}
 crime_df <- crime_df %>% mutate(state_district = paste(state, district, sep = "-"))
 mys_sf <- mys_sf %>% mutate(state_district = paste(ADM1_EN, ADM2_EN, sep = "-"))
 ```
 
-
 ```{r}
-# Assuming you have two character vectors:
 state_district_crime <- unique(crime_df$state_district)
 state_district_sf <- unique(mys_sf$state_district)
 
-# Find mismatches
 missing_in_sf <- setdiff(state_district_crime, state_district_sf)
 missing_in_crime <- setdiff(state_district_sf, state_district_crime)
 
-# Print the mismatches
 print("State-District combinations in crime_df not found in mys_sf:")
 print(missing_in_sf)
 
@@ -187,8 +219,7 @@ print("State-District combinations in mys_sf not found in crime_df:")
 print(missing_in_crime)
 ```
 
-#### 2.3.4.2 Cleaning
-
+#### 2.3.4.2 Re-Mapping Districts
 
 ```{r}
 crime_df <- crime_df %>%
@@ -221,37 +252,48 @@ crime_df <- crime_df %>%
   summarise(crimes = sum(crimes))
 ```
 
-```{r}
-tm_shape(mys_sf) +
-  tm_polygons() +
-  tm_text("ADM2_EN", size = 0.3)
-```
+#### 2.3.4.3 Crime Distribution
 
-#### 2.3.4.3 Visualizing Crime Distribution
+::: panel-tabset
+
+##### Overview
 
 ```{r}
-crime_df_mys <- crime_df %>%
+og_crime_df_mys <- crime_df %>%
   filter(year >= 2019 & year <= 2022) %>%
   left_join(mys_sf, by = c("state" = "ADM1_EN", "district" = "ADM2_EN")) %>%
   dplyr::select(state, district, year, category, type, crimes, geometry)
 
-crime_df_mys <- st_as_sf(crime_df_mys)
-crime_df_mys
+og_crime_df_mys <- st_as_sf(og_crime_df_mys)
+og_crime_df_mys
 ```
 
+##### Visualization
+
 ```{r}
-tmap_mode("plot")
-
-crime_df_mys_grp <- crime_df_mys %>%
+og_crime_df_mys_grp <- og_crime_df_mys %>%
   group_by(state, district) %>%
-  summarize(total_crimes = sum(crimes))
+  summarize(total_crimes = sum(crimes)/4)
 
-choro <- tm_shape(crime_df_mys_grp) +
+mys_map <- tm_shape(mys_sf) +
+  tm_polygons(col = "lightgray", alpha = 0.3) +
+  tm_text("ADM2_EN", size = 0.3) +
+  tm_layout(main.title = "Districts (West Malaysia)",
+            main.title.position = "center",
+            main.title.size = 1.2,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5) +
+  tm_scale_bar() +
+  tm_grid(alpha =0.2)
+
+choro_map <- tm_shape(og_crime_df_mys_grp) +
   tm_fill("total_crimes", 
           style = "pretty", 
-          palette = "Blues",
+          palette = "Oranges",
           title = "Crimes") +
-  tm_layout(main.title = "Distribution of crime in West Malaysia",
+  tm_layout(main.title = "Crime Distribution (West Malaysia)",
             main.title.position = "center",
             main.title.size = 1.2,
             legend.height = 0.45, 
@@ -262,12 +304,21 @@ choro <- tm_shape(crime_df_mys_grp) +
   tm_scale_bar() +
   tm_grid(alpha =0.2)
 
-choro
+tmap_arrange(choro_map, mys_map, ncol = 2)
 ```
 
-### 2.3.5 Population (State-District)
+::: 
 
-#### 2.3.5.1 Check for Mismatch
+::: callout-note
+
+#### Missing Data
+Notice the missing data in Pokok Sena, which we will be rectifying in the subsequent join with aggregated state data.
+
+:::
+
+### 2.3.5 State-District Wrangling (Population)
+
+#### 2.3.5.1 State-District Mismatch
 
 The year 2019 is missing from data set, hence we will map year 2020 -> 2019.
 
@@ -275,23 +326,17 @@ The year 2019 is missing from data set, hence we will map year 2020 -> 2019.
 population_row <- population_df %>%
   filter(year == 2020) %>%
   mutate(year = 2019) 
-population_df <- bind_rows(population_df, population_row)
+population_df <- bind_rows(population_df, population_row) %>% 
+  mutate(state_district = paste(state, district, sep = "-"))
 unique(population_df$year)
 ```
 
 ```{r}
-population_df <- population_df %>% mutate(state_district = paste(state, district, sep = "-"))
-```
-
-```{r}
-# Assuming you have two character vectors:
 state_district_population <- unique(population_df$state_district)
 
-# Find mismatches
 missing_in_sf <- setdiff(state_district_population, state_district_sf)
 missing_in_population <- setdiff(state_district_sf, state_district_population)
 
-# Print the mismatches
 print("State-District combinations in population_df not found in mys_sf:")
 print(missing_in_sf)
 
@@ -299,7 +344,7 @@ print("State-District combinations in mys_sf not found in population_df:")
 print(missing_in_population)
 ```
 
-#### 2.3.5.2 Cleaning
+#### 2.3.5.2 Re-Mapping Districts
 
 ```{r}
 population_df <- population_df %>%
@@ -329,15 +374,75 @@ population_df <- population_df %>%
 population_df
 ```
 
+#### 2.3.5.3 Population Distribution
+
+::: panel-tabset
+
+##### Overview
+
 ```{r}
-tm_shape(mys_sf) +
-  tm_polygons() +
-  tm_text("ADM2_EN", size = 0.3)
+population_df_mys <- population_df %>%
+  left_join(mys_sf, by = c("state" = "ADM1_EN", "district" = "ADM2_EN")) %>%
+  dplyr::select(state, district, year, population, geometry)
+
+population_df_mys <- st_as_sf(population_df_mys)
+population_df_mys
 ```
+
+##### Visualization
+
+```{r}
+population_df_mys_grp <- population_df_mys %>%
+  group_by(state, district) %>%
+  summarize(total_crimes = sum(population)/4)
+
+mys_map <- tm_shape(mys_sf) +
+  tm_polygons() +
+  tm_text("ADM2_EN", size = 0.3) +
+  tm_layout(main.title = "Districts (West Malaysia)",
+            main.title.position = "center",
+            main.title.size = 1.2,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5) +
+  tm_scale_bar() +
+  tm_grid(alpha =0.2)
+
+choro_map <- tm_shape(population_df_mys_grp) +
+  tm_fill("total_crimes", 
+          style = "pretty", 
+          palette = "Blues",
+          title = "Crimes") +
+  tm_layout(main.title = "Population Distribution (West Malaysia)",
+            main.title.position = "center",
+            main.title.size = 1.2,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar() +
+  tm_grid(alpha =0.2)
+
+tmap_arrange(choro_map, mys_map, ncol = 2)
+```
+
+::: 
+
+::: callout-note
+
+#### Similarity in Observation
+
+We can note that the districts with more crime tend to have a higher population. Hence for a more accurate comparsion we need to adjust the crimes to per captia for the districts
+
+:::
 
 ### 2.3.6 Joining
 
 #### 2.3.6.1 Join with Population Data
+
+Here we compute the crimes per 1000 capita to ensure the data is normalized
 
 ```{r}
 crime_df_mys <- crime_df %>% 
@@ -347,7 +452,9 @@ crime_df_mys <- crime_df %>%
   dplyr::select(state, district, year, category, type, crimes, crimes_pc, population)
 ```
 
-#### 2.3.6.2 Create for Pokok Sena District 
+#### 2.3.6.2 Filling for `POKOK SENA` District 
+
+Given the missing data for `POKOK SENA`, we will be getting the state average for the district in this case the state of `KEDAH`
 
 ```{r}
 pokok_sena_rows <- crime_df_mys %>%
@@ -373,21 +480,20 @@ crime_df_mys <- st_as_sf(crime_df_mys)
 crime_df_mys
 ```
 
-### 2.3.7 Visualizing the distribution of crime
+### 2.3.7 Crime per Capita Distribution
 
 ```{r}
-tmap_mode("plot")
-
 crime_df_mys_grp <- crime_df_mys %>%
   group_by(state, district) %>%
   summarize(total_crimes_pc = sum(crimes_pc)/4)
 
-choro <- tm_shape(crime_df_mys_grp) +
-  tm_fill("total_crimes_pc", 
-          style = "pretty", 
-          palette = "Blues",
+og_choro_map <- tm_shape(og_crime_df_mys_grp) +
+  tm_fill("total_crimes", 
+          n = 5,
+          style = "equal", 
+          palette = "Oranges",
           title = "Crimes") +
-  tm_layout(main.title = "Distribution of crime in West Malaysia",
+  tm_layout(main.title = "Crime Distribution (West Malaysia)",
             main.title.position = "center",
             main.title.size = 1.2,
             legend.height = 0.45, 
@@ -398,10 +504,29 @@ choro <- tm_shape(crime_df_mys_grp) +
   tm_scale_bar() +
   tm_grid(alpha =0.2)
 
-choro
+choro_map <- tm_shape(crime_df_mys_grp) +
+  tm_fill("total_crimes_pc", 
+          n = 5,
+          style = "equal", 
+          palette = "Oranges",
+          title = "Crimes") +
+  tm_layout(main.title = "Crime per Capita Distribution",
+            main.title.position = "center",
+            main.title.size = 1.2,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar() +
+  tm_grid(alpha =0.2)
+
+tmap_arrange(og_choro_map, choro_map, ncol = 2)
 ```
 
 ### 2.3.8 Correlation Plot
+
+Next we take a quick look at how correlated the data are with across the various types of Crimes
 
 ```{r}
 piv_crime_df_mys <- crime_df_mys %>%
@@ -423,7 +548,7 @@ corrplot.mixed(cor(st_drop_geometry(piv_crime_df_mys)[, 4:15]),
                tl.cex = 0.5)
 ```
 
-To further narrow our correlation analysis we will group robbery as one category and vehicle theft as the other
+During the EDA we have noted that some crimes such as `robbery_gang_armed` tend are typically really low in record. Hence to further narrow our susbequent analysis we will group robbery as one category and vehicle theft as the another.
 
 ```{r}
 piv_crime_df_mys <- piv_crime_df_mys %>%
@@ -442,6 +567,8 @@ piv_crime_df_mys <- piv_crime_df_mys %>%
 piv_crime_df_mys
 ```
 
+The final crime correlation should look like the following
+
 ```{r}
 corrplot.mixed(cor(st_drop_geometry(piv_crime_df_mys)[, 4:10]),
          lower = "ellipse", 
@@ -453,17 +580,19 @@ corrplot.mixed(cor(st_drop_geometry(piv_crime_df_mys)[, 4:10]),
                tl.cex = 0.5)
 ```
 
+::: callout-ntoe
+
+#### Initial Analysis
+
+Across the board it seems like only `robbery` have high correlation with `vehicle_theft`
+
+:::
+
 ## 2.4 Data Enrichment
 
-We realize we ran into some issue with the dataset, as they were too highly correlated, hence we decided enrich our data with several more relevant datasets which may affect crime rates such enrollment in schools, labour participation, and poverty by district
+To further enrich our analysis we decided include our data with several more relevant datasets which may affect crime rates such labour participation rates, poverty and income inequality by district
 
-```{r}
-poverty_df <- read_csv("data/aspatial/poverty_district.csv")
-inequality_df <- read_csv("data/aspatial/inequality_district.csv")
-labour_df <- read_csv("data/aspatial/labour_district.csv")
-```
-
-### 2.4.1 Clearning (State)
+### 2.4.1 State Wrangling
 
 ```{r}
 print("Unique states in mys_sf:")
@@ -495,10 +624,7 @@ inequality_df <- inequality_df %>%
           filter(state != 'SABAH' & state != 'SARAWAK' & state != 'W.P. LABUAN') %>%
           mutate(state = replace(state, state == 'W.P. KUALA LUMPUR', 'KUALA LUMPUR'),
                  state = replace(state, state == 'W.P. PUTRAJAYA', 'KUALA LUMPUR'))
-```
 
-
-```{r}
 labour_df <- labour_df %>%
           mutate(year = year(date),
                  state = toupper(state),
@@ -525,15 +651,21 @@ sort(unique(labour_df$year))
 ```
 
 
+::: callout-note
+
+#### Data Issues
+
 From the data we identified 2 issues:
 1.    Poverty and Inequality data is missing years 2020 and 2021
 2.    Labour data is missing PERLIS, KUALA LUMPUR and PUTRAJAYA
 
-### 2.4.2 Poverty & Inequaltiy (State-District)
+::: 
 
-#### 2.4.2.1 Duplicating Data
+### 2.4.2 State-District Wrangling (Poverty & Inequaltiy)
 
-Since years 2020 and 2021 are missing from data set, we will do a best effort mapping for year:
+#### 2.4.2.1 Filling Year Data
+
+Since years 2020 and 2021 are missing from data set, we will map to prior or the next year:
 -   2020 -> 2019
 -   2021 -> 2022
 
@@ -550,7 +682,7 @@ unique(inequality_df$year)
 ```
 
 
-#### 2.4.2.2 Check for Mismatch 
+#### 2.4.2.2 State-District Mismatch 
 
 Creating rows for state-district
 
@@ -559,16 +691,14 @@ poverty_df <- poverty_df %>% mutate(state_district = paste(state, district, sep 
 inequality_df <- inequality_df %>% mutate(state_district = paste(state, district, sep = "-"))
 ```
 
+Since the data for inequality comes from the same ministry and the districts are the same we will only be checking for Poverty
 
 ```{r}
-# Assuming you have two character vectors:
 state_district_poverty <- unique(poverty_df$state_district)
 
-# Find mismatches
 missing_in_sf <- setdiff(state_district_poverty, state_district_sf)
 missing_in_poverty <- setdiff(state_district_sf, state_district_poverty)
 
-# Print the mismatches
 print("State-District combinations in poverty_df not found in mys_sf:")
 print(missing_in_sf)
 
@@ -576,7 +706,7 @@ print("State-District combinations in mys_sf not found in poverty_df:")
 print(missing_in_poverty)
 ```
 
-#### 2.4.2.3 Cleaning
+#### 2.4.2.3 Re-Mapping Districts
 
 ```{r}
 poverty_df <- poverty_df %>%
@@ -622,27 +752,9 @@ inequality_df <- inequality_df %>%
 inequality_df
 ```
 
+### 2.4.3 State-Distrcit Wrangling (Labour)
 
-```{r}
-# Assuming you have two character vectors:
-poverty_df <- poverty_df %>% mutate(state_district = paste(state, district, sep = "-"))
-state_district_poverty <- unique(poverty_df$state_district)
-
-# Find mismatches
-missing_in_sf <- setdiff(state_district_poverty, state_district_sf)
-missing_in_poverty <- setdiff(state_district_sf, state_district_poverty)
-
-# Print the mismatches
-print("State-District combinations in poverty_df not found in mys_sf:")
-print(missing_in_sf)
-
-print("State-District combinations in mys_sf not found in poverty_df:")
-print(missing_in_poverty)
-```
-
-### 2.4.3 Wrangling Labour
-
-#### 2.4.3.1 Check for Mismatch 
+#### 2.4.3.1 State-District Mismatch 
 
 ```{r}
 labour_df <- labour_df %>% mutate(state_district = paste(state, district, sep = "-"))
@@ -650,14 +762,11 @@ labour_df <- labour_df %>% mutate(state_district = paste(state, district, sep = 
 
 
 ```{r}
-# Assuming you have two character vectors:
 state_district_labour <- unique(labour_df$state_district)
 
-# Find mismatches
 missing_in_sf <- setdiff(state_district_labour, state_district_sf)
 missing_in_labour <- setdiff(state_district_sf, state_district_labour)
 
-# Print the mismatches
 print("State-District combinations in labour_df not found in mys_sf:")
 print(missing_in_sf)
 
@@ -665,7 +774,7 @@ print("State-District combinations in mys_sf not found in labour_df:")
 print(missing_in_labour)
 ```
 
-#### 2.4.3.1 Cleaning
+#### 2.4.3.2 Re-Mapping Districts
 
 ```{r}
 labour_df <- labour_df %>%
@@ -684,14 +793,20 @@ labour_df
 ```
 
 
-However we do not have labor data, hence we will use the national average
+::: callout-note
+
+#### Missing labour data
+
+However we do not have labor data for the following state-districts, hence we will use the national average:
  "PERLIS-PERLIS"
  "KUALA LUMPUR-WP. KUALA LUMPUR" 
  "KUALA LUMPUR-W.P. PUTRAJAYA"  
+ 
+:::
 
 ### 2.4.4 Joining
 
-#### 2.4.4.1 Selecting Relevant Years
+#### 2.4.4.1 Join with Poverty, Inequality and Labour
 
 ```{r}
 piv_full_df_mys <- piv_crime_df_mys %>%
@@ -705,11 +820,9 @@ piv_full_df_mys
 #### 2.4.4.2 Data Subsitution (Labour)
 
 ```{r}
-# Identify the specific state-district combinations
 target_states <- c("PERLIS", "KUALA LUMPUR")
 target_districts <- c("PERLIS", "WP. KUALA LUMPUR", "W.P. PUTRAJAYA")
 
-# Calculate the average values for the missing columns (assuming the columns exist)
 avg_values <- piv_full_df_mys %>%
   filter(!(state %in% target_states & district %in% target_districts)) %>%
   summarize(
@@ -722,7 +835,6 @@ avg_values <- piv_full_df_mys %>%
     avg_ep_ratio = mean(ep_ratio, na.rm = TRUE)
   )
 
-# Replace missing values in the target rows
 piv_full_df_mys <- piv_full_df_mys %>%
   mutate(
     lf = ifelse(state %in% target_states & district %in% target_districts & is.na(lf), avg_values$avg_lf, lf),
@@ -740,7 +852,7 @@ piv_full_df_mys <- piv_full_df_mys %>%
 ### 2.5.1 Visualizing the Correlation of Data
 
 ```{r}
-corrplot.mixed(cor(st_drop_geometry(piv_full_df_mys)[, 4:19]),
+corrplot.mixed(cor(st_drop_geometry(piv_full_df_mys)[, 4:20]),
          lower = "ellipse", 
                upper = "number",
                tl.pos = "lt",
@@ -752,17 +864,33 @@ corrplot.mixed(cor(st_drop_geometry(piv_full_df_mys)[, 4:19]),
 
 ### 2.5.2 Final Selection
 
-Since the variable `lf` is highly correlated with `lf_employed`, `lf_unemployed` and `lf_outside` we can drop them from the dataframe
+Since the variable `lf` is highly correlated with `lf_employed`, `lf_unemployed`, `lf_outside` and `ep_ratio` we can drop them from the dataframe
 
 ```{r}
 piv_full_df_mys <- piv_full_df_mys %>%
-  select(-lf_employed, -lf_unemployed, -lf_outside)
+  mutate(state_district = paste(state, district, sep = "-")) %>%
+  select(-state, -district, -lf_employed, -lf_unemployed, -lf_outside, -ep_ratio) %>%
+  group_by(state_district) %>%
+  summarise(causing_injury = mean(causing_injury),
+            murder = mean(murder),
+            rape = mean(rape),
+            robbery = mean(robbery),
+            break_in = mean(break_in),
+            theft_other = mean(theft_other),
+            vehicle_theft = mean(vehicle_theft),
+            poverty_absolute = mean(poverty_absolute),
+            poverty_relative = mean(poverty_relative),
+            gini = mean(gini),
+            lf = mean(lf),
+            p_rate = mean(p_rate),
+            u_rate = mean(u_rate))
+  
 colnames(piv_full_df_mys)
 ```
 
 
 ```{r}
-corrplot.mixed(cor(st_drop_geometry(piv_full_df_mys)[, 4:16]),
+corrplot.mixed(cor(st_drop_geometry(piv_full_df_mys)[, 2:14]),
          lower = "ellipse", 
                upper = "number",
                tl.pos = "lt",
@@ -772,21 +900,362 @@ corrplot.mixed(cor(st_drop_geometry(piv_full_df_mys)[, 4:16]),
                tl.cex = 0.5)
 ```
 
+```{r}
+write_rds(piv_full_df_mys, "./data/rds/pivot_df.rds")
+```
+
+
+```{r}
+piv_full_df_mys <- read_rds("./data/rds/pivot_df.rds")
+```
+
+
 # 3. Analysis
 
-## 3.1 Exploratory Data Analysis (EDA)
+## 3.1 Variable Exploration
 
-## 3.2 Data Standardisation
+### 3.1.1 Data Standardisation
 
-# 4. UI Design
+```{r}
+clust_rownames <- piv_full_df_mys$state_district
+clust_vars <- piv_full_df_mys %>% 
+  select(-state_district) %>% 
+  st_set_geometry(NULL) %>% 
+  normalize()
 
-## 4.1 Story Board
+rownames(clust_vars) <- clust_rownames
+head(clust_vars, 10)
+```
 
-### 4.1.1 Prameters
+### 3.1.2 Histograms
 
-### 4.1.2 Outputs
+```{r}
+clust_vars_df <- as.data.frame(clust_vars)
+s <- ggplot(data=clust_vars_df, 
+       aes(x=`causing_injury`)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="light blue") +
+  ggtitle("Min-Max Standardisation")
 
-## 4.2 Layout
+s
+```
+
+### 3.1.3 Boxplots
+
+## 3.2 Hierarchical Clustering
+
+### 3.2.1 Compute Prox Mat
+
+```{r}
+proxmat <- dist(clust_vars, method = 'euclidean')
+```
+
+### 3.2.2 Gap Statistics
+
+```{r}
+set.seed(12345)
+gap_stat <- clusGap(clust_vars, 
+                    FUN = hcut, 
+                    nstart = 25, 
+                    K.max = 15, 
+                    B = 50)
+
+print(gap_stat, method = "firstmax")
+```
+
+```{r}
+fviz_gap_stat(gap_stat)
+```
+
+### 3.2.3 Compute Cluster
+
+#### 3.2.3.1 Selecting Clustering Method
+
+```{r}
+m <- c( "average", "single", "complete", "ward")
+names(m) <- c( "average", "single", "complete", "ward")
+
+ac <- function(x) {
+  agnes(clust_vars, method = x)$ac
+}
+
+map_dbl(m, ac)
+```
+
+#### 3.2.3.2 Perform Clustering
+
+```{r}
+hclust_ward <- hclust(proxmat, method = 'ward.D')
+```
+
+#### 3.2.3.3 Visualizing Cluster
+
+::: panel-tabset
+
+##### Dendogram
+
+```{r}
+plot(hclust_ward, cex = 0.6)
+rect.hclust(hclust_ward, 
+            k = 13, 
+            border = 2:5)
+```
+
+##### Clusters
+
+```{r}
+groups <- as.factor(cutree(hclust_ward, k=13))
+mys_sf_cluster <- cbind(piv_full_df_mys, as.matrix(groups)) %>%
+  rename(`CLUSTER`=`as.matrix.groups.`)
+qtm(mys_sf_cluster, "CLUSTER")
+```
+
+:::
+
+### 3.2.5 Compute Cluster (Geo Constrained)
+
+#### 3.2.5.1 Compute distmat
+
+```{r}
+dist <- st_distance(piv_full_df_mys, piv_full_df_mys)
+distmat <- as.dist(dist)
+```
+
+#### 3.2.5.2 Compute Choicalpha
+
+```{r}
+cr <- choicealpha(proxmat, distmat, range.alpha = seq(0, 1, 0.1), K=13, graph = TRUE)
+```
+
+#### 3.2.5.3 Perform Clustering
+
+```{r}
+hclust_geo <- hclustgeo(proxmat, distmat, alpha = 0.4)
+```
+
+#### 3.2.5.4 Visualizing Cluster
+
+::: panel-tabset
+
+##### Dendogram
+
+```{r}
+plot(hclust_geo, cex = 0.6)
+rect.hclust(hclust_geo, 
+            k = 13, 
+            border = 2:5)
+```
+
+##### Clusters
+
+```{r}
+groups <- as.factor(cutree(hclust_geo, k=13))
+mys_sf_geo_cluster <- cbind(piv_full_df_mys, as.matrix(groups)) %>%
+  rename(`CLUSTER`=`as.matrix.groups.`)
+qtm(mys_sf_geo_cluster, "CLUSTER")
+```
+
+
+##### Comparing
+
+```{r}
+qtm(mys_sf_cluster, "CLUSTER")
+
+qtm(mys_sf_geo_cluster, "CLUSTER")
+```
+
+:::
+
+## 3.3 Skater Clustering
+
+### 3.3.1 Generating Neighbours
+
+```{r}
+nb <- poly2nb(piv_full_df_mys)
+summary(nb)
+```
+
+```{r}
+coords <- st_coordinates(st_centroid(st_geometry(piv_full_df_mys)))
+plot(st_geometry(piv_full_df_mys), 
+     border=grey(.5))
+plot(nb,
+     coords, 
+     col="blue", 
+     add=TRUE)
+```
+
+### 3.3.2 Fixing Neighbours
+
+```{r}
+components <- n.comp.nb(nb)
+which(components$comp.id == 2)
+piv_full_df_mys$state_district[which(components$comp.id == 2)]
+which(components$comp.id == 3)
+piv_full_df_mys$state_district[which(components$comp.id == 3)]
+```
+
+1: MainLand
+2: Langkawi
+3: Pulau Pinang
+
+#### 3.3.2.1 Langkawi
+
+Given that there are water routes to Langkawi from perlis we will add that in
+
+```{r}
+indices_langkawi_boat <- which(piv_full_df_mys$state_district %in% c("PERLIS-PERLIS", "KEDAH-KOTA SETAR", "PULAU PINANG-TIMUR LAUT"))
+
+indices_langkawi_boat
+piv_full_df_mys$state_district[indices_langkawi_boat]
+```
+
+
+
+```{r}
+nb[[17]] <- as.integer(c(13, 66, 71))
+nb[[13]] <- c(nb[[13]], as.integer(17))
+nb[[66]] <- c(nb[[66]], as.integer(17))
+nb[[71]] <- c(nb[[71]], as.integer(17))
+```
+
+#### 3.3.2.2 Pulau Pinang
+
+For Penang island we will be mapping by the 2 land links available
+1. Timur Laut -> S.P. Tengah
+2. Barat Daya -> S.P. Selatan
+
+
+```{r}
+tm_shape(mys_sf %>% filter(ADM1_EN=="PULAU PINANG")) +
+  tm_polygons() +
+  tm_text("ADM2_EN", size = 0.3)
+```
+
+```{r}
+indices_pulau_pinang <- which(startsWith(piv_full_df_mys$state_district, "PULAU PINANG"))
+
+indices_pulau_pinang
+piv_full_df_mys$state_district[indices_pulau_pinang]
+```
+
+```{r}
+# Fixing for BARAT DAYA
+nb[[67]] <- c(nb[[67]], as.integer(68))
+nb[[68]] <- c(nb[[68]], as.integer(67))
+
+# Fixing for TIMUR LAUT
+nb[[71]] <- c(nb[[71]], as.integer(70))
+nb[[70]] <- c(nb[[70]], as.integer(71))
+```
+
+#### 3.3.2.3 Visualizing Fix
+
+```{r}
+coords <- st_coordinates(st_centroid(st_geometry(piv_full_df_mys)))
+plot(st_geometry(piv_full_df_mys), 
+     border=grey(.5))
+plot(nb,
+     coords, 
+     col="blue", 
+     add=TRUE)
+```
+
+### 3.3.3 Compute MST
+
+#### 3.3.3.1 Compute `nb` Weights
+
+```{r}
+lcosts <- nbcosts(nb, clust_vars)
+clust_vars.w <- nb2listw(nb, 
+                   lcosts, 
+                   style="B")
+summary(clust_vars.w)
+```
+
+#### 3.3.3.2 Generate MST
+
+```{r}
+clust_vars.mst <- mstree(clust_vars.w)
+head(clust_vars.mst)
+```
+
+```{r}
+plot(st_geometry(piv_full_df_mys), 
+                 border=gray(.5))
+plot.mst(clust_vars.mst, 
+         coords, 
+         col="blue", 
+         cex.lab=0.7, 
+         cex.circles=0.005, 
+         add=TRUE)
+```
+
+### 3.3.4 Compute Cluster
+
+```{r}
+clust <- spdep::skater(edges = clust_vars.mst[,1:2], 
+                 data = clust_vars, 
+                 method = "euclidean", 
+                 ncuts = 12)
+
+str(clust)
+```
+
+```{r}
+ccs <- clust$groups
+ccs
+```
+
+### 3.3.5 Visualizing Clusters
+
+::: panel-tabset
+
+#### MST
+
+```{r}
+plot(st_geometry(piv_full_df_mys), 
+     border=gray(.5))
+plot(clust, 
+     coords, 
+     cex.lab=.7,
+     cex.circles=0.005, 
+     add=TRUE)
+```
+
+#### Clusters
+
+```{r}
+groups_mat <- as.matrix(clust$groups)
+crime_mys_spatialcluster <- cbind(piv_full_df_mys, as.factor(groups_mat)) %>%
+  rename(`SP_CLUSTER`=`as.factor.groups_mat.`)
+qtm(crime_mys_spatialcluster, "SP_CLUSTER")
+```
+
+::: 
+
+## 3.4 Intepreting Results
+
+```{r}
+clust <- qtm(crime_mys_spatialcluster, "SP_CLUSTER")
+clust2 <- qtm(mys_sf_geo_cluster, "CLUSTER")
+
+tmap_arrange(clust, clust2, ncol = 2)
+```
+
+
+### 3.4.1 Comparing Clusters
+
+### 3.4.2 ParralCord
+
+### 3.4.3 Parallel Cluster
+
+# 4. Story Board
+
+## 4.1 Layout
+
+## 4.2 Parameters
 
 (Story Board)\[https://giniceseah.netlify.app/posts/2021-07-31-storyboard/\]
 
