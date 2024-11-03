@@ -699,7 +699,10 @@ poverty_df <- poverty_df %>%
     state == "TERENGGANU" & district == "KUALA NERUS" ~ "KUALA TERENGGANU",
     state == "KUALA LUMPUR" & district == "W.P. KUALA LUMPUR" ~ "WP. KUALA LUMPUR",
     TRUE ~ district
-  )) 
+  )) %>%
+  group_by(state, district, year) %>%
+  summarise(poverty_absolute = mean(poverty_absolute),
+            poverty_relative = mean(poverty_relative))
 
 poverty_df
 ```
@@ -721,7 +724,9 @@ inequality_df <- inequality_df %>%
     state == "TERENGGANU" & district == "KUALA NERUS" ~ "KUALA TERENGGANU",
     state == "KUALA LUMPUR" & district == "W.P. KUALA LUMPUR" ~ "WP. KUALA LUMPUR",
     TRUE ~ district
-  )) 
+  )) %>%
+  group_by(state, district, year) %>%
+  summarise(gini = mean(gini))
 
 inequality_df
 ```
@@ -760,13 +765,21 @@ labour_df <- labour_df %>%
     state == "PULAU PINANG" & district == "SEBERANG PERAI TENGAH" ~ "S.P. TENGAH",
     state == "PULAU PINANG" & district == "SEBERANG PERAI UTARA" ~ "S.P. UTARA",
     TRUE ~ district
-  )) 
+  )) %>%
+  group_by(state, district, year) %>%
+  summarise(lf = mean(lf),
+            lf_employed = mean(lf_employed),
+            lf_unemployed = mean(lf_unemployed),
+            lf_outside = mean(lf_outside),
+            p_rate = mean(p_rate),
+            u_rate = mean(u_rate),
+            ep_ratio = mean(ep_ratio))
 
 labour_df
 ```
 
 ::: callout-note
-#### Missing labour data
+##### Missing labour data
 
 However we do not have labor data for the following state-districts, hence we will use the national average: "PERLIS-PERLIS" "KUALA LUMPUR-WP. KUALA LUMPUR" "KUALA LUMPUR-W.P. PUTRAJAYA"
 :::
@@ -775,16 +788,27 @@ However we do not have labor data for the following state-districts, hence we wi
 
 #### 2.4.4.1 Join with Poverty, Inequality and Labour
 
+
 ```{r}
 piv_full_df_mys <- piv_crime_df_mys %>%
-  left_join(select(poverty_df, -date, -state_district), by = c("state", "district", "year")) %>%
-  left_join(select(inequality_df, -date, -state_district), by = c("state", "district", "year")) %>%
-  left_join(select(labour_df, -date, -state_district), by = c("state", "district", "year"))
+  left_join(poverty_df, by = c("state", "district", "year")) %>%
+  left_join(inequality_df, by = c("state", "district", "year")) %>%
+  left_join(labour_df, by = c("state", "district", "year")) %>%
+  left_join(population_df, by = c("state", "district", "year"))
 
 piv_full_df_mys
 ```
 
 #### 2.4.4.2 Data Subsitution (Labour)
+
+```{r}
+piv_full_df_mys <- piv_full_df_mys %>% 
+  mutate(lf = lf/population,
+         lf_employed = lf_employed/population,
+         lf_unemployed = lf_unemployed/population,
+         lf_outside = lf_outside/population) %>%
+  select(-population)
+```
 
 ```{r}
 target_states <- c("PERLIS", "KUALA LUMPUR")
@@ -814,12 +838,42 @@ piv_full_df_mys <- piv_full_df_mys %>%
   )
 ```
 
+#### 2.4.4.3 Aggregate all Years
+
+```{r}
+piv_full_df_mys_agg <- piv_full_df_mys %>%
+  group_by(state, district) %>%
+  summarise(year = 0,
+            causing_injury = mean(causing_injury),
+            murder = mean(murder),
+            rape = mean(rape),
+            robbery = mean(robbery),
+            break_in = mean(break_in),
+            theft_other = mean(theft_other),
+            vehicle_theft = mean(vehicle_theft),
+            poverty_absolute = mean(poverty_absolute),
+            poverty_relative = mean(poverty_relative),
+            gini = mean(gini),
+            lf = mean(lf),
+            lf_employed = mean(lf_employed),
+            lf_unemployed = mean(lf_unemployed),
+            lf_outside = mean(lf_outside),
+            p_rate = mean(p_rate),
+            u_rate = mean(u_rate),
+            ep_ratio = mean(ep_ratio))
+
+
+piv_full_df_mys <- bind_rows(piv_full_df_mys, piv_full_df_mys_agg)
+unique(piv_full_df_mys$year)
+```
+
+
 ## 2.5 Data Selection
 
 ### 2.5.1 Visualizing the Correlation of Data
 
 ```{r}
-corrplot.mixed(cor(st_drop_geometry(piv_full_df_mys)[, 4:20]),
+corrplot.mixed(cor(st_drop_geometry(piv_full_df_mys %>% filter(year == 0))[, 4:20]),
          lower = "ellipse", 
                upper = "number",
                tl.pos = "lt",
@@ -831,47 +885,36 @@ corrplot.mixed(cor(st_drop_geometry(piv_full_df_mys)[, 4:20]),
 
 ### 2.5.2 Final Selection
 
-Since the variable `lf` is highly correlated with `lf_employed`, `lf_unemployed`, `lf_outside` and `ep_ratio` we can drop them from the dataframe
+Since the variable `ep_ratio` is highly correlated with `lf`, `lf_employed`, `lf_outside` and `p_rate` we can drop them from the dataframe
+And u_rate to `lf_unemployed`
 
 ```{r}
-piv_full_df_mys <- piv_full_df_mys %>%
-  mutate(state_district = paste(state, district, sep = "-")) %>%
-  select(-state, -district, -lf_employed, -lf_unemployed, -lf_outside, -ep_ratio) %>%
-  group_by(state_district) %>%
-  summarise(causing_injury = mean(causing_injury),
-            murder = mean(murder),
-            rape = mean(rape),
-            robbery = mean(robbery),
-            break_in = mean(break_in),
-            theft_other = mean(theft_other),
-            vehicle_theft = mean(vehicle_theft),
-            poverty_absolute = mean(poverty_absolute),
-            poverty_relative = mean(poverty_relative),
-            gini = mean(gini),
-            lf = mean(lf),
-            p_rate = mean(p_rate),
-            u_rate = mean(u_rate))
+piv_df_mys <- piv_full_df_mys %>%
+  mutate(state_district = str_to_title(paste(state, district, sep = "-"))) %>%
+  select(-lf, -lf_employed, -lf_unemployed, -lf_outside, -p_rate) %>%
+  rename_with(~str_replace_all(., c("ep_ratio" = "employment_ratio", "u_rate" = "unemployment_rate"))) %>%
+  select(state_district, everything())
   
-colnames(piv_full_df_mys)
+colnames(piv_df_mys)
 ```
 
 ```{r}
-corrplot.mixed(cor(st_drop_geometry(piv_full_df_mys)[, 2:14]),
+corrplot.mixed(cor(st_drop_geometry(piv_df_mys %>% filter(year == 0))[, 5:16]),
          lower = "ellipse", 
                upper = "number",
                tl.pos = "lt",
                diag = "l",
                tl.col = "black",
-               tl.srt = 45,  # Slant the labels by 45 degrees
+               tl.srt = 45,
                tl.cex = 0.5)
 ```
 
 ```{r}
-write_rds(piv_full_df_mys, "./data/rds/pivot_df.rds")
+write_rds(piv_df_mys, "./data/rds/pivot_df.rds")
 ```
 
 ```{r}
-piv_full_df_mys <- read_rds("./data/rds/pivot_df.rds")
+piv_df_mys <- read_rds("./data/rds/pivot_df.rds")
 ```
 
 # 3. Analysis Preparations
@@ -881,10 +924,11 @@ piv_full_df_mys <- read_rds("./data/rds/pivot_df.rds")
 ### 3.1.1 Data Standardisation
 
 ```{r}
-clust_rownames <- piv_full_df_mys$state_district
-og_clust_vars <- piv_full_df_mys %>% 
-  select(-state_district) %>% 
-  st_set_geometry(NULL)
+piv_df_mys.all <- piv_df_mys %>% filter(year == 0)
+clust_rownames <- piv_df_mys.all$state_district
+og_clust_vars <- piv_df_mys.all %>% 
+  select(-state_district, -state, -district, -year) %>% 
+  st_drop_geometry()
   
 clust_vars <- og_clust_vars %>% normalize()
 
@@ -1076,7 +1120,8 @@ map_dbl(m, ac)
 #### 3.2.3.2 Perform Clustering
 
 ```{r}
-hclust_ward <- hclust(proxmat, method = 'ward.D')
+clust_method <- 'ward.D'
+hclust_ward <- hclust(proxmat, method = clust_method)
 ```
 
 #### 3.2.3.3 Visualizing Cluster
@@ -1091,11 +1136,31 @@ rect.hclust(hclust_ward,
             border = 2:5)
 ```
 
+##### Heatmap
+
+```{r}
+heatmaply(normalize(data.matrix(clust_vars)),
+          Colv=NA,
+          dist_method = "euclidean",
+          hclust_method = clust_method,
+          seriate = "OLO",
+          colors = Blues,
+          k_row = 13,
+          margins = c(NA,50,50,NA),
+          fontsize_row = 4,
+          fontsize_col = 5,
+          main="Geographic Segmentation of West Malaysia by Crime indicators",
+          xlab = "Crime and Demographic Indicators",
+          ylab = "Districts"
+          )
+```
+
+
 ##### Clusters
 
 ```{r}
 groups <- as.factor(cutree(hclust_ward, k=n_clust))
-hclust_ward_cluster <- cbind(piv_full_df_mys, as.matrix(groups)) %>%
+hclust_ward_cluster <- cbind(piv_df_mys.all, as.matrix(groups)) %>%
   rename(`CLUSTER`=`as.matrix.groups.`)
 hclust_ward_plot <- qtm(hclust_ward_cluster, "CLUSTER")
 hclust_ward_plot
@@ -1107,7 +1172,7 @@ hclust_ward_plot
 #### 3.2.5.1 Compute distmat
 
 ```{r}
-dist <- st_distance(piv_full_df_mys, piv_full_df_mys)
+dist <- st_distance(piv_df_mys.all, piv_df_mys.all)
 distmat <- as.dist(dist)
 ```
 
@@ -1139,7 +1204,7 @@ rect.hclust(hclust_geo,
 
 ```{r}
 groups <- as.factor(cutree(hclust_geo, k=n_clust))
-hclust_geo_cluster <- cbind(piv_full_df_mys, as.matrix(groups)) %>%
+hclust_geo_cluster <- cbind(piv_df_mys.all, as.matrix(groups)) %>%
   rename(`CLUSTER`=`as.matrix.groups.`)
 hclust_geo_plot <- qtm(hclust_geo_cluster, "CLUSTER")
 hclust_geo_plot
@@ -1157,15 +1222,15 @@ tmap_arrange(hclust_ward_plot, hclust_geo_plot, ncol = 2)
 ### 3.3.1 Generating Neighbours
 
 ```{r}
-nb <- poly2nb(piv_full_df_mys)
+nb <- poly2nb(piv_df_mys.all)
 summary(nb)
 ```
 
 3 Disjoint 1: MainLand 2: Langkawi 3: Pulau Pinang
 
 ```{r}
-coords <- st_coordinates(st_centroid(st_geometry(piv_full_df_mys)))
-plot(st_geometry(piv_full_df_mys), 
+coords <- st_coordinates(st_centroid(st_geometry(piv_df_mys.all)))
+plot(st_geometry(piv_df_mys.all), 
      border=grey(.5))
 plot(nb,
      coords, 
@@ -1178,9 +1243,9 @@ plot(nb,
 ```{r}
 components <- n.comp.nb(nb)
 which(components$comp.id == 2)
-piv_full_df_mys$state_district[which(components$comp.id == 2)]
+piv_df_mys.all$state_district[which(components$comp.id == 2)]
 which(components$comp.id == 3)
-piv_full_df_mys$state_district[which(components$comp.id == 3)]
+piv_df_mys.all$state_district[which(components$comp.id == 3)]
 ```
 
 #### 3.3.2.1 Langkawi
@@ -1190,10 +1255,10 @@ Given that there are water routes to Langkawi from Kuala Perlis, Kuala Kedah and
 ![](assets/ferry_lanes.jpeg)
 
 ```{r}
-indices_langkawi_boat <- which(piv_full_df_mys$state_district %in% c("PERLIS-PERLIS", "KEDAH-KOTA SETAR", "PULAU PINANG-TIMUR LAUT"))
+indices_langkawi_boat <- which(piv_df_mys.all$state_district %in% c("Perlis-Perlis", "Kedah-Kota Setar", "Pulau Pinang-Timur Laut"))
 
 indices_langkawi_boat
-piv_full_df_mys$state_district[indices_langkawi_boat]
+piv_df_mys.all$state_district[indices_langkawi_boat]
 ```
 
 ```{r}
@@ -1216,10 +1281,10 @@ tm_shape(mys_sf %>% filter(ADM1_EN=="PULAU PINANG")) +
 ```
 
 ```{r}
-indices_pulau_pinang <- which(startsWith(piv_full_df_mys$state_district, "PULAU PINANG"))
+indices_pulau_pinang <- which(startsWith(piv_df_mys.all$state_district, "PULAU PINANG"))
 
 indices_pulau_pinang
-piv_full_df_mys$state_district[indices_pulau_pinang]
+piv_df_mys.all$state_district[indices_pulau_pinang]
 ```
 
 ```{r}
@@ -1235,8 +1300,8 @@ nb[[70]] <- c(nb[[70]], as.integer(71))
 #### 3.3.2.3 Visualizing Fix
 
 ```{r}
-coords <- st_coordinates(st_centroid(st_geometry(piv_full_df_mys)))
-plot(st_geometry(piv_full_df_mys), 
+coords <- st_coordinates(st_centroid(st_geometry(piv_df_mys.all)))
+plot(st_geometry(piv_df_mys.all), 
      border=grey(.5))
 plot(nb,
      coords, 
@@ -1264,7 +1329,7 @@ head(clust_vars.mst)
 ```
 
 ```{r}
-plot(st_geometry(piv_full_df_mys), 
+plot(st_geometry(piv_df_mys.all), 
                  border=gray(.5))
 plot.mst(clust_vars.mst, 
          coords, 
@@ -1292,7 +1357,7 @@ str(clust)
 
 ```{r}
 #| warning: false
-plot(st_geometry(piv_full_df_mys), 
+plot(st_geometry(piv_df_mys.all), 
      border=gray(.5))
 plot(clust, 
      coords, 
@@ -1304,7 +1369,7 @@ plot(clust,
 
 ```{r}
 groups_mat <- as.matrix(clust$groups)
-skater_cluster <- cbind(piv_full_df_mys, as.factor(groups_mat)) %>%
+skater_cluster <- cbind(piv_df_mys.all, as.factor(groups_mat)) %>%
   rename(`CLUSTER`=`as.factor.groups_mat.`)
 skater_plot <- qtm(skater_cluster, "CLUSTER")
 skater_plot
