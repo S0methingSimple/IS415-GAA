@@ -1856,7 +1856,15 @@ heatmaply(as.matrix(skater_prof[, 2:ncol(skater_prof)]),
 
 ## 4.1 Flow
 
-For the presentation flow of my application it is structured it as such: 1. Variable Exploration: For this section the user can explore the distribution of the variables in different type of plots 2. Cluster Configuration: Next the user can use the NbClust tool provided to make informed decision on the no. of clusters to use 3. Cluster Results: Where the actual clustering happens, the cluster will be displayed for the user for their configuration with other chart aids 4. Further Analysis: Finally the user will be able to analyse and further extract insights from the clustering with parallel coords and cluster profiles
+For the presentation flow of my application it is structured it as such:
+
+1.  Variable Exploration: For this section the user can explore the distribution of the variables in different type of plots
+
+2.  Cluster Configuration: Next the user can use the NbClust tool provided to make informed decision on the no. of clusters to use
+
+3.  Cluster Results: Where the actual clustering happens, the cluster will be displayed for the user for their configuration with other chart aids
+
+4.  Further Analysis: Finally the user will be able to analyse and further extract insights from the clustering with parallel coords and cluster profiles
 
 ## 4.2 Variable Exploration
 
@@ -1936,7 +1944,7 @@ Input Parameters:
 
 Output:
 
-1.   Clusters plotted on the map of West Malaysia
+1.  Clusters plotted on the map of West Malaysia
 
 2.  Dendogram/Choicealpha Chart
 
@@ -1996,9 +2004,8 @@ Eyeing the data from the site, we presume wrangling would be straightforward how
 
 While spatial clustering techniques like Skater can be effective in certain cases, it can vary depending on the specific data. In our case, the Skater clustering results were somewhat limited, primarily identifying geographically contiguous clusters. This highlights the importance of exploring multiple clustering techniques and evaluating their outputs to determine the best technique for our usecase.
 
-Skater (Right) vs H-Clust, K:13
-![](assets/vs_skater.png)
+Skater (Left) vs H-Clust, K:13 ![](assets/vs_skater.png)
 
-## 5.3 Storybaording
+## 5.3 Storyboarding
 
 The process of developing a compelling story board took up quite a bit of time, as there was quite fair bit that could be done with clustering. However the scope and flow is arguably more important, coming up with a flow that delivers impactful findings and value to user is more crucial than the amount of charts visualized.

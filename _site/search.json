@@ -298,7 +298,7 @@
     "href": "take-home_ex/ex03/th_ex03.html#flow",
     "title": "Take-home Exercise 3",
     "section": "4.1 Flow",
-    "text": "4.1 Flow\nFor the presentation flow of my application it is structured it as such: 1. Variable Exploration: For this section the user can explore the distribution of the variables in different type of plots 2. Cluster Configuration: Next the user can use the NbClust tool provided to make informed decision on the no. of clusters to use 3. Cluster Results: Where the actual clustering happens, the cluster will be displayed for the user for their configuration with other chart aids 4. Further Analysis: Finally the user will be able to analyse and further extract insights from the clustering with parallel coords and cluster profiles"
+    "text": "4.1 Flow\nFor the presentation flow of my application it is structured it as such:\n\nVariable Exploration: For this section the user can explore the distribution of the variables in different type of plots\nCluster Configuration: Next the user can use the NbClust tool provided to make informed decision on the no. of clusters to use\nCluster Results: Where the actual clustering happens, the cluster will be displayed for the user for their configuration with other chart aids\nFurther Analysis: Finally the user will be able to analyse and further extract insights from the clustering with parallel coords and cluster profiles"
   },
   {
     "objectID": "take-home_ex/ex03/th_ex03.html#variable-exploration-1",
@@ -340,14 +340,14 @@
     "href": "take-home_ex/ex03/th_ex03.html#skater-clustering-1",
     "title": "Take-home Exercise 3",
     "section": "5.2 Skater Clustering",
-    "text": "5.2 Skater Clustering\nWhile spatial clustering techniques like Skater can be effective in certain cases, it can vary depending on the specific data. In our case, the Skater clustering results were somewhat limited, primarily identifying geographically contiguous clusters. This highlights the importance of exploring multiple clustering techniques and evaluating their outputs to determine the best technique for our usecase.\nSkater (Right) vs H-Clust, K:13"
+    "text": "5.2 Skater Clustering\nWhile spatial clustering techniques like Skater can be effective in certain cases, it can vary depending on the specific data. In our case, the Skater clustering results were somewhat limited, primarily identifying geographically contiguous clusters. This highlights the importance of exploring multiple clustering techniques and evaluating their outputs to determine the best technique for our usecase.\nSkater (Left) vs H-Clust, K:13"
   },
   {
-    "objectID": "take-home_ex/ex03/th_ex03.html#storybaording",
-    "href": "take-home_ex/ex03/th_ex03.html#storybaording",
+    "objectID": "take-home_ex/ex03/th_ex03.html#storyboarding",
+    "href": "take-home_ex/ex03/th_ex03.html#storyboarding",
     "title": "Take-home Exercise 3",
-    "section": "5.3 Storybaording",
-    "text": "5.3 Storybaording\nThe process of developing a compelling story board took up quite a bit of time, as there was quite fair bit that could be done with clustering. However the scope and flow is arguably more important, coming up with a flow that delivers impactful findings and value to user is more crucial than the amount of charts visualized."
+    "section": "5.3 Storyboarding",
+    "text": "5.3 Storyboarding\nThe process of developing a compelling story board took up quite a bit of time, as there was quite fair bit that could be done with clustering. However the scope and flow is arguably more important, coming up with a flow that delivers impactful findings and value to user is more crucial than the amount of charts visualized."
   },
   {
     "objectID": "index.html",
