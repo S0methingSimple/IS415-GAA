@@ -1153,6 +1153,8 @@ heatmaply(normalize(data.matrix(clust_vars)),
 groups <- as.factor(cutree(hclust_ward, k=n_clust))
 hclust_ward_cluster <- cbind(piv_df_mys.all, as.matrix(groups)) %>%
   rename(`CLUSTER`=`as.matrix.groups.`)
+hclust_ward_cluster.norm <- cbind(clust_vars, as.matrix(groups)) %>%
+  rename(`CLUSTER`=`as.matrix(groups)`)
 
 hclust_ward_plot <- tm_shape(hclust_ward_cluster) +
   tm_fill("CLUSTER", 
@@ -1211,6 +1213,9 @@ rect.hclust(hclust_geo,
 groups <- as.factor(cutree(hclust_geo, k=n_clust))
 hclust_geo_cluster <- cbind(piv_df_mys.all, as.matrix(groups)) %>%
   rename(`CLUSTER`=`as.matrix.groups.`)
+hclust_geo_cluster.norm <- cbind(clust_vars, as.matrix(groups)) %>%
+  rename(`CLUSTER`=`as.matrix(groups)`)
+
 hclust_geo_plot <- tm_shape(hclust_geo_cluster) +
   tm_fill("CLUSTER", 
           palette = "Set3",
@@ -1389,6 +1394,9 @@ plot(clust,
 groups_mat <- as.matrix(clust$groups)
 skater_cluster <- cbind(piv_df_mys.all, as.factor(groups_mat)) %>%
   rename(`CLUSTER`=`as.factor.groups_mat.`)
+skater_cluster.norm <- cbind(clust_vars, as.factor(groups_mat)) %>%
+  rename(`CLUSTER`=`as.factor(groups_mat)`)
+
 skater_plot <- tm_shape(skater_cluster) +
   tm_fill("CLUSTER", 
           palette = "Set3",
@@ -1428,14 +1436,14 @@ tmap_arrange(hclust_ward_plot, hclust_geo_plot, skater_plot, ncol = 3)
 #| fig-width: 16
 #| fig-height: 6
 
-ggparcoord(data = hclust_ward_cluster, 
-           columns = c(5:11), 
+ggparcoord(data = hclust_ward_cluster.norm, 
+           columns = c(1:7), 
            scale = "globalminmax",
            alphaLines = 0.2,
            boxplot = TRUE, 
-           title = "Multiple Parallel Coordinates Plots of ICT Variables by Cluster") +
+           title = "Multiple Parallel Coordinates Plots of Crime type by Cluster") +
   facet_grid(~ CLUSTER) + 
-  theme(axis.text.x = element_text(angle = 30))
+  theme(axis.text.x = element_text(angle = 90))
 ```
 
 #### H-Cluster (Geo)
@@ -1444,14 +1452,14 @@ ggparcoord(data = hclust_ward_cluster,
 #| fig-width: 16
 #| fig-height: 6
 
-ggparcoord(data = hclust_geo_cluster, 
-           columns = c(5:11), 
+ggparcoord(data = hclust_geo_cluster.norm, 
+           columns = c(1:7), 
            scale = "globalminmax",
            alphaLines = 0.2,
            boxplot = TRUE, 
-           title = "Multiple Parallel Coordinates Plots of ICT Variables by Cluster") +
+           title = "Multiple Parallel Coordinates Plots of Crime type by Cluster") +
   facet_grid(~ CLUSTER) + 
-  theme(axis.text.x = element_text(angle = 30))
+  theme(axis.text.x = element_text(angle = 90))
 ```
 
 #### Skater-Cluster
@@ -1460,14 +1468,14 @@ ggparcoord(data = hclust_geo_cluster,
 #| fig-width: 16
 #| fig-height: 6
 
-ggparcoord(data = skater_cluster, 
-           columns = c(5:11), 
+ggparcoord(data = skater_cluster.norm, 
+           columns = c(1:7), 
            scale = "globalminmax",
            alphaLines = 0.2,
            boxplot = TRUE, 
-           title = "Multiple Parallel Coordinates Plots of ICT Variables by Cluster") +
+           title = "Multiple Parallel Coordinates Plots of Crime type by Cluster") +
   facet_grid(~ CLUSTER) + 
-  theme(axis.text.x = element_text(angle = 30))
+  theme(axis.text.x = element_text(angle = 90))
 ```
 
 
@@ -1483,14 +1491,14 @@ ggparcoord(data = skater_cluster,
 #| fig-width: 16
 #| fig-height: 6
 
-ggparcoord(data = hclust_ward_cluster, 
-           columns = c(12:16), 
+ggparcoord(data = hclust_ward_cluster.norm, 
+           columns = c(8:12), 
            scale = "globalminmax",
            alphaLines = 0.2,
            boxplot = TRUE, 
-           title = "Multiple Parallel Coordinates Plots of ICT Variables by Cluster") +
+           title = "Multiple Parallel Coordinates Plots of Demographic by Cluster") +
   facet_grid(~ CLUSTER) + 
-  theme(axis.text.x = element_text(angle = 30))
+  theme(axis.text.x = element_text(angle = 90))
 ```
 
 #### H-Cluster (Geo)
@@ -1499,14 +1507,14 @@ ggparcoord(data = hclust_ward_cluster,
 #| fig-width: 16
 #| fig-height: 6
 
-ggparcoord(data = hclust_geo_cluster,  
-           columns = c(12:16), 
+ggparcoord(data = hclust_geo_cluster.norm,  
+           columns = c(8:12), 
            scale = "globalminmax",
            alphaLines = 0.2,
            boxplot = TRUE, 
-           title = "Multiple Parallel Coordinates Plots of ICT Variables by Cluster") +
+           title = "Multiple Parallel Coordinates Plots of Demographic by Cluster") +
   facet_grid(~ CLUSTER) + 
-  theme(axis.text.x = element_text(angle = 30))
+  theme(axis.text.x = element_text(angle = 90))
 ```
 
 #### Skater Cluster
@@ -1515,16 +1523,15 @@ ggparcoord(data = hclust_geo_cluster,
 #| fig-width: 16
 #| fig-height: 6
 
-ggparcoord(data = skater_cluster,  
-           columns = c(12:16), 
+ggparcoord(data = skater_cluster.norm,  
+           columns = c(8:12), 
            scale = "globalminmax",
            alphaLines = 0.2,
            boxplot = TRUE, 
-           title = "Multiple Parallel Coordinates Plots of ICT Variables by Cluster") +
+           title = "Multiple Parallel Coordinates Plots of Demographic by Cluster") +
   facet_grid(~ CLUSTER) + 
-  theme(axis.text.x = element_text(angle = 30))
+  theme(axis.text.x = element_text(angle = 90))
 ```
-
 :::
 
 ### 3.5.4 Cluster Profiling
@@ -1548,13 +1555,14 @@ hclust_ward_prof <- hclust_ward_cluster %>%
 
 
 ```{r}
-#| fig-width: 15
-#| fig-height: 7
+#| fig-width: 10
+#| fig-height: 5
 ggplot(hclust_ward_prof %>% pivot_longer(-CLUSTER, names_to = "metric", values_to = "value"), 
        aes(x = CLUSTER, y = value, fill = CLUSTER)) +
   geom_bar(stat = "identity", position = "dodge") +
   facet_wrap(~ metric, scales = "free_y", ncol = 4) +  
   scale_fill_brewer(palette = "Set3") +
+  ggtitle("Cluster Profile (Ward)") +
   theme_minimal()
 ```
 
@@ -1565,9 +1573,9 @@ heatmaply(as.matrix(hclust_ward_prof[, 2:ncol(hclust_ward_prof)]),
           colors = OrRd,
           labRow = hclust_ward_prof$CLUSTER,
           margins = c(NA,100,50,NA),
-          fontsize_row = 4,
-          fontsize_col = 5,
-          main="Cluster Heatmap (H-Clust Geo)",
+          fontsize_row = 10,
+          fontsize_col = 8,
+          main="Cluster Heatmap (H-Clust)",
           xlab = "Crime Indicators",
           ylab = "Clusters")
 ```
@@ -1589,13 +1597,14 @@ hclust_geo_prof <- hclust_geo_cluster %>%
 
 
 ```{r}
-#| fig-width: 15
-#| fig-height: 7
+#| fig-width: 10
+#| fig-height: 5
 ggplot(hclust_geo_prof %>% pivot_longer(-CLUSTER, names_to = "metric", values_to = "value"), 
        aes(x = CLUSTER, y = value, fill = CLUSTER)) +
   geom_bar(stat = "identity", position = "dodge") +
   facet_wrap(~ metric, scales = "free_y", ncol = 4) +  
   scale_fill_brewer(palette = "Set3") +
+  ggtitle("Cluster Profile (Geo)") +
   theme_minimal()
 ```
 
@@ -1606,8 +1615,8 @@ heatmaply(as.matrix(hclust_geo_prof[, 2:ncol(hclust_geo_prof)]),
           colors = OrRd,
           labRow = hclust_geo_prof$CLUSTER,
           margins = c(NA,100,50,NA),
-          fontsize_row = 4,
-          fontsize_col = 5,
+          fontsize_row = 10,
+          fontsize_col = 8,
           main="Cluster Heatmap (H-Clust Geo)",
           xlab = "Crime Indicators",
           ylab = "Clusters")
@@ -1630,13 +1639,14 @@ skater_prof <- skater_cluster %>%
 
 
 ```{r}
-#| fig-width: 15
-#| fig-height: 7
+#| fig-width: 10
+#| fig-height: 5
 ggplot(skater_prof %>% pivot_longer(-CLUSTER, names_to = "metric", values_to = "value"), 
        aes(x = CLUSTER, y = value, fill = CLUSTER)) +
   geom_bar(stat = "identity", position = "dodge") +
   facet_wrap(~ metric, scales = "free_y", ncol = 4) +  
   scale_fill_brewer(palette = "Set3") +
+  ggtitle("Cluster Profile (Skater)") +
   theme_minimal()
 ```
 
@@ -1647,8 +1657,8 @@ heatmaply(as.matrix(skater_prof[, 2:ncol(skater_prof)]),
           colors = OrRd,
           labRow = skater_prof$CLUSTER,
           margins = c(NA,100,50,NA),
-          fontsize_row = 4,
-          fontsize_col = 5,
+          fontsize_row = 10,
+          fontsize_col = 8,
           main="Cluster Heatmap (Skater)",
           xlab = "Crime Indicators",
           ylab = "Clusters")
@@ -1662,11 +1672,11 @@ heatmaply(as.matrix(skater_prof[, 2:ncol(skater_prof)]),
 
 ## 4.2 Variable Exploration
 
-## 4.3 Hirerachical Clustering
+## 4.3 Cluster Configuration
 
-## 4.4 Skater Clustering
+## 4.4 Cluster Results
 
-## 4.5 Intepreting Results
+## 4.5 Further Analysis
 
 (Story Board)\[https://giniceseah.netlify.app/posts/2021-07-31-storyboard/\]
 
