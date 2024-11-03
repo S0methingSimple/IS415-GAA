@@ -276,7 +276,6 @@ mys_map <- tm_shape(mys_sf) +
             legend.width = 0.35,
             frame = TRUE) +
   tm_borders(alpha = 0.5) +
-  tm_scale_bar() +
   tm_grid(alpha =0.2)
 
 choro_map <- tm_shape(og_crime_df_mys_grp) +
@@ -291,8 +290,7 @@ choro_map <- tm_shape(og_crime_df_mys_grp) +
             legend.width = 0.35,
             frame = TRUE) +
   tm_borders(alpha = 0.5) +
-  tm_compass(type="8star", size = 2) +
-  tm_scale_bar() +
+  tm_compass(type="8star", size = 2, position = c("right", "top")) +
   tm_grid(alpha =0.2)
 
 tmap_arrange(choro_map, mys_map, ncol = 2)
@@ -394,7 +392,6 @@ mys_map <- tm_shape(mys_sf) +
             legend.width = 0.35,
             frame = TRUE) +
   tm_borders(alpha = 0.5) +
-  tm_scale_bar() +
   tm_grid(alpha =0.2)
 
 choro_map <- tm_shape(population_df_mys_grp) +
@@ -409,8 +406,7 @@ choro_map <- tm_shape(population_df_mys_grp) +
             legend.width = 0.35,
             frame = TRUE) +
   tm_borders(alpha = 0.5) +
-  tm_compass(type="8star", size = 2) +
-  tm_scale_bar() +
+  tm_compass(type="8star", size = 2, position = c("right", "top")) +
   tm_grid(alpha =0.2)
 
 tmap_arrange(choro_map, mys_map, ncol = 2)
@@ -485,8 +481,7 @@ og_choro_map <- tm_shape(og_crime_df_mys_grp) +
             legend.width = 0.35,
             frame = TRUE) +
   tm_borders(alpha = 0.5) +
-  tm_compass(type="8star", size = 2) +
-  tm_scale_bar() +
+  tm_compass(type="8star", size = 2, position = c("right", "top")) +
   tm_grid(alpha =0.2)
 
 choro_map <- tm_shape(crime_df_mys_grp) +
@@ -502,8 +497,7 @@ choro_map <- tm_shape(crime_df_mys_grp) +
             legend.width = 0.35,
             frame = TRUE) +
   tm_borders(alpha = 0.5) +
-  tm_compass(type="8star", size = 2) +
-  tm_scale_bar() +
+  tm_compass(type="8star", size = 2, position = c("right", "top")) +
   tm_grid(alpha =0.2)
 
 tmap_arrange(og_choro_map, choro_map, ncol = 2)
@@ -955,7 +949,7 @@ for (col in colnames(og_clust_vars)) {
     ggtitle(str_to_title(str_replace_all(col, "_", " ")))
 }
 
-grid.arrange(grobs = hist_list, ncol = 5, nrow = 3)
+grid.arrange(grobs = hist_list, ncol = 4, nrow = 3)
 ```
 
 #### Min-Max Standardisation
@@ -972,7 +966,7 @@ for (col in colnames(clust_vars)) {
     ggtitle(str_to_title(str_replace_all(col, "_", " ")))
 }
 
-grid.arrange(grobs = hist_list, ncol = 5, nrow = 3)
+grid.arrange(grobs = hist_list, ncol = 4, nrow = 3)
 ```
 ::: 
 
@@ -994,7 +988,7 @@ for (col in colnames(og_clust_vars)) {
     ggtitle(str_to_title(str_replace_all(col, "_", " ")))
 }
 
-grid.arrange(grobs = hist_list, ncol = 5, nrow = 3)
+grid.arrange(grobs = hist_list, ncol = 4, nrow = 3)
 ```
 
 #### Min-Max Standardisation
@@ -1011,7 +1005,7 @@ for (col in colnames(clust_vars)) {
     ggtitle(str_to_title(str_replace_all(col, "_", " ")))
 }
 
-grid.arrange(grobs = hist_list, ncol = 5, nrow = 3)
+grid.arrange(grobs = hist_list, ncol = 4, nrow = 3)
 ```
 ::: 
 
@@ -1033,7 +1027,7 @@ for (col in colnames(og_clust_vars)) {
     ggtitle(str_to_title(str_replace_all(col, "_", " ")))
 }
 
-grid.arrange(grobs = hist_list, ncol = 5, nrow = 3)
+grid.arrange(grobs = hist_list, ncol = 4, nrow = 3)
 ```
 
 #### Min-Max Standardisation
@@ -1050,61 +1044,58 @@ for (col in colnames(clust_vars)) {
     ggtitle(str_to_title(str_replace_all(col, "_", " ")))
 }
 
-grid.arrange(grobs = hist_list, ncol = 5, nrow = 3)
+grid.arrange(grobs = hist_list, ncol = 4, nrow = 3)
 ```
 ::: 
 
 ## 3.2 Selecting No. of Clusters
 
-### 3.2.1 Compute Gap Statistics
+### 3.2.1 Compute NB Clust
 
 ```{r}
 set.seed(12345)
-gap_stat <- clusGap(clust_vars, 
-                    FUN = kmeans, 
-                    nstart = 25, 
-                    K.max = 15, 
-                    B = 50)
-
-print(gap_stat, method = "firstmax")
+nbc <- NbClust(clust_vars, distance = "euclidean", min.nc = 5, max.nc = 10, method = "ward.D")
 ```
 
-### 3.2.2 Visualizing Gap Statistics
+
+### 3.2.2 Visualizing NB Clust
+
+::: panel-tabset
+
+#### Avg Silhouette Width
 
 ```{r}
-fviz_gap_stat(gap_stat)
+fviz_nbclust(clust_vars, FUNcluster = hcut, method = "silhouette", k.max = 10)
 ```
 
-### 3.2.3 Compute NB Clust
+#### Within Sum of Square
 
 ```{r}
-nbc <- NbClust(clust_vars, distance = "euclidean", min.nc = 2, max.nc = 15, method = "kmeans")
-
-print(nbc, method = "firstmax")
+fviz_nbclust(clust_vars, FUNcluster = hcut, method = "wss", k.max = 10)
 ```
 
-### 3.2.4 Visualizing NB Clust
+#### Gap Statistics
 
 ```{r}
-fviz_nbclust(clust_vars, FUNcluster = pam)
+fviz_nbclust(clust_vars, FUNcluster = hcut, method = "gap_stat", k.max = 10)
 ```
+:::
+
+## 3.3 Hierarchical Clustering
 
 ```{r}
-n_clust = 13
+n_clust = 7
 ```
 
-
-## 3.2 Hierarchical Clustering
-
-### 3.2.2 Compute Prox Mat
+### 3.3.1 Compute Prox Mat
 
 ```{r}
 proxmat <- dist(clust_vars, method = 'euclidean')
 ```
 
-### 3.2.3 Compute Cluster
+### 3.3.2 Compute Cluster
 
-#### 3.2.3.1 Selecting Clustering Method
+#### 3.3.2.1 Selecting Clustering Method
 
 ```{r}
 m <- c( "average", "single", "complete", "ward")
@@ -1117,14 +1108,14 @@ ac <- function(x) {
 map_dbl(m, ac)
 ```
 
-#### 3.2.3.2 Perform Clustering
+#### 3.3.2.2 Perform Clustering
 
 ```{r}
 clust_method <- 'ward.D'
 hclust_ward <- hclust(proxmat, method = clust_method)
 ```
 
-#### 3.2.3.3 Visualizing Cluster
+#### 3.3.2.3 Visualizing Cluster
 
 ::: panel-tabset
 ##### Dendogram
@@ -1144,8 +1135,8 @@ heatmaply(normalize(data.matrix(clust_vars)),
           dist_method = "euclidean",
           hclust_method = clust_method,
           seriate = "OLO",
-          colors = Blues,
-          k_row = 13,
+          colors = OrRd,
+          k_row = n_clust,
           margins = c(NA,50,50,NA),
           fontsize_row = 4,
           fontsize_col = 5,
@@ -1156,39 +1147,53 @@ heatmaply(normalize(data.matrix(clust_vars)),
 ```
 
 
-##### Clusters
+##### Cluster
 
 ```{r}
 groups <- as.factor(cutree(hclust_ward, k=n_clust))
 hclust_ward_cluster <- cbind(piv_df_mys.all, as.matrix(groups)) %>%
   rename(`CLUSTER`=`as.matrix.groups.`)
-hclust_ward_plot <- qtm(hclust_ward_cluster, "CLUSTER")
+
+hclust_ward_plot <- tm_shape(hclust_ward_cluster) +
+  tm_fill("CLUSTER", 
+          palette = "Set3",
+          title = "Cluster") +
+  tm_layout(main.title = paste("Hierarchical Clustering - K:", n_clust),
+            main.title.position = "center",
+            main.title.size = 1.2,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 3, position = c("right", "top")) +
+  tm_grid(alpha =0.2)
+
 hclust_ward_plot
 ```
 :::
 
-### 3.2.5 Compute Cluster (Geo Constrained)
+### 3.3.3 Compute Cluster (Geo Constrained)
 
-#### 3.2.5.1 Compute distmat
+#### 3.3.3.1 Compute distmat
 
 ```{r}
 dist <- st_distance(piv_df_mys.all, piv_df_mys.all)
 distmat <- as.dist(dist)
 ```
 
-#### 3.2.5.2 Compute Choicalpha
+#### 3.3.3.2 Compute Choicalpha
 
 ```{r}
 cr <- choicealpha(proxmat, distmat, range.alpha = seq(0, 1, 0.1), K=n_clust, graph = TRUE)
 ```
 
-#### 3.2.5.3 Perform Clustering
+#### 3.3.3.3 Perform Clustering
 
 ```{r}
 hclust_geo <- hclustgeo(proxmat, distmat, alpha = 0.1)
 ```
 
-#### 3.2.5.4 Visualizing Cluster
+#### 3.3.3.4 Visualizing Cluster
 
 ::: panel-tabset
 ##### Dendogram
@@ -1200,13 +1205,26 @@ rect.hclust(hclust_geo,
             border = 2:5)
 ```
 
-##### Clusters
+##### Cluster
 
 ```{r}
 groups <- as.factor(cutree(hclust_geo, k=n_clust))
 hclust_geo_cluster <- cbind(piv_df_mys.all, as.matrix(groups)) %>%
   rename(`CLUSTER`=`as.matrix.groups.`)
-hclust_geo_plot <- qtm(hclust_geo_cluster, "CLUSTER")
+hclust_geo_plot <- tm_shape(hclust_geo_cluster) +
+  tm_fill("CLUSTER", 
+          palette = "Set3",
+          title = "Cluster") +
+  tm_layout(main.title = paste("Hierarchical Clustering (Geo) - K:", n_clust),
+            main.title.position = "center",
+            main.title.size = 1.2,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 3, position = c("right", "top")) +
+  tm_grid(alpha =0.2)
+
 hclust_geo_plot
 ```
 
@@ -1217,9 +1235,9 @@ tmap_arrange(hclust_ward_plot, hclust_geo_plot, ncol = 2)
 ```
 :::
 
-## 3.3 Skater Clustering
+## 3.4 Skater Clustering
 
-### 3.3.1 Generating Neighbours
+### 3.4.1 Generating Neighbours
 
 ```{r}
 nb <- poly2nb(piv_df_mys.all)
@@ -1238,7 +1256,7 @@ plot(nb,
      add=TRUE)
 ```
 
-### 3.3.2 Fixing Neighbours
+### 3.4.2 Fixing Neighbours
 
 ```{r}
 components <- n.comp.nb(nb)
@@ -1248,7 +1266,7 @@ which(components$comp.id == 3)
 piv_df_mys.all$state_district[which(components$comp.id == 3)]
 ```
 
-#### 3.3.2.1 Langkawi
+#### 3.4.2.1 Langkawi
 
 Given that there are water routes to Langkawi from Kuala Perlis, Kuala Kedah and Penang we will add that in
 
@@ -1268,7 +1286,7 @@ nb[[66]] <- c(nb[[66]], as.integer(17))
 nb[[71]] <- c(nb[[71]], as.integer(17))
 ```
 
-#### 3.3.2.2 Pulau Pinang
+#### 3.4.2.2 Pulau Pinang
 
 For Penang island we will be mapping by the 2 land links available 1. Timur Laut -\> S.P. Tengah 2. Barat Daya -\> S.P. Selatan
 
@@ -1281,7 +1299,7 @@ tm_shape(mys_sf %>% filter(ADM1_EN=="PULAU PINANG")) +
 ```
 
 ```{r}
-indices_pulau_pinang <- which(startsWith(piv_df_mys.all$state_district, "PULAU PINANG"))
+indices_pulau_pinang <- which(startsWith(piv_df_mys.all$state_district, "Pulau Pinang"))
 
 indices_pulau_pinang
 piv_df_mys.all$state_district[indices_pulau_pinang]
@@ -1297,7 +1315,7 @@ nb[[71]] <- c(nb[[71]], as.integer(70))
 nb[[70]] <- c(nb[[70]], as.integer(71))
 ```
 
-#### 3.3.2.3 Visualizing Fix
+#### 3.4.2.3 Visualizing Fix
 
 ```{r}
 coords <- st_coordinates(st_centroid(st_geometry(piv_df_mys.all)))
@@ -1309,9 +1327,9 @@ plot(nb,
      add=TRUE)
 ```
 
-### 3.3.3 Compute MST
+### 3.4.3 Compute MST
 
-#### 3.3.3.1 Compute `nb` Weights
+#### 3.4.3.1 Compute `nb` Weights
 
 ```{r}
 lcosts <- nbcosts(nb, clust_vars)
@@ -1321,7 +1339,7 @@ clust_vars.w <- nb2listw(nb,
 summary(clust_vars.w)
 ```
 
-#### 3.3.3.2 Generate MST
+#### 3.4.3.2 Generate MST
 
 ```{r}
 clust_vars.mst <- mstree(clust_vars.w)
@@ -1339,7 +1357,7 @@ plot.mst(clust_vars.mst,
          add=TRUE)
 ```
 
-### 3.3.4 Compute Cluster
+### 3.4.4 Compute Cluster
 
 ```{r}
 clust <- spdep::skater(edges = clust_vars.mst[,1:2], 
@@ -1350,7 +1368,7 @@ clust <- spdep::skater(edges = clust_vars.mst[,1:2],
 str(clust)
 ```
 
-### 3.3.5 Visualizing Clusters
+### 3.4.5 Visualizing Clusters
 
 ::: panel-tabset
 #### MST
@@ -1371,32 +1389,47 @@ plot(clust,
 groups_mat <- as.matrix(clust$groups)
 skater_cluster <- cbind(piv_df_mys.all, as.factor(groups_mat)) %>%
   rename(`CLUSTER`=`as.factor.groups_mat.`)
-skater_plot <- qtm(skater_cluster, "CLUSTER")
+skater_plot <- tm_shape(skater_cluster) +
+  tm_fill("CLUSTER", 
+          palette = "Set3",
+          title = "Cluster") +
+  tm_layout(main.title = paste("Skater Clustering - K:", n_clust),
+            main.title.position = "center",
+            main.title.size = 1.2,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 3, position = c("right", "top")) +
+  tm_grid(alpha =0.2)
+
 skater_plot
 ```
 :::
 
-## 3.4 Intepreting Results
+## 3.5 Intepreting Results
 
 
-### 3.4.1 Comparing Clusters
+### 3.5.1 Comparing Clusters
 
 ```{r}
-tmap_arrange(skater_plot, hclust_geo_plot, ncol = 2)
+#| fig-width: 10
+#| fig-height: 6
+tmap_arrange(hclust_ward_plot, hclust_geo_plot, skater_plot, ncol = 3)
 ```
 
-### 3.4.2 Parral Coordinates
+### 3.5.2 Parral Coordinates (Crime)
 
 ::: panel-tabset
 
-#### Crime Par-Coords
+#### H-Cluster (Ward)
 
 ```{r}
 #| fig-width: 16
 #| fig-height: 6
 
-ggparcoord(data = skater_cluster, 
-           columns = c(2:8), 
+ggparcoord(data = hclust_ward_cluster, 
+           columns = c(5:11), 
            scale = "globalminmax",
            alphaLines = 0.2,
            boxplot = TRUE, 
@@ -1405,14 +1438,85 @@ ggparcoord(data = skater_cluster,
   theme(axis.text.x = element_text(angle = 30))
 ```
 
-#### Demographic Par Coords
+#### H-Cluster (Geo)
+
+```{r}
+#| fig-width: 16
+#| fig-height: 6
+
+ggparcoord(data = hclust_geo_cluster, 
+           columns = c(5:11), 
+           scale = "globalminmax",
+           alphaLines = 0.2,
+           boxplot = TRUE, 
+           title = "Multiple Parallel Coordinates Plots of ICT Variables by Cluster") +
+  facet_grid(~ CLUSTER) + 
+  theme(axis.text.x = element_text(angle = 30))
+```
+
+#### Skater-Cluster
 
 ```{r}
 #| fig-width: 16
 #| fig-height: 6
 
 ggparcoord(data = skater_cluster, 
-           columns = c(9:14), 
+           columns = c(5:11), 
+           scale = "globalminmax",
+           alphaLines = 0.2,
+           boxplot = TRUE, 
+           title = "Multiple Parallel Coordinates Plots of ICT Variables by Cluster") +
+  facet_grid(~ CLUSTER) + 
+  theme(axis.text.x = element_text(angle = 30))
+```
+
+
+:::
+
+### 3.5.3 Parral Coordinates (Demographics)
+
+::: panel-tabset
+
+#### H-Cluster (Ward)
+
+```{r}
+#| fig-width: 16
+#| fig-height: 6
+
+ggparcoord(data = hclust_ward_cluster, 
+           columns = c(12:16), 
+           scale = "globalminmax",
+           alphaLines = 0.2,
+           boxplot = TRUE, 
+           title = "Multiple Parallel Coordinates Plots of ICT Variables by Cluster") +
+  facet_grid(~ CLUSTER) + 
+  theme(axis.text.x = element_text(angle = 30))
+```
+
+#### H-Cluster (Geo)
+
+```{r}
+#| fig-width: 16
+#| fig-height: 6
+
+ggparcoord(data = hclust_geo_cluster,  
+           columns = c(12:16), 
+           scale = "globalminmax",
+           alphaLines = 0.2,
+           boxplot = TRUE, 
+           title = "Multiple Parallel Coordinates Plots of ICT Variables by Cluster") +
+  facet_grid(~ CLUSTER) + 
+  theme(axis.text.x = element_text(angle = 30))
+```
+
+#### Skater Cluster
+
+```{r}
+#| fig-width: 16
+#| fig-height: 6
+
+ggparcoord(data = skater_cluster,  
+           columns = c(12:16), 
            scale = "globalminmax",
            alphaLines = 0.2,
            boxplot = TRUE, 
@@ -1423,10 +1527,14 @@ ggparcoord(data = skater_cluster,
 
 :::
 
-### 3.4.3 Cluster Profiling
+### 3.5.4 Cluster Profiling
+
+::: panel-tabset
+
+#### H-Cluster (Ward)
 
 ```{r}
-skater_cluster %>% 
+hclust_ward_prof <- hclust_ward_cluster %>% 
   st_drop_geometry() %>%
   group_by(CLUSTER) %>%
   summarise(mean_causing_injury = mean(causing_injury),
@@ -1437,6 +1545,116 @@ skater_cluster %>%
             mean_theft_other = mean(theft_other),
             mean_vehicle_theft = mean(vehicle_theft))
 ```
+
+
+```{r}
+#| fig-width: 15
+#| fig-height: 7
+ggplot(hclust_ward_prof %>% pivot_longer(-CLUSTER, names_to = "metric", values_to = "value"), 
+       aes(x = CLUSTER, y = value, fill = CLUSTER)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~ metric, scales = "free_y", ncol = 4) +  
+  scale_fill_brewer(palette = "Set3") +
+  theme_minimal()
+```
+
+```{r}
+heatmaply(as.matrix(hclust_ward_prof[, 2:ncol(hclust_ward_prof)]), 
+          dendrogram = 'none',
+          Colv = FALSE, 
+          colors = OrRd,
+          labRow = hclust_ward_prof$CLUSTER,
+          margins = c(NA,100,50,NA),
+          fontsize_row = 4,
+          fontsize_col = 5,
+          main="Cluster Heatmap (H-Clust Geo)",
+          xlab = "Crime Indicators",
+          ylab = "Clusters")
+```
+
+#### H-Cluster (Geo)
+
+```{r}
+hclust_geo_prof <- hclust_geo_cluster %>% 
+  st_drop_geometry() %>%
+  group_by(CLUSTER) %>%
+  summarise(mean_causing_injury = mean(causing_injury),
+            mean_murder = mean(murder),
+            mean_rape = mean(rape),
+            mean_robbery = mean(robbery),
+            mean_break_in = mean(break_in),
+            mean_theft_other = mean(theft_other),
+            mean_vehicle_theft = mean(vehicle_theft))
+```
+
+
+```{r}
+#| fig-width: 15
+#| fig-height: 7
+ggplot(hclust_geo_prof %>% pivot_longer(-CLUSTER, names_to = "metric", values_to = "value"), 
+       aes(x = CLUSTER, y = value, fill = CLUSTER)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~ metric, scales = "free_y", ncol = 4) +  
+  scale_fill_brewer(palette = "Set3") +
+  theme_minimal()
+```
+
+```{r}
+heatmaply(as.matrix(hclust_geo_prof[, 2:ncol(hclust_geo_prof)]), 
+          dendrogram = 'none',
+          Colv = FALSE, 
+          colors = OrRd,
+          labRow = hclust_geo_prof$CLUSTER,
+          margins = c(NA,100,50,NA),
+          fontsize_row = 4,
+          fontsize_col = 5,
+          main="Cluster Heatmap (H-Clust Geo)",
+          xlab = "Crime Indicators",
+          ylab = "Clusters")
+```
+
+#### Skater Cluster
+
+```{r}
+skater_prof <- skater_cluster %>% 
+  st_drop_geometry() %>%
+  group_by(CLUSTER) %>%
+  summarise(mean_causing_injury = mean(causing_injury),
+            mean_murder = mean(murder),
+            mean_rape = mean(rape),
+            mean_robbery = mean(robbery),
+            mean_break_in = mean(break_in),
+            mean_theft_other = mean(theft_other),
+            mean_vehicle_theft = mean(vehicle_theft))
+```
+
+
+```{r}
+#| fig-width: 15
+#| fig-height: 7
+ggplot(skater_prof %>% pivot_longer(-CLUSTER, names_to = "metric", values_to = "value"), 
+       aes(x = CLUSTER, y = value, fill = CLUSTER)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~ metric, scales = "free_y", ncol = 4) +  
+  scale_fill_brewer(palette = "Set3") +
+  theme_minimal()
+```
+
+```{r}
+heatmaply(as.matrix(skater_prof[, 2:ncol(skater_prof)]), 
+          dendrogram = 'none',
+          Colv = FALSE, 
+          colors = OrRd,
+          labRow = skater_prof$CLUSTER,
+          margins = c(NA,100,50,NA),
+          fontsize_row = 4,
+          fontsize_col = 5,
+          main="Cluster Heatmap (Skater)",
+          xlab = "Crime Indicators",
+          ylab = "Clusters")
+```
+
+::: 
 
 # 4. App Story Board
 
