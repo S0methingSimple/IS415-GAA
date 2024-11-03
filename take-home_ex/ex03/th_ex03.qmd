@@ -4,7 +4,7 @@ author: "Jeffery Lau"
 date: 10-13-2024
 date-modified: "last-modified"
 description: |
-  In this exercise, we will be looking prototyping for my team's Geospatial Analytics Shiny Application. I am responsible for 
+  In this exercise, we will develop an interactive Geospatial Analytics Shiny App to enable users to explore crime patterns in West Malaysia. By leveraging spatial clustering techniques, the app will provide an interface to uncover insights into the spatial distribution of crime and identify potential clusters.
 categories:
   - Take-home
 format:
@@ -14,30 +14,52 @@ execute:
   eval: true
   echo: true
   warning: false
-  freeze: false
+  freeze: true
 ---
 
 # 1. Introduction
 
-## 1.1 Responsibility
+Crime is a pressing issue in Malaysia, impacting both urban and rural communities. Understanding the spatial and temporal patterns of crime is crucial for law enforcement agencies to allocate resources effectively and implement targeted crime prevention strategies. Traditional crime analysis methods often rely on basic statistical analysis and simple geographic visualizations. However, by employing advanced statistical techniques such as clustering, we can delve deeper into the underlying factors driving crime and identify specific hotspots or crime clusters.
 
 ## 1.2 Motivation
 
+This project aims to leverage spatial clustering techniques to identify distinct crime patterns and analyze the socio-economic factors associated with these patterns. By integrating crime data with additional socio-economic indicators such as labor force statistics and inequality measures, we can gain a more comprehensive understanding of the factors influencing crime in Malaysia (West).
+
 ## 1.3 Objectives
+
+1.  Apply spatial clustering techniques to visualize similar regions based on crime patterns enriched with socio-economic data.
+2.  Interpret and analyse spatial clusters with crime characteristics and their relationship with socio-economic factors and deem their suitability for the Shiny application.
+3.  Develop a storyboard for the Shiny application incoperating effective and interative visualizations to communicate the findings to a diverse audience.
 
 # 2. Packages and Data
 
 ## 2.1 Packages Required
 
+The following will be the packages used for this study and the Shiny Application:
+
 ```{r}
 pacman::p_load(sf, st, tidyverse, raster, tmap, tmaptools, ggplot2, gridExtra, spatstat, sfdep, spdep, ClustGeo, 
                ggpubr, cluster, factoextra, NbClust,
-               heatmaply, corrplot, psych, tidyverse, GGally)
+               heatmaply, corrplot, psych, GGally)
 ```
+
+-   sf: For working with simple features, a standard for spatial data in R.
+-   tidyverse: A collection of packages for data manipulation and visualization, including dplyr, tidyr, ggplot2, etc.
+-   tmap: For creating static and interactive maps.
+-   ggplot2: A powerful visualization package for creating static plots.
+-   gridExtra: For arranging multiple plots on a single page.
+-   sfdep: For spatial dependency analysis.
+-   ClustGeo: For spatial clustering analysis.
+-   cluster: For various clustering algorithms, including K-means and hierarchical clustering.
+-   factoextra: For visualizing and evaluating clustering results.
+-   NbClust: For determining the optimal number of clusters.
+-   heatmaply: For creating interactive heatmaps.
+-   corrplot: For visualizing correlation matrices.
+-   GGally: For advanced data visualization, including pair plots and correlation plots.
 
 ## 2.2 Data Required
 
-There are two datasets being used in this exercise.
+There are a total of 5 aspatial datasets used in this project.
 
 -   [Malaysia – Crime by District and Crime Type](https://data.gov.my/data-catalogue/crime_district) from data.gov.my in csv format.
 
@@ -45,15 +67,15 @@ There are two datasets being used in this exercise.
 
 -   [Malaysia – Annual Principal Labour Force Statistics by District](https://data.gov.my/data-catalogue/lfs_district) from data.gov.my in csv format.
 
--   [Malaysia – Household Income and Expenditure: Administrative Districts](https://data.gov.my/data-catalogue/hies_district) from data.gov.my in csv format.
+-   [Malaysia – Poverty by Administrative District](https://data.gov.my/data-catalogue/hh_poverty_district) from data.gov.my in csv format.
 
--   [Malaysia – Enrolment in Government Schools by District](https://data.gov.my/data-catalogue/enrolment_school_district) from data.gov.my in csv format.
+-   [Malaysia – Income Inequality by District](https://data.gov.my/data-catalogue/hh_inequality_district) from data.gov.my in csv format.
 
--   [Malaysia – Enrolment in Government Schools by District](https://data.gov.my/data-catalogue/enrolment_school_district) from data.gov.my in csv format.
-
-We first import the crime rate csv file into R.
+-   [Malaysia – Population by District](https://data.gov.my/data-catalogue/population_district) from data.gov.my in csv format.
 
 ### 2.2.1 Aspatial Data
+
+We start by importing the crime rate and population csv file into R.
 
 ```{r}
 crime_df <- read_csv("data/aspatial/crime_district.csv")
@@ -62,7 +84,7 @@ population_df <- read_csv("data/aspatial/population_district.csv")
 
 ### 2.2.2 Geospatial Data
 
-Next, we import the administrative regions of Malaysia.
+Next, we import the administrative (Level 2, District) regions of Malaysia.
 
 ```{r}
 mys_sf <- read_sf(dsn = "data/geospatial/mys_adm_unhcr_20210211_shp", 
@@ -72,6 +94,27 @@ mys_sf <- read_sf(dsn = "data/geospatial/mys_adm_unhcr_20210211_shp",
 
 ### 2.2.3 Enrichment Data
 
+We will also be importing and working we several other potentially related data to crime rates in Malaysia and uncover if there is any further insights which could be extracted from their usage. The following teh details of the fields:
+
+1.  Poverty by District: Poverty rates by administrative district from 2019 to 2022
+
+-   `poverty_absolute`: Proportion of households with monthly income below the Poverty Line Income (PLI)
+-   `poverty_relative`: Proportion of households with monthly income below half the district median income
+
+2.  Inequality by District: Gini coefficient by administrative district from 2019 to 2022.
+
+-   `gini`: The Gini coefficient based on the distribution of households' gross monthly income
+
+3.  Labour Force Statistics by District: Annual principal labour force statistics at district level, including unemployment and participation rates.
+
+-   `lf`: The number (in thousands) of employed and unemployed individuals. This figure also represents the number of people participating in the labour force.
+-   `lf_employed`: The number (in thousands) of people who worked at least one hour for pay, profit or family gain, in thousands of people
+-   `lf_unemployed`: The number (in thousands) of people who did not work but were looking for work or available to work
+-   `lf_outside`: The number (in thousands) of people not classified as employed or unemployed, including housewives, students, early retired, disabled persons and those not interested in looking for a job
+-   `u_rate`: Ratio of unemployed to labour force size
+-   `p_rate`: Ratio of the labour force size to the working-age (15-64) population
+-   `ep_ratio`: Ratio of the number of employed people to the working-age (15-64) population
+
 ```{r}
 poverty_df <- read_csv("data/aspatial/poverty_district.csv")
 inequality_df <- read_csv("data/aspatial/inequality_district.csv")
@@ -80,7 +123,11 @@ labour_df <- read_csv("data/aspatial/labour_district.csv")
 
 ## 2.3 Wrangling
 
+Next we shall prepare our data for analysis, which includes proper mapping of data and joining for the aspatial datasets with the geospatial dataset.
+
 ### 2.3.1 Data Preparation
+
+Before we can check the mappings we convert `state` and `district` to upper to ensure a smooth matching and join. We also extracted the year as a column since the aspatial data are all annual.
 
 ::: panel-tabset
 #### Crime
@@ -118,6 +165,8 @@ mys_sf
 
 ### 2.3.2 State Mismatch
 
+Next we check for any mismatch on ADM1 (State-level)
+
 ::: panel-tabset
 #### Overview
 
@@ -131,6 +180,8 @@ unique(population_df$state)
 print("Unique states in mys_sf:")
 unique(mys_sf$ADM1_EN)
 ```
+
+At first glance we can see a mismatch in the length of the states.
 
 #### Difference
 
@@ -147,11 +198,13 @@ print(missing_in_sf)
 print("States in mys_sf not found in crime_df:")
 print(missing_in_crime)
 ```
+
+It seems like crime_df also have a row for the aggregated crime rates for the whole of Malaysia. Whereas W.P. LABUAN, W.P. PUTRAJAYA are not found in the spatial dataset.
 :::
 
 ### 2.3.3 State Wrangling
 
-However in this case study, for ease of analysis, we choose to focus on West Malaysia, and thus will be filtering out Sarawak, Sabah and Labuan.
+For this project we will be focusing on West Malaysia, and thus will be filtering out Sarawak, Sabah and Labuan. To address the issue identified above we will be mapping: 'W.P. PUTRAJAYA' -\> 'KUALA LUMPUR'.
 
 ::: panel-tabset
 #### Crime
@@ -188,7 +241,15 @@ mys_sf
 ```
 :::
 
+::: callout-note
+#### W.P. PUTRAJAYA -\> KUALA LUMPUR ??
+
+It is noted that W.P. PUTRAJAYA is within SELANGOR but for the ease of joining with subsequent data it will mapped under KUALA LUMPUR state
+:::
+
 ### 2.3.4 State-District Wrangling (Crime)
+
+Next we will be wrangling the data on the district level, the methodology is similar as above: 1. Check difference of unique state_district 2. Address difference by mapping district not found within `mys_sf` into available districts 3. Aggregate the newly mapped variables under a similar district
 
 #### 2.3.4.1 State-District Mismatch
 
@@ -211,7 +272,11 @@ print("State-District combinations in mys_sf not found in crime_df:")
 print(missing_in_crime)
 ```
 
+That is alot of mismatch! The process involves checking the available districts in `mys_sf` and assiging the districts.
+
 #### 2.3.4.2 Re-Mapping Districts
+
+After the team sat down to sort out the mapping this is the list of mapping to address the above mismatch.
 
 ```{r}
 crime_df <- crime_df %>%
@@ -244,10 +309,20 @@ crime_df <- crime_df %>%
   summarise(crimes = sum(crimes))
 ```
 
+::: callout-note
+##### Type of issues
+
+1.  The common issue are related to translation, or districts with different names e.g. "PENGKALAN HULU" \~ "ULU PERAK"
+2.  Some comes down to preferences e.g. "CAMERON HIGHLAND" \~ "CAMERON HIGHLANDS", "MANJUNG" \~ "MANJUNG (DINDING)",
+3.  And in some cases a district may be broken down into sub-districts e.g. c("PETALING JAYA", "SERDANG", "SG. BULOH", "SHAH ALAM", "SUBANG JAYA", "SUNGAI BULOH") \~ "PETALING",
+:::
+
 #### 2.3.4.3 Crime Distribution
 
+In the following we can see the distribution of crime rates (raw) on the map of West Malaysia. Note that the crime rates happens to be higher where the population is higher such as in Johor Bahru and Kuala Lumpur.
+
 ::: panel-tabset
-##### Overview
+##### Visualization
 
 ```{r}
 og_crime_df_mys <- crime_df %>%
@@ -256,12 +331,7 @@ og_crime_df_mys <- crime_df %>%
   dplyr::select(state, district, year, category, type, crimes, geometry)
 
 og_crime_df_mys <- st_as_sf(og_crime_df_mys)
-og_crime_df_mys
-```
 
-##### Visualization
-
-```{r}
 og_crime_df_mys_grp <- og_crime_df_mys %>%
   group_by(state, district) %>%
   summarize(total_crimes = sum(crimes)/4)
@@ -295,19 +365,27 @@ choro_map <- tm_shape(og_crime_df_mys_grp) +
 
 tmap_arrange(choro_map, mys_map, ncol = 2)
 ```
+
+##### Table
+
+```{r}
+og_crime_df_mys
+```
 :::
 
 ::: callout-note
-#### Missing Data
+#### Missing Data (POKOK SENA)
 
-Notice the missing data in Pokok Sena, which we will be rectifying in the subsequent join with aggregated state data.
+Note the missing data in POKOK SENA in `crime_df`, which we will be rectifying in the subsequent join with the crime aggregated by KEDAH state
 :::
 
 ### 2.3.5 State-District Wrangling (Population)
 
+The crime data provided is not sufficient to paint an accurate picture of the crime patterns in Malaysia as it is heavily skewed towards places with higher population, this will not be ideal for our analysis, hence we will be importing Population by district to adjust the crime accordingly.
+
 #### 2.3.5.1 State-District Mismatch
 
-The year 2019 is missing from data set, hence we will map year 2020 -\> 2019.
+The data for population is only available from 2020 - 2024. Since 2019 is missing from data set, we will do a best effort mapping where year: 2020 -\> 2019.
 
 ```{r}
 population_row <- population_df %>%
@@ -317,6 +395,8 @@ population_df <- bind_rows(population_df, population_row) %>%
   mutate(state_district = paste(state, district, sep = "-"))
 unique(population_df$year)
 ```
+
+Next we check mismatch on the state-district.
 
 ```{r}
 state_district_population <- unique(population_df$state_district)
@@ -332,6 +412,8 @@ print(missing_in_population)
 ```
 
 #### 2.3.5.2 Re-Mapping Districts
+
+We employed the similar methodology to map the Population data.
 
 ```{r}
 population_df <- population_df %>%
@@ -363,8 +445,10 @@ population_df
 
 #### 2.3.5.3 Population Distribution
 
+The following is a quick visualization of the population data in West Malaysia.
+
 ::: panel-tabset
-##### Overview
+##### Visualization
 
 ```{r}
 population_df_mys <- population_df %>%
@@ -372,12 +456,7 @@ population_df_mys <- population_df %>%
   dplyr::select(state, district, year, population, geometry)
 
 population_df_mys <- st_as_sf(population_df_mys)
-population_df_mys
-```
 
-##### Visualization
-
-```{r}
 population_df_mys_grp <- population_df_mys %>%
   group_by(state, district) %>%
   summarize(total_crimes = sum(population)/4)
@@ -411,15 +490,23 @@ choro_map <- tm_shape(population_df_mys_grp) +
 
 tmap_arrange(choro_map, mys_map, ncol = 2)
 ```
+
+##### Overview
+
+```{r}
+population_df_mys
+```
 :::
 
 ::: callout-note
 #### Similarity in Observation
 
-We can note that the districts with more crime tend to have a higher population. Hence for a more accurate comparsion we need to adjust the crimes to per captia for the districts
+We can note that the districts with more crime tend to have a higher population we suggest it is positively correlated. Hence for a more accurate representation of crime rate we need to adjust the crimes to per captia (1000) for the districts.
 :::
 
 ### 2.3.6 Joining
+
+We will next perform join of the data on `crime_df` with `population_df` to normalize our crime data
 
 #### 2.3.6.1 Join with Population Data
 
@@ -451,6 +538,8 @@ crime_df_mys <- bind_rows(crime_df_mys, pokok_sena_rows)
 ```
 
 #### 2.3.6.3 Join with District Boundary
+
+We finish off the join with a join with our spatial dataset `mys_sf`.
 
 ```{r}
 crime_df_mys <- crime_df_mys %>%
@@ -503,9 +592,15 @@ choro_map <- tm_shape(crime_df_mys_grp) +
 tmap_arrange(og_choro_map, choro_map, ncol = 2)
 ```
 
+::: callout-note
+#### Much better!
+
+Note how much more insights we can extract from our adjusted crime choro plot. The district with population still seem to be higher in crime however we can also identify other clusters i.e. several cold spots in Kelantan etc.
+:::
+
 ### 2.3.8 Correlation Plot
 
-Next we take a quick look at how correlated the data are with across the various types of Crimes
+Next we take a quick look at how correlated the data are with across the various types of crimes
 
 ```{r}
 piv_crime_df_mys <- crime_df_mys %>%
@@ -527,7 +622,7 @@ corrplot.mixed(cor(st_drop_geometry(piv_crime_df_mys)[, 4:15]),
                tl.cex = 0.5)
 ```
 
-During the EDA we have noted that some crimes such as `robbery_gang_armed` tend are typically really low in record. Hence to further narrow our susbequent analysis we will group robbery as one category and vehicle theft as the another.
+During the EDA we have noted that some crimes such as `robbery_gang_armed` tend are typically really low in record. Hence to further narrow our subsequent analysis we will group robbery as one category and vehicle theft as the other since they are highly correlated.
 
 ```{r}
 piv_crime_df_mys <- piv_crime_df_mys %>%
@@ -546,7 +641,7 @@ piv_crime_df_mys <- piv_crime_df_mys %>%
 piv_crime_df_mys
 ```
 
-The final crime correlation should look like the following
+The final crime type correlation matrix should look like the following.
 
 ```{r}
 corrplot.mixed(cor(st_drop_geometry(piv_crime_df_mys)[, 4:10]),
@@ -559,15 +654,15 @@ corrplot.mixed(cor(st_drop_geometry(piv_crime_df_mys)[, 4:10]),
                tl.cex = 0.5)
 ```
 
-::: callout-ntoe
+::: callout-note
 #### Initial Analysis
 
-Across the board it seems like only `robbery` have high correlation with `vehicle_theft`
+Across the board it seems like only `robbery` have high correlation with `vehicle_theft`. However we will not be dropping either as they are key variables we would like extract insights from.
 :::
 
 ## 2.4 Data Enrichment
 
-To further enrich our analysis we decided include our data with several more relevant datasets which may affect crime rates such labour participation rates, poverty and income inequality by district
+To further enrich our analysis we will incoporate several socio-economic data which may potentially influence/affect crime rates such labour participation rates, poverty and income inequality by district
 
 ### 2.4.1 State Wrangling
 
@@ -584,6 +679,8 @@ unique(inequality_df$state)
 print("Unique states in labour_df:")
 unique(labour_df$state)
 ```
+
+Similarly we prep the data by transforming the data and filtering out east Malaysia
 
 ```{r}
 poverty_df <- poverty_df %>%
@@ -627,7 +724,7 @@ sort(unique(labour_df$year))
 ```
 
 ::: callout-note
-#### Data Issues
+#### Critical Data Issues
 
 From the data we identified 2 issues: 1. Poverty and Inequality data is missing years 2020 and 2021 2. Labour data is missing PERLIS, KUALA LUMPUR and PUTRAJAYA
 :::
@@ -636,7 +733,11 @@ From the data we identified 2 issues: 1. Poverty and Inequality data is missing 
 
 #### 2.4.2.1 Filling Year Data
 
-Since years 2020 and 2021 are missing from data set, we will map to prior or the next year: - 2020 -\> 2019 - 2021 -\> 2022
+Since years 2020 and 2021 are missing from data set, we will map to prior or the next year:
+
+-   2020 -\> 2019
+
+-   2021 -\> 2022
 
 ```{r}
 poverty_rows <- poverty_df %>%
@@ -652,14 +753,14 @@ unique(inequality_df$year)
 
 #### 2.4.2.2 State-District Mismatch
 
-Creating rows for state-district
+Similarly we will have to wrangle for District level too.
 
 ```{r}
 poverty_df <- poverty_df %>% mutate(state_district = paste(state, district, sep = "-"))
 inequality_df <- inequality_df %>% mutate(state_district = paste(state, district, sep = "-"))
 ```
 
-Since the data for inequality comes from the same ministry and the districts are the same we will only be checking for Poverty
+Since the data for inequality comes from the same ministry and the districts are the same we will only be checking for Poverty.
 
 ```{r}
 state_district_poverty <- unique(poverty_df$state_district)
@@ -675,6 +776,8 @@ print(missing_in_poverty)
 ```
 
 #### 2.4.2.3 Re-Mapping Districts
+
+This step is getting tedious, but still, very crucial.
 
 ```{r}
 poverty_df <- poverty_df %>%
@@ -729,6 +832,8 @@ inequality_df
 
 #### 2.4.3.1 State-District Mismatch
 
+No change as with above.
+
 ```{r}
 labour_df <- labour_df %>% mutate(state_district = paste(state, district, sep = "-"))
 ```
@@ -775,13 +880,20 @@ labour_df
 ::: callout-note
 ##### Missing labour data
 
-However we do not have labor data for the following state-districts, hence we will use the national average: "PERLIS-PERLIS" "KUALA LUMPUR-WP. KUALA LUMPUR" "KUALA LUMPUR-W.P. PUTRAJAYA"
+However we do not have labour data for the following state-districts, hence we will be using the national average for:
+
+1.  "PERLIS-PERLIS"
+
+2.  "KUALA LUMPUR-WP. KUALA LUMPUR"
+
+3.  "KUALA LUMPUR-W.P. PUTRAJAYA"
 :::
 
 ### 2.4.4 Joining
 
 #### 2.4.4.1 Join with Poverty, Inequality and Labour
 
+We join the other aspatial data with our spatial crime dataframe.
 
 ```{r}
 piv_full_df_mys <- piv_crime_df_mys %>%
@@ -795,6 +907,8 @@ piv_full_df_mys
 
 #### 2.4.4.2 Data Subsitution (Labour)
 
+Similar to crime, labour force will also need to be adjusted to the districts population for a more accurate representation.
+
 ```{r}
 piv_full_df_mys <- piv_full_df_mys %>% 
   mutate(lf = lf/population,
@@ -803,6 +917,8 @@ piv_full_df_mys <- piv_full_df_mys %>%
          lf_outside = lf_outside/population) %>%
   select(-population)
 ```
+
+Here we will be substituting the national average for the previously highlighted missing data from the labour dataset
 
 ```{r}
 target_states <- c("PERLIS", "KUALA LUMPUR")
@@ -834,6 +950,8 @@ piv_full_df_mys <- piv_full_df_mys %>%
 
 #### 2.4.4.3 Aggregate all Years
 
+We will keep the year for filtering our application, hence we will also create an aggregate the data across the 4 years (2019 - 2022)
+
 ```{r}
 piv_full_df_mys_agg <- piv_full_df_mys %>%
   group_by(state, district) %>%
@@ -861,8 +979,9 @@ piv_full_df_mys <- bind_rows(piv_full_df_mys, piv_full_df_mys_agg)
 unique(piv_full_df_mys$year)
 ```
 
-
 ## 2.5 Data Selection
+
+To simplify our subsequent analysis and fine tune our clustering we will be checking for any highly correlated non-crime data and remove them for clustering.
 
 ### 2.5.1 Visualizing the Correlation of Data
 
@@ -879,8 +998,11 @@ corrplot.mixed(cor(st_drop_geometry(piv_full_df_mys %>% filter(year == 0))[, 4:2
 
 ### 2.5.2 Final Selection
 
-Since the variable `ep_ratio` is highly correlated with `lf`, `lf_employed`, `lf_outside` and `p_rate` we can drop them from the dataframe
-And u_rate to `lf_unemployed`
+Since the variable
+
+1.  `ep_ratio` is highly correlated (\>0.8) with `lf`, `lf_employed`, `lf_outside` and `p_rate` we can drop them from the dataframe. (Employment ratio is much more intutive too)
+
+2.  `u_rate` is highly correlated (\>0.8) with `lf_unemployed` we can drop it too.
 
 ```{r}
 piv_df_mys <- piv_full_df_mys %>%
@@ -903,6 +1025,8 @@ corrplot.mixed(cor(st_drop_geometry(piv_df_mys %>% filter(year == 0))[, 5:16]),
                tl.cex = 0.5)
 ```
 
+Looks much better, now lets save it as `rds`.
+
 ```{r}
 write_rds(piv_df_mys, "./data/rds/pivot_df.rds")
 ```
@@ -913,9 +1037,13 @@ piv_df_mys <- read_rds("./data/rds/pivot_df.rds")
 
 # 3. Analysis Preparations
 
+We are almost there, but before we can start clustering our data, we should take a quick glance at the data.
+
 ## 3.1 Variable Exploration
 
 ### 3.1.1 Data Standardisation
+
+We create a standardised version of the data with `min-max` scaling to ensure all the data are normalized between 0.0 - 1.0.
 
 ```{r}
 piv_df_mys.all <- piv_df_mys %>% filter(year == 0)
@@ -933,8 +1061,9 @@ head(clust_vars, 10)
 
 ### 3.1.2 Histograms
 
-::: panel-tabset
+In the following we will take a look at each of the variables distribution as `Histogram`, `Density` and `Boxplot`.
 
+::: panel-tabset
 #### Original
 
 ```{r}
@@ -968,12 +1097,11 @@ for (col in colnames(clust_vars)) {
 
 grid.arrange(grobs = hist_list, ncol = 4, nrow = 3)
 ```
-::: 
+:::
 
 ### 3.1.3 Density Plot
 
 ::: panel-tabset
-
 #### Original
 
 ```{r}
@@ -1007,12 +1135,11 @@ for (col in colnames(clust_vars)) {
 
 grid.arrange(grobs = hist_list, ncol = 4, nrow = 3)
 ```
-::: 
+:::
 
 ### 3.1.4 Boxplots
 
 ::: panel-tabset
-
 #### Original
 
 ```{r}
@@ -1046,22 +1173,22 @@ for (col in colnames(clust_vars)) {
 
 grid.arrange(grobs = hist_list, ncol = 4, nrow = 3)
 ```
-::: 
+:::
 
 ## 3.2 Selecting No. of Clusters
 
-### 3.2.1 Compute NB Clust
+Next we will be using the NbClust package to help us determine the number of clusters with the best clustering scheme from the different results obtained by varying all combinations of number of clusters, distance measures, and clustering methods (Including gap stat).
+
+### 3.2.1 Compute NbClust
 
 ```{r}
 set.seed(12345)
 nbc <- NbClust(clust_vars, distance = "euclidean", min.nc = 5, max.nc = 10, method = "ward.D")
 ```
 
-
 ### 3.2.2 Visualizing NB Clust
 
 ::: panel-tabset
-
 #### Avg Silhouette Width
 
 ```{r}
@@ -1081,13 +1208,23 @@ fviz_nbclust(clust_vars, FUNcluster = hcut, method = "gap_stat", k.max = 10)
 ```
 :::
 
+::: callout-note
+### No. 7 seems best
+
+From NbClust results it seem like 7 clustered is favored by 9 methods, however the number of cluster can be adjusted within the actual Shiny Application.
+:::
+
 ## 3.3 Hierarchical Clustering
+
+We will set our number of cluster for consistency across the subsequent clustering we will be doing.
 
 ```{r}
 n_clust = 7
 ```
 
-### 3.3.1 Compute Prox Mat
+### 3.3.1 Compute pair-wise distance
+
+Next we will calculate the pairwise Euclidean distances between rows of the `clust_vars` data frame .
 
 ```{r}
 proxmat <- dist(clust_vars, method = 'euclidean')
@@ -1108,7 +1245,15 @@ ac <- function(x) {
 map_dbl(m, ac)
 ```
 
+::: callout-note
+##### ward.D method
+
+A higher average silhouette width indicates better-defined clusters. In this case, Ward's method seems to produce the best clustering solution based on the average silhouette width.
+:::
+
 #### 3.3.2.2 Perform Clustering
+
+We will perform a standard Hierarchical clustering with the `ward.D` method.
 
 ```{r}
 clust_method <- 'ward.D'
@@ -1146,7 +1291,6 @@ heatmaply(normalize(data.matrix(clust_vars)),
           )
 ```
 
-
 ##### Cluster
 
 ```{r}
@@ -1174,9 +1318,17 @@ hclust_ward_plot
 ```
 :::
 
+::: callout-note
+#### Out-of-the-Box Spatially Relations
+
+The clusters in general seem somewhat related among it's immediate neighbour which is actually a good sign, it shows there are some form of spatial relation between crime patterns and their geographic localion.
+:::
+
 ### 3.3.3 Compute Cluster (Geo Constrained)
 
 #### 3.3.3.1 Compute distmat
+
+We will need to compute the distance matrix, a specific format required for spatial analysis.
 
 ```{r}
 dist <- st_distance(piv_df_mys.all, piv_df_mys.all)
@@ -1185,11 +1337,15 @@ distmat <- as.dist(dist)
 
 #### 3.3.3.2 Compute Choicalpha
 
+Next we use `choicealpha` to determine the optimal threshold value (alpha) for defining neighbors based on distance. It considers various alpha values and selects the one that minimizes the number of isolated nodes and maximizes the number of clusters.
+
 ```{r}
 cr <- choicealpha(proxmat, distmat, range.alpha = seq(0, 1, 0.1), K=n_clust, graph = TRUE)
 ```
 
 #### 3.3.3.3 Perform Clustering
+
+The threshold seem to be crossed at 0.1, hence we will be using that for our geographically constrained clustering.
 
 ```{r}
 hclust_geo <- hclustgeo(proxmat, distmat, alpha = 0.1)
@@ -1232,15 +1388,19 @@ hclust_geo_plot <- tm_shape(hclust_geo_cluster) +
 
 hclust_geo_plot
 ```
+:::
 
-##### Comparison
+#### 3.3.3.5 Comparison
+
+Lets put both cluster side-by-side. Both clustering results seems very similar, partly due to the low alpha value. But overall the clustering seems me coherenet as compared to the standard clusterin.
 
 ```{r}
 tmap_arrange(hclust_ward_plot, hclust_geo_plot, ncol = 2)
 ```
-:::
 
 ## 3.4 Skater Clustering
+
+We will also be attempting cluster using the SKATER method with MST and see if we can incoporate it into our Shiny application.
 
 ### 3.4.1 Generating Neighbours
 
@@ -1248,8 +1408,6 @@ tmap_arrange(hclust_ward_plot, hclust_geo_plot, ncol = 2)
 nb <- poly2nb(piv_df_mys.all)
 summary(nb)
 ```
-
-3 Disjoint 1: MainLand 2: Langkawi 3: Pulau Pinang
 
 ```{r}
 coords <- st_coordinates(st_centroid(st_geometry(piv_df_mys.all)))
@@ -1261,7 +1419,21 @@ plot(nb,
      add=TRUE)
 ```
 
+::: callout-note
+#### Note on disjoint
+
+3 Disjoint Subgraphs
+
+1.  MainLand
+
+2.  Langkawi (Region with no links)
+
+3.  Pulau Pinang
+:::
+
 ### 3.4.2 Fixing Neighbours
+
+In order to create a complete MST we have to address the issue above.
 
 ```{r}
 components <- n.comp.nb(nb)
@@ -1273,7 +1445,7 @@ piv_df_mys.all$state_district[which(components$comp.id == 3)]
 
 #### 3.4.2.1 Langkawi
 
-Given that there are water routes to Langkawi from Kuala Perlis, Kuala Kedah and Penang we will add that in
+Given that there are water routes to Langkawi from Kuala Perlis, Kuala Kedah and Penang we will add them into Langkawi neighbours
 
 ![](assets/ferry_lanes.jpeg)
 
@@ -1293,7 +1465,11 @@ nb[[71]] <- c(nb[[71]], as.integer(17))
 
 #### 3.4.2.2 Pulau Pinang
 
-For Penang island we will be mapping by the 2 land links available 1. Timur Laut -\> S.P. Tengah 2. Barat Daya -\> S.P. Selatan
+For Penang island we will be mapping by the 2 land links available
+
+1.  Timur Laut -\> S.P. Tengah
+
+2.  Barat Daya -\> S.P. Selatan
 
 ![](assets/penang_land_link.png)
 
@@ -1332,9 +1508,13 @@ plot(nb,
      add=TRUE)
 ```
 
+The graph is now no longer disjoint and we can proceed with computing our MST.
+
 ### 3.4.3 Compute MST
 
 #### 3.4.3.1 Compute `nb` Weights
+
+Next we create spatial weights matrix using the neighbor list `nb` and the edge costs `lcosts`.
 
 ```{r}
 lcosts <- nbcosts(nb, clust_vars)
@@ -1345,6 +1525,8 @@ summary(clust_vars.w)
 ```
 
 #### 3.4.3.2 Generate MST
+
+Constructs a minimum spanning tree (MST) using the spatial weights matrix `clust_vars.w` with the minimum edge weight
 
 ```{r}
 clust_vars.mst <- mstree(clust_vars.w)
@@ -1363,6 +1545,8 @@ plot.mst(clust_vars.mst,
 ```
 
 ### 3.4.4 Compute Cluster
+
+Next we perform spatial clustering on the data using the computed mst. The `skater` function divides the MST into clusters based on edge cuts.
 
 ```{r}
 clust <- spdep::skater(edges = clust_vars.mst[,1:2], 
@@ -1417,6 +1601,7 @@ skater_plot
 
 ## 3.5 Intepreting Results
 
+To better understand the crime patterns across West Malaysia, we will utilize a range of visualizations such as parallel coordinates, cluster profiling with barcharts and heatmaps
 
 ### 3.5.1 Comparing Clusters
 
@@ -1426,10 +1611,17 @@ skater_plot
 tmap_arrange(hclust_ward_plot, hclust_geo_plot, skater_plot, ncol = 3)
 ```
 
-### 3.5.2 Parral Coordinates (Crime)
+::: callout-note
+#### Skater is a No-go
+
+The skater clustering technique, appears to be overly reliant on spatial proximity in this case. While it successfully groups geographically contiguous regions, it may not capture the crime patterns. This limitation could result in less insightful clusters that do not adequately differentiate between areas with similar crime characteristics but different spatial locations. Hence we will be ommitting the use of the skater technique for our R application.
+:::
+
+### 3.5.2 Parallel Coordinates (Crime)
+
+We will be using parallel coordinates to help intepret and highlight the characteristics of the cluster within the application.
 
 ::: panel-tabset
-
 #### H-Cluster (Ward)
 
 ```{r}
@@ -1477,14 +1669,11 @@ ggparcoord(data = skater_cluster.norm,
   facet_grid(~ CLUSTER) + 
   theme(axis.text.x = element_text(angle = 90))
 ```
-
-
 :::
 
 ### 3.5.3 Parral Coordinates (Demographics)
 
 ::: panel-tabset
-
 #### H-Cluster (Ward)
 
 ```{r}
@@ -1536,8 +1725,9 @@ ggparcoord(data = skater_cluster.norm,
 
 ### 3.5.4 Cluster Profiling
 
-::: panel-tabset
+We will also be profiling the different cluster with a comparison with barcharts of the different crime types (per 1000 capita) as well as interactive heatmap to see the bigger picture.
 
+::: panel-tabset
 #### H-Cluster (Ward)
 
 ```{r}
@@ -1552,7 +1742,6 @@ hclust_ward_prof <- hclust_ward_cluster %>%
             mean_theft_other = mean(theft_other),
             mean_vehicle_theft = mean(vehicle_theft))
 ```
-
 
 ```{r}
 #| fig-width: 10
@@ -1595,7 +1784,6 @@ hclust_geo_prof <- hclust_geo_cluster %>%
             mean_vehicle_theft = mean(vehicle_theft))
 ```
 
-
 ```{r}
 #| fig-width: 10
 #| fig-height: 5
@@ -1637,7 +1825,6 @@ skater_prof <- skater_cluster %>%
             mean_vehicle_theft = mean(vehicle_theft))
 ```
 
-
 ```{r}
 #| fig-width: 10
 #| fig-height: 5
@@ -1663,21 +1850,155 @@ heatmaply(as.matrix(skater_prof[, 2:ncol(skater_prof)]),
           xlab = "Crime Indicators",
           ylab = "Clusters")
 ```
+:::
 
-::: 
+# 4. UI Storyboard
 
-# 4. App Story Board
+## 4.1 Flow
 
-## 4.1 Overview
+For the presentation flow of my application it is structured it as such: 1. Variable Exploration: For this section the user can explore the distribution of the variables in different type of plots 2. Cluster Configuration: Next the user can use the NbClust tool provided to make informed decision on the no. of clusters to use 3. Cluster Results: Where the actual clustering happens, the cluster will be displayed for the user for their configuration with other chart aids 4. Further Analysis: Finally the user will be able to analyse and further extract insights from the clustering with parallel coords and cluster profiles
 
 ## 4.2 Variable Exploration
 
+In this section user can explore the different variables used for clustering and various plot types such Histogram, Density and Boxplot
+
+Input Parameters:
+
+1.  Year: Year filter on the data
+
+2.  State: State filter on the data
+
+3.  District: District filter on the data
+
+4.  Plot type: Type of plot to use
+
+5.  Data Standardisation: Toggle data standardisation
+
+Output:
+
+1.  A facet plot of variables distribution
+
+### 4.2.1 Histogram
+
+![](assets/ve_1.png)
+
+### 4.2.2 Density
+
+![](assets/ve_2.png)
+
+### 4.2.3 Boxplot w/ Standardisation
+
+![](assets/ve_3.png)
+
 ## 4.3 Cluster Configuration
+
+In this section user can experiment and decide how they would like to configure their cluster subsequently.
+
+Input Parameters:
+
+1.  Year: Year filter on the data
+
+2.  Style: NbClust or Fviz chart to plot
+
+3.  Method: Method used for specifc style
+
+4.  Min Cluster (Only NbClust): Minimum no. of cluster
+
+Output:
+
+1.  Charts/Results from the cluster analysis methods
+
+### 4.3.1 NbClust
+
+![](assets/cc_1.png)
+
+### 4.3.2 Fiviz (Gap Stats)
+
+![](assets/cc_2.png)
 
 ## 4.4 Cluster Results
 
+In this section user can compute the cluster base on the configuration they have entered.
+
+Input Parameters:
+
+1.  Year: Year filter on the data
+
+2.  No. of Cluster: Indicate the no. of cluster to compute
+
+3.  Clustering Method: Hierarchical and Geographically-Constrained Hierarchical (GeoClust) clustering available as well as comparison
+
+4.  Method (Only Hierarchical): Clustering method
+
+5.  Style (Only Hierarchical): Clustering on Map or Heatmap option
+
+6.  Choice Alpha: Configure alpha threshold for Geographically-Constrained clustering
+
+Output:
+
+1.   Clusters plotted on the map of West Malaysia
+
+2.  Dendogram/Choicealpha Chart
+
+### 4.4.1 Hierarchical Clustering
+
+![](assets/cr_2.png)
+
+### 4.4.2 Geographically Constrained Clustering
+
+![](assets/cr_1.png)
+
+### 4.4.3 Hierarchical Clustering (Heatmaply)
+
+![](assets/cr_3.png)
+
+### 4.4.4 Cluster Comparison
+
+![](assets/cr_4.png)
+
 ## 4.5 Further Analysis
 
-(Story Board)\[https://giniceseah.netlify.app/posts/2021-07-31-storyboard/\]
+In this section user will be able to further intepret the results of the clustering with the aid of individual cluster profiles and the parallel coordinates.
+
+Input Parameters:
+
+1.  Cluster Result: Clustering result to analyse
+
+2.  Style: Indicate style of main plot; Cluster profile (Barcharts) or Heatmap
+
+3.  Parallel Coordinates: Crime or Demographic option
+
+4.  Boxplot (For Par Coords): Include or omit boxplot
+
+5.  Standardised (For Par Coords): Indicate if plotted data should be standardised (min-max)
+
+Output:
+
+1.  Cluster profile in either Barchart or Heatmap
+
+2.  Parallel Coordinates of Crime/Demographic by Cluster
+
+### 4.5.1 Cluster Profile & Para Coord
+
+![](assets/fa_1.png)
+
+### 4.5.2 Heatmap & Para Coord
+
+![](assets/fa_2.png)
 
 # 5. Reflection
+
+## 5.1 Data Wrangling
+
+Eyeing the data from the site, we presume wrangling would be straightforward however, data cleaning and preparation process proved to be more tedious than anticipated due to inconsistencies in district names and the raw nature of the crime data. Normalizing the crime data by incorporating population data was essential to obtain meaningful insights.
+
+## 5.2 Skater Clustering
+
+While spatial clustering techniques like Skater can be effective in certain cases, it can vary depending on the specific data. In our case, the Skater clustering results were somewhat limited, primarily identifying geographically contiguous clusters. This highlights the importance of exploring multiple clustering techniques and evaluating their outputs to determine the best technique for our usecase.
+
+Skater (Right) vs H-Clust, K:13
+![](assets/vs_skater.png)
+
+## 5.3 Storybaording
+
+The process of developing a compelling story board took up quite a bit of time, as there was quite fair bit that could be done with clustering. However the scope and flow is arguably more important, coming up with a flow that delivers impactful findings and value to user is more crucial than the amount of charts visualized.
