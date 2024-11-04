@@ -1,10 +1,10 @@
 ---
 title: "In-class Exercise 12"
 author: "Jeffery Lau"
-date: 10-28-2024
+date: 11-04-2024
 date-modified: "last-modified"
 description: |
-  In this exercise we learn how to work with geographically weighted predictive model.
+  In this exercise we learn to perform data prepareation for geographically weighted predictive model.
 categories:
   - In-class
 format:
@@ -14,7 +14,7 @@ execute:
   eval: true
   echo: true
   warning: false
-  freeze: false
+  freeze: true
 ---
 
 # 1. Setup
@@ -23,6 +23,7 @@ execute:
 pacman::p_load(sf, tmap, tidyverse, httr, performance)
 ```
 
+## 1.1 Bind realis data
 
 ```{r}
 file_list <- list.files(path = "data/aspatial",
@@ -33,7 +34,6 @@ realise_data <- file_list %>%
   map_dfr(read_csv)
 ```
 
-
 ```{r}
 condo_resale <- realise_data %>%
   mutate(`Sale Date` = dmy(`Sale Date`)) %>%
@@ -41,7 +41,76 @@ condo_resale <- realise_data %>%
           `Property Type` == "Condominium")
 ```
 
+## 1.2 Reverse Geocode
+
 ```{r}
-condo_resale
+postcode <- unique(condo_resale$`Postal Code`)
+```
+
+```{r}
+#| eval: false
+
+url <- "https://onemap.gov.sg/api/common/elastic/search"
+found <- data.frame()
+not_found <- data.frame()
+
+#for (postcode in postcode) {
+#  query <- list('searchVal'=postcode, 'returnGeom'='Y',
+#                'getAddrDetails'='Y', 'pageNum'='1')
+#  res <- GET(url,query=query)
+#  if((content(res)$found)!=0){
+#    found <- rbind(found, data.frame(content(res))[4:13])
+#  } else {notfound = data.frame(postcode)}
+#  
+#}
+```
+
+```{r}
+#| eval: false
+
+write_rds(found, "./data/rds/found")
+write_rds(not_found, "./data/rds/not_found")
+```
+
+```{r}
+found <- read_rds("./data/rds/found")
+not_found <- read_rds("./data/rds/not_found")
+```
+
+
+```{r}
+found_new <- found %>%
+  select(c(6:8)) %>%
+  rename(POSTAL = `results.POSTAL`,
+         XCOORD = `results.X`,
+         YCOORD = `results.Y`)
+```
+
+```{r}
+#| echo: false
+
+condo_resale_geocoded <- left_join(
+  condo_resale, found_new,
+  by = c('Postal Code' = 'POSTAL')
+)
+```
+
+```{r}
+condo_resale_sf <- st_as_sf(condo_resale_geocoded,
+                            coords= c("XCOORD", "YCOORD"),
+                            crs = 3414)
+```
+
+## 1.3 Jitter Points
+
+```{r}
+overlapping_points <- condo_resale_sf %>%
+  mutate(overlap = lengths(st_equals(., .)) > 1)
+overlapping_points
+```
+
+```{r}
+condo_resale_sf <- condo_resale_sf %>%
+  st_jitter(amount = 2)
 ```
 
