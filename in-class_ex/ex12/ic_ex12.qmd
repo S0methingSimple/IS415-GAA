@@ -1,0 +1,47 @@
+---
+title: "In-class Exercise 12"
+author: "Jeffery Lau"
+date: 10-28-2024
+date-modified: "last-modified"
+description: |
+  In this exercise we learn how to work with geographically weighted predictive model.
+categories:
+  - In-class
+format:
+  html:
+    toc: true
+execute: 
+  eval: true
+  echo: true
+  warning: false
+  freeze: false
+---
+
+# 1. Setup
+
+```{r}
+pacman::p_load(sf, tmap, tidyverse, httr, performance)
+```
+
+
+```{r}
+file_list <- list.files(path = "data/aspatial",
+                        pattern = "^realis.*\\.csv$",
+                        full.names = TRUE)
+
+realise_data <- file_list %>%
+  map_dfr(read_csv)
+```
+
+
+```{r}
+condo_resale <- realise_data %>%
+  mutate(`Sale Date` = dmy(`Sale Date`)) %>%
+  filter(`Type of Sale` == "Resale" &
+          `Property Type` == "Condominium")
+```
+
+```{r}
+condo_resale
+```
+

@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Jeffery Lau">
-<meta name="dcterms.date" content="2024-09-23">
-<meta name="description" content="In this exercise we learn how to">
+<meta name="dcterms.date" content="2024-10-21">
+<meta name="description" content="In this exercise we learn how to perform spatially constraint clustering">
 
 <title>Jeff’s 🗺 Adventures - In-class Exercise 10</title>
 <style>
@@ -155,12 +155,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="dropdown-text">Exercise 6</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../../hands-on_ex/ex07/ho_ex07.html">
- <span class="dropdown-text">Exercise 7</span></a>
+    <a class="dropdown-item" href="../../hands-on_ex/ex08/ho_ex08.html">
+ <span class="dropdown-text">Exercise 8 &amp; 9</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../../hands-on_ex/ex08/ho_ex08.html">
- <span class="dropdown-text">Exercise 8</span></a>
+    <a class="dropdown-item" href="../../hands-on_ex/ex10/ho_ex10.html">
+ <span class="dropdown-text">Exercise 10</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="../../hands-on_ex/ex11/ho_ex11.html">
@@ -198,12 +198,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="dropdown-text">Exercise 6</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../../in-class_ex/ex09/ic_ex09.html">
- <span class="dropdown-text">Exercise 9</span></a>
-  </li>  
-        <li>
     <a class="dropdown-item" href="../../in-class_ex/ex10/ic_ex10.html">
  <span class="dropdown-text">Exercise 10</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../in-class_ex/ex11/ic_ex11.html">
+ <span class="dropdown-text">Exercise 11</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../in-class_ex/ex12/ic_ex12.html">
+ <span class="dropdown-text">Exercise 12</span></a>
   </li>  
     </ul>
   </li>
@@ -243,6 +247,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#setup" id="toc-setup" class="nav-link active" data-scroll-target="#setup">1. Setup</a></li>
+  <li><a href="#conventional-clustering" id="toc-conventional-clustering" class="nav-link" data-scroll-target="#conventional-clustering">2. Conventional Clustering</a>
+  <ul class="collapse">
+  <li><a href="#hirearchical-clustering" id="toc-hirearchical-clustering" class="nav-link" data-scroll-target="#hirearchical-clustering">2.1 Hirearchical Clustering</a></li>
+  <li><a href="#appending-sf-to-cluster" id="toc-appending-sf-to-cluster" class="nav-link" data-scroll-target="#appending-sf-to-cluster">2.2 Appending sf to cluster</a></li>
+  <li><a href="#plot-dendogram" id="toc-plot-dendogram" class="nav-link" data-scroll-target="#plot-dendogram">2.3 Plot dendogram</a></li>
+  <li><a href="#plot-clusters" id="toc-plot-clusters" class="nav-link" data-scroll-target="#plot-clusters">2.4 Plot Clusters</a></li>
+  </ul></li>
+  <li><a href="#geographically-constrained-clustering" id="toc-geographically-constrained-clustering" class="nav-link" data-scroll-target="#geographically-constrained-clustering">3. Geographically Constrained Clustering</a>
+  <ul class="collapse">
+  <li><a href="#computing-spatial-dist-mat" id="toc-computing-spatial-dist-mat" class="nav-link" data-scroll-target="#computing-spatial-dist-mat">3.1 Computing Spatial Dist Mat</a></li>
+  <li><a href="#visualizing-neighbours" id="toc-visualizing-neighbours" class="nav-link" data-scroll-target="#visualizing-neighbours">3.2 Visualizing Neighbours</a></li>
+  <li><a href="#compute-edge-cost-and-visualzie-mst" id="toc-compute-edge-cost-and-visualzie-mst" class="nav-link" data-scroll-target="#compute-edge-cost-and-visualzie-mst">3.3 Compute edge cost and visualzie MST</a></li>
+  <li><a href="#incomprate-cost-into-weight-objects" id="toc-incomprate-cost-into-weight-objects" class="nav-link" data-scroll-target="#incomprate-cost-into-weight-objects">3.4 Incomprate cost into weight objects</a></li>
+  <li><a href="#compute-mst" id="toc-compute-mst" class="nav-link" data-scroll-target="#compute-mst">3.5 Compute MST</a></li>
+  <li><a href="#visualize-mst" id="toc-visualize-mst" class="nav-link" data-scroll-target="#visualize-mst">3.6 Visualize MST</a></li>
+  <li><a href="#compute-cluster-using-skater" id="toc-compute-cluster-using-skater" class="nav-link" data-scroll-target="#compute-cluster-using-skater">3.7 Compute cluster using SKATER</a></li>
+  <li><a href="#visualize-the-skater-tree" id="toc-visualize-the-skater-tree" class="nav-link" data-scroll-target="#visualize-the-skater-tree">3.8 Visualize the SKATER tree</a></li>
+  <li><a href="#visualize-cluster" id="toc-visualize-cluster" class="nav-link" data-scroll-target="#visualize-cluster">3.9 Visualize Cluster</a></li>
+  </ul></li>
+  <li><a href="#clustgeo-method" id="toc-clustgeo-method" class="nav-link" data-scroll-target="#clustgeo-method">4. ClustGeo Method</a>
+  <ul class="collapse">
+  <li><a href="#computing-spatial-dist-mat-1" id="toc-computing-spatial-dist-mat-1" class="nav-link" data-scroll-target="#computing-spatial-dist-mat-1">## 4.1 Computing Spatial Dist Mat</a></li>
+  <li><a href="#cluster-graph" id="toc-cluster-graph" class="nav-link" data-scroll-target="#cluster-graph">4.2 Cluster graph</a></li>
+  <li><a href="#clustgeo-clustering" id="toc-clustgeo-clustering" class="nav-link" data-scroll-target="#clustgeo-clustering">4.3 Clustgeo Clustering</a></li>
+  <li><a href="#parallel-coordinates" id="toc-parallel-coordinates" class="nav-link" data-scroll-target="#parallel-coordinates">4.4 Parallel Coordinates</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -259,7 +289,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div>
   <div class="description">
-    <p>In this exercise we learn how to</p>
+    <p>In this exercise we learn how to perform spatially constraint clustering</p>
   </div>
 </div>
 
@@ -276,14 +306,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">September 23, 2024</p>
+      <p class="date">October 21, 2024</p>
     </div>
   </div>
   
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">October 28, 2024</p>
+      <p class="date-modified">November 4, 2024</p>
     </div>
   </div>
     
@@ -297,402 +327,177 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="setup" class="level1">
 <h1>1. Setup</h1>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(olsrr, ggstatsplot, sf, tmap, tidyverse, performance, see, sfdep)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(spdep, sp, tmap, sf, ClustGeo, </span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>               cluster, factoextra, NbClust,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>               tidyverse, GGally)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>condo_resale <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/aspatial/Condo_resale_2015.csv"</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>condo_resale_sf <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"data/rds/condo_resale_sf.rds"</span>)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>mpsz <span class="ot">=</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"data/geospatial"</span>, <span class="at">layer =</span> <span class="st">"MP14_SUBZONE_WEB_PL"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Reading layer `MP14_SUBZONE_WEB_PL' from data source 
-  `/Users/jeffery/Projects/Y4S1/IS415/IS415-GAA/in-class_ex/ex10/data/geospatial' 
-  using driver `ESRI Shapefile'
-Simple feature collection with 323 features and 15 fields
-Geometry type: MULTIPOLYGON
-Dimension:     XY
-Bounding box:  xmin: 2667.538 ymin: 15748.72 xmax: 56396.44 ymax: 50256.33
-Projected CRS: SVY21</code></pre>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>shan_sf <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"./data/rds/shan_sf.rds"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>shan_ict <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"./data/rds/shan_ict.rds"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>mpsz <span class="ot">&lt;-</span> <span class="fu">st_transform</span>(mpsz, <span class="dv">3414</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
+</section>
+<section id="conventional-clustering" class="level1">
+<h1>2. Conventional Clustering</h1>
+<section id="hirearchical-clustering" class="level2">
+<h2 class="anchored" data-anchor-id="hirearchical-clustering">2.1 Hirearchical Clustering</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggcorrmat</span>(condo_resale[, <span class="dv">5</span><span class="sc">:</span><span class="dv">23</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>proxmat <span class="ot">&lt;-</span> <span class="fu">dist</span>(shan_ict, <span class="at">method =</span> <span class="st">'euclidean'</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>hclust_ward <span class="ot">&lt;-</span> <span class="fu">hclust</span>(proxmat, <span class="at">method =</span> <span class="st">'ward.D'</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>groups <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(<span class="fu">cutree</span>(hclust_ward, <span class="at">k=</span><span class="dv">6</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="appending-sf-to-cluster" class="level2">
+<h2 class="anchored" data-anchor-id="appending-sf-to-cluster">2.2 Appending sf to cluster</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>shan_sf_cluster <span class="ot">&lt;-</span> <span class="fu">cbind</span>(shan_sf, </span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>                         <span class="fu">as.matrix</span>(groups)) <span class="sc">%&gt;%</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="st">`</span><span class="at">CLUSTER</span><span class="st">`</span><span class="ot">=</span><span class="st">`</span><span class="at">as.matrix.groups.</span><span class="st">`</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(<span class="dv">3</span><span class="sc">:</span><span class="dv">4</span>, <span class="dv">7</span><span class="sc">:</span><span class="dv">9</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">TS =</span> TS.x)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="plot-dendogram" class="level2">
+<h2 class="anchored" data-anchor-id="plot-dendogram">2.3 Plot dendogram</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(hclust_ward, <span class="at">cex =</span> <span class="fl">0.6</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rect.hclust</span>(hclust_ward, <span class="at">k =</span> <span class="dv">6</span>, <span class="at">border =</span> <span class="fl">2.5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="ic_ex10_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="ic_ex10_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="1152"></p>
 </figure>
 </div>
 </div>
 </div>
+</section>
+<section id="plot-clusters" class="level2">
+<h2 class="anchored" data-anchor-id="plot-clusters">2.4 Plot Clusters</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>condo_mlr <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="at">formula =</span> SELLING_PRICE <span class="sc">~</span> AREA_SQM <span class="sc">+</span> AGE <span class="sc">+</span> PROX_CBD <span class="sc">+</span> PROX_CHILDCARE <span class="sc">+</span> PROX_ELDERLYCARE <span class="sc">+</span> PROX_URA_GROWTH_AREA <span class="sc">+</span> PROX_HAWKER_MARKET <span class="sc">+</span> PROX_KINDERGARTEN <span class="sc">+</span> PROX_MRT <span class="sc">+</span> PROX_PARK <span class="sc">+</span> PROX_PRIMARY_SCH <span class="sc">+</span> PROX_TOP_PRIMARY_SCH <span class="sc">+</span> PROX_SHOPPING_MALL <span class="sc">+</span> PROX_SUPERMARKET <span class="sc">+</span> PROX_BUS_STOP <span class="sc">+</span> NO_Of_UNITS <span class="sc">+</span> FAMILY_FRIENDLY <span class="sc">+</span> FREEHOLD <span class="sc">+</span> LEASEHOLD_99YR, <span class="at">data=</span>condo_resale_sf)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>condo_mlr</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = SELLING_PRICE ~ AREA_SQM + AGE + PROX_CBD + PROX_CHILDCARE + 
-    PROX_ELDERLYCARE + PROX_URA_GROWTH_AREA + PROX_HAWKER_MARKET + 
-    PROX_KINDERGARTEN + PROX_MRT + PROX_PARK + PROX_PRIMARY_SCH + 
-    PROX_TOP_PRIMARY_SCH + PROX_SHOPPING_MALL + PROX_SUPERMARKET + 
-    PROX_BUS_STOP + NO_Of_UNITS + FAMILY_FRIENDLY + FREEHOLD + 
-    LEASEHOLD_99YR, data = condo_resale_sf)
-
-Coefficients:
-         (Intercept)              AREA_SQM                   AGE  
-            543071.4               12688.7              -24566.0  
-            PROX_CBD        PROX_CHILDCARE      PROX_ELDERLYCARE  
-            -78122.0             -333219.0              170950.0  
-PROX_URA_GROWTH_AREA    PROX_HAWKER_MARKET     PROX_KINDERGARTEN  
-             38507.6               23801.2              144098.0  
-            PROX_MRT             PROX_PARK      PROX_PRIMARY_SCH  
-           -322775.9              564487.9              186170.5  
-PROX_TOP_PRIMARY_SCH    PROX_SHOPPING_MALL      PROX_SUPERMARKET  
-              -477.1             -207721.5              -48074.7  
-       PROX_BUS_STOP           NO_Of_UNITS       FAMILY_FRIENDLY  
-            675755.0                -216.2              142128.3  
-            FREEHOLD        LEASEHOLD_99YR  
-            300646.5              -77137.4  </code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ols_regress</span>(condo_mlr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>                                Model Summary                                 
------------------------------------------------------------------------------
-R                            0.807       RMSE                     750537.537 
-R-Squared                    0.652       MSE                571262902261.220 
-Adj. R-Squared               0.647       Coef. Var                    43.160 
-Pred R-Squared               0.637       AIC                       42971.173 
-MAE                     412117.987       SBC                       43081.835 
------------------------------------------------------------------------------
- RMSE: Root Mean Square Error 
- MSE: Mean Square Error 
- MAE: Mean Absolute Error 
- AIC: Akaike Information Criteria 
- SBC: Schwarz Bayesian Criteria 
-
-                                     ANOVA                                       
---------------------------------------------------------------------------------
-                    Sum of                                                      
-                   Squares          DF         Mean Square       F         Sig. 
---------------------------------------------------------------------------------
-Regression    1.515738e+15          19        7.977571e+13    139.648    0.0000 
-Residual      8.089083e+14        1416    571262902261.220                      
-Total         2.324647e+15        1435                                          
---------------------------------------------------------------------------------
-
-                                               Parameter Estimates                                                
------------------------------------------------------------------------------------------------------------------
-               model           Beta    Std. Error    Std. Beta       t        Sig           lower          upper 
------------------------------------------------------------------------------------------------------------------
-         (Intercept)     543071.420    136210.918                   3.987    0.000     275874.535     810268.305 
-            AREA_SQM      12688.669       370.119        0.579     34.283    0.000      11962.627      13414.710 
-                 AGE     -24566.001      2766.041       -0.166     -8.881    0.000     -29991.980     -19140.022 
-            PROX_CBD     -78121.985      6791.377       -0.267    -11.503    0.000     -91444.227     -64799.744 
-      PROX_CHILDCARE    -333219.036    111020.303       -0.087     -3.001    0.003    -551000.984    -115437.089 
-    PROX_ELDERLYCARE     170949.961     42110.748        0.083      4.060    0.000      88343.803     253556.120 
-PROX_URA_GROWTH_AREA      38507.622     12523.661        0.059      3.075    0.002      13940.700      63074.545 
-  PROX_HAWKER_MARKET      23801.197     29299.923        0.019      0.812    0.417     -33674.725      81277.120 
-   PROX_KINDERGARTEN     144097.972     82738.669        0.030      1.742    0.082     -18205.570     306401.514 
-            PROX_MRT    -322775.874     58528.079       -0.123     -5.515    0.000    -437586.937    -207964.811 
-           PROX_PARK     564487.876     66563.011        0.148      8.481    0.000     433915.162     695060.590 
-    PROX_PRIMARY_SCH     186170.524     65515.193        0.072      2.842    0.005      57653.253     314687.795 
-PROX_TOP_PRIMARY_SCH       -477.073     20597.972       -0.001     -0.023    0.982     -40882.894      39928.747 
-  PROX_SHOPPING_MALL    -207721.520     42855.500       -0.109     -4.847    0.000    -291788.613    -123654.427 
-    PROX_SUPERMARKET     -48074.679     77145.257       -0.012     -0.623    0.533    -199405.956     103256.599 
-       PROX_BUS_STOP     675755.044    138551.991        0.133      4.877    0.000     403965.817     947544.272 
-         NO_Of_UNITS       -216.180        90.302       -0.046     -2.394    0.017       -393.320        -39.040 
-     FAMILY_FRIENDLY     142128.272     47055.082        0.056      3.020    0.003      49823.107     234433.438 
-            FREEHOLD     300646.543     77296.529        0.117      3.890    0.000     149018.525     452274.561 
-      LEASEHOLD_99YR     -77137.375     77570.869       -0.030     -0.994    0.320    -229303.551      75028.801 
------------------------------------------------------------------------------------------------------------------</code></pre>
-</div>
-</div>
-<p>will focus on p value for this in class, can have diff options though</p>
-<p>forward stepwise</p>
-<p>stepwise - see which one is more significant first then insert r square is increasing after ea iteration p val help to eliminate base model is alw 0 in forward</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>condo_fw_mlr <span class="ot">&lt;-</span> <span class="fu">ols_step_forward_p</span>(</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  condo_mlr,</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">p_val =</span> <span class="fl">0.05</span>,</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">details =</span> <span class="cn">FALSE</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>condo_fw_mlr</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-                                     Stepwise Summary                                      
------------------------------------------------------------------------------------------
-Step    Variable                   AIC          SBC         SBIC         R2       Adj. R2 
------------------------------------------------------------------------------------------
- 0      Base Model              44449.068    44459.608    40371.745    0.00000    0.00000 
- 1      AREA_SQM                43587.753    43603.562    39510.883    0.45184    0.45146 
- 2      PROX_CBD                43243.523    43264.602    39167.182    0.56928    0.56868 
- 3      PROX_PARK               43177.691    43204.039    39101.331    0.58915    0.58829 
- 4      FREEHOLD                43125.474    43157.092    39049.179    0.60438    0.60327 
- 5      AGE                     43069.222    43106.109    38993.167    0.62010    0.61878 
- 6      PROX_ELDERLYCARE        43046.515    43088.672    38970.548    0.62659    0.62502 
- 7      PROX_SHOPPING_MALL      43020.990    43068.417    38945.209    0.63367    0.63188 
- 8      PROX_URA_GROWTH_AREA    43009.092    43061.788    38933.407    0.63720    0.63517 
- 9      PROX_MRT                42999.058    43057.024    38923.483    0.64023    0.63796 
- 10     PROX_BUS_STOP           42984.951    43048.186    38909.582    0.64424    0.64175 
- 11     FAMILY_FRIENDLY         42981.085    43049.590    38905.797    0.64569    0.64296 
- 12     NO_Of_UNITS             42975.246    43049.021    38900.092    0.64762    0.64465 
- 13     PROX_CHILDCARE          42971.858    43050.902    38896.812    0.64894    0.64573 
- 14     PROX_PRIMARY_SCH        42966.758    43051.072    38891.872    0.65067    0.64723 
------------------------------------------------------------------------------------------
-
-Final Model Output 
-------------------
-
-                                Model Summary                                 
------------------------------------------------------------------------------
-R                            0.807       RMSE                     751998.679 
-R-Squared                    0.651       MSE                571471422208.592 
-Adj. R-Squared               0.647       Coef. Var                    43.168 
-Pred R-Squared               0.638       AIC                       42966.758 
-MAE                     414819.628       SBC                       43051.072 
------------------------------------------------------------------------------
- RMSE: Root Mean Square Error 
- MSE: Mean Square Error 
- MAE: Mean Absolute Error 
- AIC: Akaike Information Criteria 
- SBC: Schwarz Bayesian Criteria 
-
-                                     ANOVA                                       
---------------------------------------------------------------------------------
-                    Sum of                                                      
-                   Squares          DF         Mean Square       F         Sig. 
---------------------------------------------------------------------------------
-Regression    1.512586e+15          14        1.080418e+14    189.059    0.0000 
-Residual      8.120609e+14        1421    571471422208.592                      
-Total         2.324647e+15        1435                                          
---------------------------------------------------------------------------------
-
-                                               Parameter Estimates                                                
------------------------------------------------------------------------------------------------------------------
-               model           Beta    Std. Error    Std. Beta       t        Sig           lower          upper 
------------------------------------------------------------------------------------------------------------------
-         (Intercept)     527633.222    108183.223                   4.877    0.000     315417.244     739849.200 
-            AREA_SQM      12777.523       367.479        0.584     34.771    0.000      12056.663      13498.382 
-            PROX_CBD     -77131.323      5763.125       -0.263    -13.384    0.000     -88436.469     -65826.176 
-           PROX_PARK     570504.807     65507.029        0.150      8.709    0.000     442003.938     699005.677 
-            FREEHOLD     350599.812     48506.485        0.136      7.228    0.000     255447.802     445751.821 
-                 AGE     -24687.739      2754.845       -0.167     -8.962    0.000     -30091.739     -19283.740 
-    PROX_ELDERLYCARE     185575.623     39901.864        0.090      4.651    0.000     107302.737     263848.510 
-  PROX_SHOPPING_MALL    -220947.251     36561.832       -0.115     -6.043    0.000    -292668.213    -149226.288 
-PROX_URA_GROWTH_AREA      39163.254     11754.829        0.060      3.332    0.001      16104.571      62221.936 
-            PROX_MRT    -294745.107     56916.367       -0.112     -5.179    0.000    -406394.234    -183095.980 
-       PROX_BUS_STOP     682482.221    134513.243        0.134      5.074    0.000     418616.359     946348.082 
-     FAMILY_FRIENDLY     146307.576     46893.021        0.057      3.120    0.002      54320.593     238294.560 
-         NO_Of_UNITS       -245.480        87.947       -0.053     -2.791    0.005       -418.000        -72.961 
-      PROX_CHILDCARE    -318472.751    107959.512       -0.084     -2.950    0.003    -530249.889    -106695.613 
-    PROX_PRIMARY_SCH     159856.136     60234.599        0.062      2.654    0.008      41697.849     278014.424 
------------------------------------------------------------------------------------------------------------------</code></pre>
-</div>
-</div>
-<p>plot</p>
-<p>ideally have curve not flat</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(condo_fw_mlr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qtm</span>(shan_sf_cluster, <span class="st">"CLUSTER"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="ic_ex10_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="ic_ex10_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
+</section>
+</section>
+<section id="geographically-constrained-clustering" class="level1">
+<h1>3. Geographically Constrained Clustering</h1>
+<section id="computing-spatial-dist-mat" class="level2">
+<h2 class="anchored" data-anchor-id="computing-spatial-dist-mat">3.1 Computing Spatial Dist Mat</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>condo_bw_mlr <span class="ot">&lt;-</span> <span class="fu">ols_step_backward_p</span>(</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  condo_mlr,</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">p_val =</span> <span class="fl">0.05</span>,</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">details =</span> <span class="cn">FALSE</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>condo_bw_mlr</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>shan.nb <span class="ot">&lt;-</span> <span class="fu">poly2nb</span>(shan_sf)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(shan.nb)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>
-                                     Stepwise Summary                                      
------------------------------------------------------------------------------------------
-Step    Variable                   AIC          SBC         SBIC         R2       Adj. R2 
------------------------------------------------------------------------------------------
- 0      Full Model              42971.173    43081.835    38896.546    0.65203    0.64736 
- 1      PROX_TOP_PRIMARY_SCH    42969.173    43074.565    38894.518    0.65203    0.64761 
- 2      PROX_SUPERMARKET        42967.567    43067.689    38892.873    0.65193    0.64776 
- 3      PROX_HAWKER_MARKET      42966.461    43061.315    38891.719    0.65172    0.64779 
- 4      LEASEHOLD_99YR          42965.558    43055.141    38890.764    0.65145    0.64777 
- 5      PROX_KINDERGARTEN       42966.758    43051.072    38891.872    0.65067    0.64723 
------------------------------------------------------------------------------------------
+<pre><code>Neighbour list object:
+Number of regions: 55 
+Number of nonzero links: 264 
+Percentage nonzero weights: 8.727273 
+Average number of links: 4.8 
+Link number distribution:
 
-Final Model Output 
-------------------
-
-                                Model Summary                                 
------------------------------------------------------------------------------
-R                            0.807       RMSE                     751998.679 
-R-Squared                    0.651       MSE                571471422208.592 
-Adj. R-Squared               0.647       Coef. Var                    43.168 
-Pred R-Squared               0.638       AIC                       42966.758 
-MAE                     414819.628       SBC                       43051.072 
------------------------------------------------------------------------------
- RMSE: Root Mean Square Error 
- MSE: Mean Square Error 
- MAE: Mean Absolute Error 
- AIC: Akaike Information Criteria 
- SBC: Schwarz Bayesian Criteria 
-
-                                     ANOVA                                       
---------------------------------------------------------------------------------
-                    Sum of                                                      
-                   Squares          DF         Mean Square       F         Sig. 
---------------------------------------------------------------------------------
-Regression    1.512586e+15          14        1.080418e+14    189.059    0.0000 
-Residual      8.120609e+14        1421    571471422208.592                      
-Total         2.324647e+15        1435                                          
---------------------------------------------------------------------------------
-
-                                               Parameter Estimates                                                
------------------------------------------------------------------------------------------------------------------
-               model           Beta    Std. Error    Std. Beta       t        Sig           lower          upper 
------------------------------------------------------------------------------------------------------------------
-         (Intercept)     527633.222    108183.223                   4.877    0.000     315417.244     739849.200 
-            AREA_SQM      12777.523       367.479        0.584     34.771    0.000      12056.663      13498.382 
-                 AGE     -24687.739      2754.845       -0.167     -8.962    0.000     -30091.739     -19283.740 
-            PROX_CBD     -77131.323      5763.125       -0.263    -13.384    0.000     -88436.469     -65826.176 
-      PROX_CHILDCARE    -318472.751    107959.512       -0.084     -2.950    0.003    -530249.889    -106695.613 
-    PROX_ELDERLYCARE     185575.623     39901.864        0.090      4.651    0.000     107302.737     263848.510 
-PROX_URA_GROWTH_AREA      39163.254     11754.829        0.060      3.332    0.001      16104.571      62221.936 
-            PROX_MRT    -294745.107     56916.367       -0.112     -5.179    0.000    -406394.234    -183095.980 
-           PROX_PARK     570504.807     65507.029        0.150      8.709    0.000     442003.938     699005.677 
-    PROX_PRIMARY_SCH     159856.136     60234.599        0.062      2.654    0.008      41697.849     278014.424 
-  PROX_SHOPPING_MALL    -220947.251     36561.832       -0.115     -6.043    0.000    -292668.213    -149226.288 
-       PROX_BUS_STOP     682482.221    134513.243        0.134      5.074    0.000     418616.359     946348.082 
-         NO_Of_UNITS       -245.480        87.947       -0.053     -2.791    0.005       -418.000        -72.961 
-     FAMILY_FRIENDLY     146307.576     46893.021        0.057      3.120    0.002      54320.593     238294.560 
-            FREEHOLD     350599.812     48506.485        0.136      7.228    0.000     255447.802     445751.821 
------------------------------------------------------------------------------------------------------------------</code></pre>
+ 2  3  4  5  6  7  8  9 
+ 5  9  7 21  4  3  5  1 
+5 least connected regions:
+3 5 7 9 47 with 2 links
+1 most connected region:
+8 with 9 links</code></pre>
 </div>
 </div>
-<p>backwards stepwise</p>
-<p>start with full model</p>
+</section>
+<section id="visualizing-neighbours" class="level2">
+<h2 class="anchored" data-anchor-id="visualizing-neighbours">3.2 Visualizing Neighbours</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(condo_bw_mlr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">st_geometry</span>(shan_sf), <span class="at">border=</span><span class="fu">grey</span>(.<span class="dv">5</span>))</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>pts <span class="ot">&lt;-</span> <span class="fu">st_coordinates</span>(<span class="fu">st_centroid</span>(shan_sf))</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(shan.nb, pts, <span class="at">col=</span><span class="st">"blue"</span>, <span class="at">add=</span><span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="ic_ex10_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="ic_ex10_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
+</section>
+<section id="compute-edge-cost-and-visualzie-mst" class="level2">
+<h2 class="anchored" data-anchor-id="compute-edge-cost-and-visualzie-mst">3.3 Compute edge cost and visualzie MST</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>condo_sb_mlr <span class="ot">&lt;-</span> <span class="fu">ols_step_both_p</span>(</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  condo_mlr,</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">p_val =</span> <span class="fl">0.05</span>,</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">details =</span> <span class="cn">FALSE</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>condo_sb_mlr</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>lcosts <span class="ot">&lt;-</span> <span class="fu">nbcosts</span>(shan.nb, shan_ict)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="incomprate-cost-into-weight-objects" class="level2">
+<h2 class="anchored" data-anchor-id="incomprate-cost-into-weight-objects">3.4 Incomprate cost into weight objects</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>shan.w <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(shan.nb, </span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>                   lcosts, </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">style=</span><span class="st">"B"</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(shan.w)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>
-                                       Stepwise Summary                                        
----------------------------------------------------------------------------------------------
-Step    Variable                       AIC          SBC         SBIC         R2       Adj. R2 
----------------------------------------------------------------------------------------------
- 0      Base Model                  44449.068    44459.608    40371.745    0.00000    0.00000 
- 1      AREA_SQM (+)                43587.753    43603.562    39510.883    0.45184    0.45146 
- 2      PROX_CBD (+)                43243.523    43264.602    39167.182    0.56928    0.56868 
- 3      PROX_PARK (+)               43177.691    43204.039    39101.331    0.58915    0.58829 
- 4      FREEHOLD (+)                43125.474    43157.092    39049.179    0.60438    0.60327 
- 5      AGE (+)                     43069.222    43106.109    38993.167    0.62010    0.61878 
- 6      PROX_ELDERLYCARE (+)        43046.515    43088.672    38970.548    0.62659    0.62502 
- 7      PROX_SHOPPING_MALL (+)      43020.990    43068.417    38945.209    0.63367    0.63188 
- 8      PROX_URA_GROWTH_AREA (+)    43009.092    43061.788    38933.407    0.63720    0.63517 
- 9      PROX_MRT (+)                42999.058    43057.024    38923.483    0.64023    0.63796 
- 10     PROX_BUS_STOP (+)           42984.951    43048.186    38909.582    0.64424    0.64175 
- 11     FAMILY_FRIENDLY (+)         42981.085    43049.590    38905.797    0.64569    0.64296 
- 12     NO_Of_UNITS (+)             42975.246    43049.021    38900.092    0.64762    0.64465 
- 13     PROX_CHILDCARE (+)          42971.858    43050.902    38896.812    0.64894    0.64573 
- 14     PROX_PRIMARY_SCH (+)        42966.758    43051.072    38891.872    0.65067    0.64723 
- 15     PROX_KINDERGARTEN (+)       42965.558    43055.141    38890.764    0.65145    0.64777 
----------------------------------------------------------------------------------------------
+<pre><code>Characteristics of weights list object:
+Neighbour list object:
+Number of regions: 55 
+Number of nonzero links: 264 
+Percentage nonzero weights: 8.727273 
+Average number of links: 4.8 
+Link number distribution:
 
-Final Model Output 
-------------------
+ 2  3  4  5  6  7  8  9 
+ 5  9  7 21  4  3  5  1 
+5 least connected regions:
+3 5 7 9 47 with 2 links
+1 most connected region:
+8 with 9 links
 
-                                Model Summary                                 
------------------------------------------------------------------------------
-R                            0.807       RMSE                     751161.087 
-R-Squared                    0.651       MSE                570600646491.087 
-Adj. R-Squared               0.648       Coef. Var                    43.135 
-Pred R-Squared               0.638       AIC                       42965.558 
-MAE                     413583.799       SBC                       43055.141 
------------------------------------------------------------------------------
- RMSE: Root Mean Square Error 
- MSE: Mean Square Error 
- MAE: Mean Absolute Error 
- AIC: Akaike Information Criteria 
- SBC: Schwarz Bayesian Criteria 
-
-                                     ANOVA                                       
---------------------------------------------------------------------------------
-                    Sum of                                                      
-                   Squares          DF         Mean Square       F         Sig. 
---------------------------------------------------------------------------------
-Regression    1.514394e+15          15        1.009596e+14    176.936    0.0000 
-Residual      8.102529e+14        1420    570600646491.087                      
-Total         2.324647e+15        1435                                          
---------------------------------------------------------------------------------
-
-                                               Parameter Estimates                                                
------------------------------------------------------------------------------------------------------------------
-               model           Beta    Std. Error    Std. Beta       t        Sig           lower          upper 
------------------------------------------------------------------------------------------------------------------
-         (Intercept)     459826.675    114616.014                   4.012    0.000     234991.777     684661.574 
-            AREA_SQM      12720.174       368.610        0.581     34.509    0.000      11997.096      13443.252 
-            PROX_CBD     -75676.065      5816.474       -0.258    -13.011    0.000     -87085.870     -64266.259 
-           PROX_PARK     575749.528     65523.382        0.151      8.787    0.000     447216.504     704282.552 
-            FREEHOLD     360203.286     48768.851        0.140      7.386    0.000     264536.552     455870.021 
-                 AGE     -24697.719      2752.751       -0.167     -8.972    0.000     -30097.615     -19297.824 
-    PROX_ELDERLYCARE     182435.081     39910.469        0.088      4.571    0.000     104145.268     260724.893 
-  PROX_SHOPPING_MALL    -224513.955     36588.872       -0.117     -6.136    0.000    -296288.004    -152739.906 
-PROX_URA_GROWTH_AREA      40145.474     11758.824        0.062      3.414    0.001      17078.942      63212.007 
-            PROX_MRT    -311753.202     57670.032       -0.119     -5.406    0.000    -424880.814    -198625.590 
-       PROX_BUS_STOP     711858.014    135420.040        0.140      5.257    0.000     446213.188     977502.840 
-     FAMILY_FRIENDLY     144034.218     46874.683        0.057      3.073    0.002      52083.153     235985.283 
-         NO_Of_UNITS       -236.270        88.032       -0.051     -2.684    0.007       -408.956        -63.583 
-      PROX_CHILDCARE    -336118.857    108331.761       -0.088     -3.103    0.002    -548626.339    -123611.374 
-    PROX_PRIMARY_SCH     162183.897     60202.895        0.063      2.694    0.007      44087.730     280280.063 
-   PROX_KINDERGARTEN     141915.768     79726.155        0.029      1.780    0.075     -14477.927     298309.464 
------------------------------------------------------------------------------------------------------------------</code></pre>
+Weights style: B 
+Weights constants summary:
+   n   nn       S0       S1        S2
+B 55 3025 76267.65 58260785 522016004</code></pre>
 </div>
 </div>
+</section>
+<section id="compute-mst" class="level2">
+<h2 class="anchored" data-anchor-id="compute-mst">3.5 Compute MST</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(condo_sb_mlr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="ic_ex10_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>shan.mst <span class="ot">&lt;-</span> <span class="fu">mstree</span>(shan.w)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</div>
-</div>
-<p>model selection</p>
-<p>model is the wrapper for the stepwise need to use it to compare with lm()</p>
+</section>
+<section id="visualize-mst" class="level2">
+<h2 class="anchored" data-anchor-id="visualize-mst">3.6 Visualize MST</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>metric <span class="ot">&lt;-</span> <span class="fu">compare_performance</span>(condo_mlr,</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>                              condo_fw_mlr<span class="sc">$</span>model,</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>                              condo_bw_mlr<span class="sc">$</span>model,</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>                              condo_sb_mlr<span class="sc">$</span>model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">st_geometry</span>(shan_sf), </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">border=</span><span class="fu">gray</span>(.<span class="dv">5</span>))</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot.mst</span>(shan.mst, </span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>         pts, </span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">col=</span><span class="st">"blue"</span>, </span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">cex.lab=</span><span class="fl">0.7</span>, </span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">cex.circles=</span><span class="fl">0.005</span>, </span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">add=</span><span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>gsub() to tidy test value in name field its nested as a sub model so need to clean it up using regex</p>
+</section>
+<section id="compute-cluster-using-skater" class="level2">
+<h2 class="anchored" data-anchor-id="compute-cluster-using-skater">3.7 Compute cluster using SKATER</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>metric<span class="sc">$</span>Name <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">".*</span><span class="sc">\\\\</span><span class="st">([a-zA-Z0-9_]+)</span><span class="sc">\\\\</span><span class="st">, </span><span class="sc">\\\\</span><span class="st">model</span><span class="sc">\\\\</span><span class="st">.*"</span>,<span class="st">"</span><span class="sc">\\</span><span class="st">1"</span>, metric<span class="sc">$</span>Name)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>skater.clust6 <span class="ot">&lt;-</span> <span class="fu">skater</span>(<span class="at">edges =</span> shan.mst[,<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>], </span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">data =</span> shan_ict, </span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">method =</span> <span class="st">"euclidean"</span>, </span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">ncuts =</span> <span class="dv">5</span>) <span class="co">#Cluster N-1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>the different indices are normalized and larger values indicate a better model performance. so points closer to the center indicates a worse fit indices</p>
-<p>blue is similar to brown one so it overlaps</p>
-<p>from see package</p>
+</section>
+<section id="visualize-the-skater-tree" class="level2">
+<h2 class="anchored" data-anchor-id="visualize-the-skater-tree">3.8 Visualize the SKATER tree</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(metric)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">st_geometry</span>(shan_sf), </span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">border=</span><span class="fu">gray</span>(.<span class="dv">5</span>))</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(skater.clust6, </span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>     pts, </span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">cex.lab=</span>.<span class="dv">7</span>,</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">groups.colors=</span><span class="fu">c</span>(<span class="st">"red"</span>,<span class="st">"green"</span>,<span class="st">"blue"</span>, <span class="st">"brown"</span>, <span class="st">"pink"</span>),</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">cex.circles=</span><span class="fl">0.005</span>, </span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">add=</span><span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -701,11 +506,14 @@ PROX_URA_GROWTH_AREA      40145.474     11758.824        0.062      3.414    0.0
 </div>
 </div>
 </div>
-<p>visualising model parameters</p>
-<p>can see as a visual by sorting as ascending</p>
+</section>
+<section id="visualize-cluster" class="level2">
+<h2 class="anchored" data-anchor-id="visualize-cluster">3.9 Visualize Cluster</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggcoefstats</span>(condo_sb_mlr<span class="sc">$</span>model,</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>            <span class="at">sort =</span> <span class="st">"ascending"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>groups_mat <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(skater.clust6<span class="sc">$</span>groups)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>shan_sf_spatialcluster <span class="ot">&lt;-</span> <span class="fu">cbind</span>(shan_sf_cluster, <span class="fu">as.factor</span>(groups_mat)) <span class="sc">%&gt;%</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="st">`</span><span class="at">skater_CLUSTER</span><span class="st">`</span><span class="ot">=</span><span class="st">`</span><span class="at">as.factor.groups_mat.</span><span class="st">`</span>)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="fu">qtm</span>(shan_sf_spatialcluster, <span class="st">"skater_CLUSTER"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -714,54 +522,45 @@ PROX_URA_GROWTH_AREA      40145.474     11758.824        0.062      3.414    0.0
 </div>
 </div>
 </div>
-<p>checking for multicollinearity</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">check_collinearity</span>(condo_sb_mlr<span class="sc">$</span>model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># Check for Multicollinearity
-
-Low Correlation
-
-                 Term  VIF   VIF 95% CI Increased SE Tolerance Tolerance 95% CI
-             AREA_SQM 1.15 [1.10, 1.24]         1.07      0.87     [0.81, 0.91]
-             PROX_CBD 1.60 [1.50, 1.73]         1.27      0.62     [0.58, 0.67]
-            PROX_PARK 1.21 [1.15, 1.30]         1.10      0.83     [0.77, 0.87]
-             FREEHOLD 1.46 [1.37, 1.57]         1.21      0.68     [0.64, 0.73]
-                  AGE 1.41 [1.33, 1.52]         1.19      0.71     [0.66, 0.75]
-     PROX_ELDERLYCARE 1.52 [1.42, 1.63]         1.23      0.66     [0.61, 0.70]
-   PROX_SHOPPING_MALL 1.49 [1.40, 1.60]         1.22      0.67     [0.62, 0.72]
- PROX_URA_GROWTH_AREA 1.33 [1.26, 1.43]         1.16      0.75     [0.70, 0.79]
-             PROX_MRT 1.96 [1.83, 2.13]         1.40      0.51     [0.47, 0.55]
-        PROX_BUS_STOP 2.89 [2.66, 3.15]         1.70      0.35     [0.32, 0.38]
-      FAMILY_FRIENDLY 1.38 [1.30, 1.48]         1.18      0.72     [0.67, 0.77]
-          NO_Of_UNITS 1.45 [1.37, 1.56]         1.21      0.69     [0.64, 0.73]
-       PROX_CHILDCARE 3.29 [3.02, 3.59]         1.81      0.30     [0.28, 0.33]
-     PROX_PRIMARY_SCH 2.21 [2.05, 2.40]         1.49      0.45     [0.42, 0.49]
-    PROX_KINDERGARTEN 1.11 [1.06, 1.20]         1.05      0.90     [0.84, 0.94]</code></pre>
-</div>
-</div>
-<p>red no good blue still can green good</p>
-<p>theme to make sure the labels dont overlap making it hard to read</p>
-<p>whiskers mean confidence interval?</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">check_collinearity</span>(condo_sb_mlr<span class="sc">$</span>model)) <span class="sc">+</span> </span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>hclust.map <span class="ot">&lt;-</span> <span class="fu">qtm</span>(shan_sf_cluster,</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"CLUSTER"</span>) <span class="sc">+</span> </span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_layout</span>(<span class="at">legend.position =</span> <span class="fu">c</span>(<span class="fl">0.8</span>, <span class="fl">0.6</span>))</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>shclust.map <span class="ot">&lt;-</span> <span class="fu">qtm</span>(shan_sf_spatialcluster,</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"skater_CLUSTER"</span>) <span class="sc">+</span> </span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_layout</span>(<span class="at">legend.position =</span> <span class="fu">c</span>(<span class="fl">0.7</span>, <span class="fl">0.6</span>))</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(hclust.map, shclust.map,</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>             <span class="at">asp=</span><span class="cn">NA</span>, <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="ic_ex10_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="ic_ex10_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
-<p>linearity assumption test</p>
-<p>have 6 plots we only pick out 2nd one which is the linearity plot</p>
-<p>x is fitter value the sb_mlr</p>
-<p>figure below reveals that most of the data points scattered around</p>
+</section>
+</section>
+<section id="clustgeo-method" class="level1">
+<h1>4. ClustGeo Method</h1>
+<p>Uses Hierarchical Clustering (Soft User decide) vs SKATER (HARD, Picks optimium)</p>
+<section id="computing-spatial-dist-mat-1" class="level2">
+<h2 class="anchored" data-anchor-id="computing-spatial-dist-mat-1">## 4.1 Computing Spatial Dist Mat</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>out <span class="ot">&lt;-</span> <span class="fu">plot</span>(<span class="fu">check_model</span>(condo_sb_mlr<span class="sc">$</span>model,</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>                        <span class="at">panel =</span> <span class="cn">FALSE</span>))</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>out[[<span class="dv">2</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>dist <span class="ot">&lt;-</span> <span class="fu">st_distance</span>(shan_sf, shan_sf)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>distmat <span class="ot">&lt;-</span> <span class="fu">as.dist</span>(dist)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="cluster-graph" class="level2">
+<h2 class="anchored" data-anchor-id="cluster-graph">4.2 Cluster graph</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>cr <span class="ot">&lt;-</span> <span class="fu">choicealpha</span>(proxmat, distmat, </span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>                  <span class="at">range.alpha =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="fl">0.1</span>), </span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">K=</span><span class="dv">6</span>, <span class="at">graph =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -769,36 +568,53 @@ Low Correlation
 </figure>
 </div>
 </div>
-</div>
-<p>normality assumption test</p>
-<p>residual of multiple linear regression mode is resemble normal distribution</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">check_normality</span>(condo_sb_mlr<span class="sc">$</span>model))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="ic_ex10_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="ic_ex10_files/figure-html/unnamed-chunk-18-2.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
-<p>checking outliers</p>
-<p>has more method</p>
-<p>cook helps in visualising hence we pick it</p>
+</section>
+<section id="clustgeo-clustering" class="level2">
+<h2 class="anchored" data-anchor-id="clustgeo-clustering">4.3 Clustgeo Clustering</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>outliers <span class="ot">&lt;-</span> <span class="fu">check_outliers</span>(condo_sb_mlr<span class="sc">$</span>model,</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>                           <span class="at">method =</span> <span class="st">"cook"</span>)</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>outliers</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>OK: No outliers detected.
-- Based on the following method and threshold: cook (1).
-- For variable: (Whole model)</code></pre>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>clustG <span class="ot">&lt;-</span> <span class="fu">hclustgeo</span>(proxmat, distmat, <span class="at">alpha =</span> <span class="fl">0.2</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>groups <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(<span class="fu">cutree</span>(clustG, <span class="at">k=</span><span class="dv">6</span>))</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>shan_sf_clustGeo <span class="ot">&lt;-</span> <span class="fu">cbind</span>(shan_sf, </span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">as.matrix</span>(groups)) <span class="sc">%&gt;%</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="st">`</span><span class="at">clustGeo</span><span class="st">`</span> <span class="ot">=</span> <span class="st">`</span><span class="at">as.matrix.groups.</span><span class="st">`</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qtm</span>(shan_sf_clustGeo, <span class="st">"clustGeo"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ic_ex10_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
 </div>
 </div>
-<p>can use a visual one instead if dont want command line at a glance can see if there are any outliers</p>
+</div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">check_outliers</span>(condo_sb_mlr<span class="sc">$</span>model,</span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>                           <span class="at">method =</span> <span class="st">"cook"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>hclust.map <span class="ot">&lt;-</span> <span class="fu">qtm</span>(shan_sf_cluster,</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"CLUSTER"</span>) <span class="sc">+</span> </span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_layout</span>(<span class="at">legend.position =</span> <span class="fu">c</span>(<span class="fl">0.8</span>, <span class="fl">0.6</span>))</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>shclust.map <span class="ot">&lt;-</span> <span class="fu">qtm</span>(shan_sf_spatialcluster,</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"skater_CLUSTER"</span>) <span class="sc">+</span> </span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_layout</span>(<span class="at">legend.position =</span> <span class="fu">c</span>(<span class="fl">0.7</span>, <span class="fl">0.6</span>))</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>clustGeo.map <span class="ot">&lt;-</span> <span class="fu">qtm</span>(shan_sf_clustGeo,</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"clustGeo"</span>) <span class="sc">+</span> </span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_layout</span>(<span class="at">legend.position =</span> <span class="fu">c</span>(<span class="fl">0.7</span>, <span class="fl">0.6</span>))</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(hclust.map, shclust.map, </span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>             clustGeo.map,</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>             <span class="at">asp=</span><span class="cn">NA</span>, <span class="at">ncol=</span><span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -807,14 +623,30 @@ Low Correlation
 </div>
 </div>
 </div>
-<p>spatially non-stationary assumption</p>
-<p>h0 - the residuals are randomly distributed (aka spatial stationary) h1 - the residuals are spatially non-stationary</p>
-<p>visualising spatial non-stationary</p>
+</section>
+<section id="parallel-coordinates" class="level2">
+<h2 class="anchored" data-anchor-id="parallel-coordinates">4.4 Parallel Coordinates</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>mlr_output <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(condo_fw_mlr<span class="sc">$</span>model<span class="sc">$</span>residuals)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggparcoord</span>(<span class="at">data =</span> shan_sf_clustGeo, </span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>           <span class="at">columns =</span> <span class="fu">c</span>(<span class="dv">17</span><span class="sc">:</span><span class="dv">21</span>), </span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>           <span class="at">scale =</span> <span class="st">"globalminmax"</span>,</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>           <span class="at">alphaLines =</span> <span class="fl">0.2</span>,</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>           <span class="at">boxplot =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>           <span class="at">title =</span> <span class="st">"Multiple Parallel Coordinates Plots of ICT Variables by Cluster"</span>) <span class="sc">+</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(<span class="sc">~</span> clustGeo) <span class="sc">+</span> </span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">30</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ic_ex10_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
 </div>
+</div>
+</div>
+<p>Use parallel coordinates to understand your cluster &lt; 0.8 correlation can consider</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
