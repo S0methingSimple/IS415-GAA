@@ -2,6 +2,7 @@
   {
     "listing": "/listings.html",
     "items": [
+      "/in-class_ex/ex13/ic_ex13.html",
       "/in-class_ex/ex12/ic_ex12.html",
       "/in-class_ex/ex11/ic_ex11.html",
       "/in-class_ex/ex10/ic_ex10.html",
@@ -13,7 +14,7 @@
       "/hands-on_ex/ex06/ho_ex06.html",
       "/in-class_ex/ex05/ic_ex05.html",
       "/hands-on_ex/ex05/ho_ex05.html",
-      "/hands-on_ex/ex11/ho_ex11.html",
+      "/hands-on_ex/ex12/ho_ex12.html",
       "/in-class_ex/ex04/ic_ex04.html",
       "/hands-on_ex/ex04/ho_ex04.html",
       "/take-home_ex/ex01/th_ex01.html",
@@ -28,6 +29,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/in-class_ex/ex13/ic_ex13.html",
       "/in-class_ex/ex12/ic_ex12.html",
       "/in-class_ex/ex11/ic_ex11.html",
       "/in-class_ex/ex10/ic_ex10.html",
@@ -39,7 +41,7 @@
       "/hands-on_ex/ex06/ho_ex06.html",
       "/in-class_ex/ex05/ic_ex05.html",
       "/hands-on_ex/ex05/ho_ex05.html",
-      "/hands-on_ex/ex11/ho_ex11.html",
+      "/hands-on_ex/ex12/ho_ex12.html",
       "/in-class_ex/ex04/ic_ex04.html",
       "/hands-on_ex/ex04/ho_ex04.html",
       "/take-home_ex/ex01/th_ex01.html",
